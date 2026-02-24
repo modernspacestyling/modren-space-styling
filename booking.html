@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Book property staging online — Modern Space Styling Geelong. Fill in your property details and receive an instant job number.">
+    <title>Book a Staging | Modern Space Styling Geelong</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .booking-layout {
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            gap: 2rem;
+            align-items: flex-start;
+        }
+
+        @media (max-width:900px) {
+            .booking-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .section-divider {
+            border: none;
+            border-top: 1px solid var(--color-sand-light);
+            margin: 1.75rem 0;
+        }
+
+        .field-section-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #C8A24A;
+            border-bottom: 1px solid rgba(200, 162, 74, 0.2);
+            padding-bottom: 0.6rem;
+            margin-bottom: 1.25rem;
+            margin-top: 1.75rem;
+        }
+
+        .toggle-row {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid var(--color-sand-light);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.18s;
+            background: white;
+            color: var(--color-charcoal-mid);
+        }
+
+        .toggle-btn.selected {
+            background: #111111;
+            border-color: #111111;
+            color: white;
+        }
+
+        .price-panel {
+            background: #111111;
+            border-radius: 16px;
+            padding: 1.75rem;
+            color: white;
+            position: sticky;
+            top: calc(var(--nav-height) + 1.5rem);
+        }
+
+        .pr-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .pr-total {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(200, 162, 74, 0.4);
+            margin-top: 0.75rem;
+        }
+
+        .pr-amount {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            color: #C8A24A;
+            font-weight: 700;
+        }
+
+        .pr-note {
+            font-size: 0.72rem;
+            color: rgba(255, 255, 255, 0.45);
+            margin-top: 0.75rem;
+            line-height: 1.7;
+        }
+
+        .lockbox-wrap {
+            position: relative;
+        }
+
+        .lockbox-toggle {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            font-size: 1rem;
+            color: #9B9080;
+            z-index: 2;
+        }
+
+        .upload-zone {
+            border: 2px dashed rgba(200, 162, 74, 0.3);
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.18s;
+            background: #FAFAF8;
+        }
+
+        .upload-zone:hover {
+            border-color: #C8A24A;
+            background: rgba(200, 162, 74, 0.04);
+        }
+
+        .booking-success {
+            text-align: center;
+            padding: 3rem 2rem;
+        }
+
+        .booking-success .job-num {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            color: #C8A24A;
+            font-weight: 700;
+            margin: 1rem 0;
+        }
+
+        .quote-note {
+            background: rgba(200, 162, 74, 0.08);
+            border: 1px solid rgba(200, 162, 74, 0.25);
+            border-radius: 10px;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.85rem;
+            color: #86754A;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="nav nav--solid" id="mainNav" aria-label="Main navigation">
+        <div class="nav-inner">
+            <a href="index.html" class="nav-logo"><span class="nav-logo-name">Modern Space Styling</span><span
+                    class="nav-logo-tagline">Property Staging · Geelong</span></a>
+            <ul class="nav-links">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="services.html" class="nav-link">Services</a></li>
+                <li><a href="gallery.html" class="nav-link">Gallery</a></li>
+                <li><a href="contact.html" class="nav-link">Contact</a></li>
+            </ul>
+            <a href="portal/login.html" class="btn btn-secondary btn-sm hide-mobile">Agent Login</a>
+            <button class="nav-toggler" aria-label="Menu"><span></span><span></span><span></span></button>
+        </div>
+    </nav>
+    <div class="nav-mobile" id="mobileMenu">
+        <a href="index.html" class="nav-link">Home</a>
+        <a href="services.html" class="nav-link">Services &amp; Pricing</a>
+        <a href="gallery.html" class="nav-link">Gallery</a>
+        <a href="contact.html" class="nav-link">Contact</a>
+        <a href="portal/login.html" class="nav-link">Agent Login</a>
+    </div>
+
+    <div style="background:#111111;padding:calc(var(--nav-height) + 2rem) 0 2rem">
+        <div class="container">
+            <span class="eyebrow" style="color:#C8A24A">Online Booking</span>
+            <h1 style="color:white;margin-top:0.5rem">Book a Property Staging</h1>
+            <p style="color:rgba(255,255,255,0.65);margin-top:0.5rem">Complete the form below. You'll receive an instant
+                job number and SMS confirmation within 2 business hours.</p>
+        </div>
+    </div>
+
+    <section class="section">
+        <div class="container">
+            <div class="booking-layout">
+
+                <!-- FORM -->
+                <div id="bookingFormWrap">
+                    <div
+                        style="background:white;border-radius:16px;padding:2rem;box-shadow:0 4px 24px rgba(0,0,0,0.07)">
+
+                        <div class="field-section-title">Agent Details</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="agentName">Full Name <span
+                                        class="required">*</span></label>
+                                <input type="text" id="agentName" class="form-control" placeholder="Jane Smith"
+                                    autocomplete="name">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="agentPhone">Mobile Number <span
+                                        class="required">*</span></label>
+                                <input type="tel" id="agentPhone" class="form-control" placeholder="+61 4xx xxx xxx"
+                                    autocomplete="tel">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="agentEmail">Email Address <span
+                                        class="required">*</span></label>
+                                <input type="email" id="agentEmail" class="form-control"
+                                    placeholder="jane@agencyname.com.au" autocomplete="email">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="agentAgency">Real Estate Agency Name <span
+                                        class="required">*</span></label>
+                                <input type="text" id="agentAgency" class="form-control"
+                                    placeholder="Your Agency, Geelong">
+                            </div>
+                        </div>
+
+                        <div class="field-section-title">Property Details</div>
+                        <div class="form-group" style="margin-bottom:1rem">
+                            <label class="form-label" for="propAddress">Property Address <span
+                                    class="required">*</span></label>
+                            <input type="text" id="propAddress" class="form-control"
+                                placeholder="42 Bellarine St, Newtown VIC 3220">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="installDate">Preferred Installation Date <span
+                                        class="required">*</span></label>
+                                <input type="date" id="installDate" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="installTime">Preferred Time</label>
+                                <select id="installTime" class="form-control">
+                                    <option value="">Select time</option>
+                                    <option value="07:00">7:00 AM</option>
+                                    <option value="08:00">8:00 AM</option>
+                                    <option value="09:00" selected>9:00 AM</option>
+                                    <option value="10:00">10:00 AM</option>
+                                    <option value="11:00">11:00 AM</option>
+                                    <option value="12:00">12:00 PM</option>
+                                    <option value="13:00">1:00 PM</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row form-row-3" style="grid-template-columns:repeat(3,1fr)">
+                            <div class="form-group">
+                                <label class="form-label" for="bedrooms">Bedrooms <span
+                                        class="required">*</span></label>
+                                <select id="bedrooms" class="form-control" onchange="updateEstimate()">
+                                    <option value="">—</option>
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5+</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="bathrooms">Bathrooms</label>
+                                <select id="bathrooms" class="form-control" onchange="updateEstimate()">
+                                    <option value="1">1</option>
+                                    <option value="2" selected>2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4+</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="livingAreas">Living Areas</label>
+                                <select id="livingAreas" class="form-control" onchange="updateEstimate()">
+                                    <option value="0">0</option>
+                                    <option value="1" selected>1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="diningAreas">Dining Areas</label>
+                                <select id="diningAreas" class="form-control" onchange="updateEstimate()">
+                                    <option value="0">0</option>
+                                    <option value="1" selected>1</option>
+                                    <option value="2">2</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row" style="margin-top:1rem">
+                            <div class="form-group">
+                                <label class="form-label">Garage</label>
+                                <div class="toggle-row">
+                                    <button type="button" class="toggle-btn selected" id="garageNo"
+                                        onclick="setToggle('garage', false)">No</button>
+                                    <button type="button" class="toggle-btn" id="garageYes"
+                                        onclick="setToggle('garage', true)">Yes</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Property Vacant?</label>
+                                <div class="toggle-row">
+                                    <button type="button" class="toggle-btn" id="vacantNo"
+                                        onclick="setToggle('vacant', false)">Occupied</button>
+                                    <button type="button" class="toggle-btn selected" id="vacantYes"
+                                        onclick="setToggle('vacant', true)">Vacant</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="field-section-title">Access &amp; Security</div>
+                        <div class="form-group" style="margin-bottom:1rem">
+                            <label class="form-label" for="lockbox">Lockbox Code <span class="required">*</span></label>
+                            <div class="lockbox-wrap">
+                                <input type="password" id="lockbox" class="form-control"
+                                    placeholder="Enter lockbox code (encrypted &amp; secure)" autocomplete="off">
+                                <span class="lockbox-toggle" onclick="toggleLockbox()" title="Show/hide code">👁</span>
+                            </div>
+                            <div class="form-hint" style="margin-top:4px">🔐 Encrypted with AES-256. Only authorised
+                                team members can access this code.</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Floorplan Upload (Optional)</label>
+                            <div class="upload-zone" id="uploadZone"
+                                onclick="document.getElementById('floorplanFile').click()">
+                                <div style="font-size:1.5rem;margin-bottom:0.5rem">📄</div>
+                                <p>Click to upload floorplan <strong style="color:#C8A24A">PDF or image</strong></p>
+                                <small id="uploadFileName" style="color:#9B9080">Max 10MB</small>
+                            </div>
+                            <input type="file" id="floorplanFile" accept=".pdf,.jpg,.jpeg,.png" style="display:none"
+                                onchange="handleUpload(this)">
+                        </div>
+
+                        <div class="field-section-title">Additional Notes</div>
+                        <div class="form-group">
+                            <label class="form-label" for="notes">Notes</label>
+                            <textarea id="notes" class="form-control" rows="3"
+                                placeholder="Access instructions, special requirements, campaign details..."></textarea>
+                        </div>
+
+                        <!-- Travel surcharge note -->
+                        <div
+                            style="background:#FFF9F0;border:1px solid rgba(200,162,74,0.3);border-radius:8px;padding:1rem 1.25rem;margin:1.5rem 0;font-size:0.82rem;color:#86754A">
+                            📍 <strong>Service Area:</strong> Properties within 50km of Geelong CBD have no travel fee.
+                            Properties beyond 50km incur a <strong>$50 travel surcharge</strong> per visit.
+                        </div>
+
+                        <!-- Final quote note -->
+                        <div class="quote-note">
+                            <strong style="color:#C8A24A">📋 Final Quote Confirmation</strong><br>
+                            The estimated price shown is indicative only. A confirmed quote will be provided by our team
+                            before your installation proceeds. Long-term clients may be eligible for discounted rates.
+                        </div>
+
+                        <button class="btn btn-gold"
+                            style="width:100%;justify-content:center;padding:1rem;font-size:0.95rem"
+                            onclick="submitBooking()" id="submitBtn">
+                            Submit Booking Request
+                        </button>
+                    </div>
+                </div>
+
+                <!-- SUCCESS STATE -->
+                <div id="bookingSuccess" style="display:none">
+                    <div
+                        style="background:white;border-radius:16px;padding:3rem 2rem;box-shadow:0 4px 24px rgba(0,0,0,0.07);text-align:center">
+                        <div
+                            style="width:80px;height:80px;background:var(--color-success);border-radius:50%;margin:0 auto 1.5rem;display:flex;align-items:center;justify-content:center;font-size:2rem;color:white">
+                            ✓</div>
+                        <h2>Booking Submitted!</h2>
+                        <p style="margin-top:0.5rem;color:#6B7280">Your Job Number:</p>
+                        <div class="job-num" id="successJobNum">—</div>
+                        <p style="color:#6B7280;margin-bottom:2rem">We'll review your request and send a confirmation
+                            SMS to your phone within 2 business hours.</p>
+                        <a href="index.html" class="btn btn-gold" style="width:100%;justify-content:center">Back to
+                            Home</a>
+                        <a href="booking.html" class="btn btn-secondary"
+                            style="width:100%;justify-content:center;margin-top:0.75rem" onclick="resetForm()">Make
+                            Another Booking</a>
+                    </div>
+                </div>
+
+                <!-- PRICE PANEL -->
+                <div>
+                    <div class="price-panel" id="pricePanel">
+                        <h4
+                            style="color:#C8A24A;font-family:'Playfair Display',serif;margin-bottom:1.25rem;font-size:1.05rem">
+                            💰 Estimated Price</h4>
+                        <div id="priceRows">
+                            <div class="pr-row"><span style="color:rgba(255,255,255,0.65)">Select bedrooms to
+                                    estimate</span></div>
+                        </div>
+                        <div class="pr-total">
+                            <span style="font-weight:600;font-size:0.9rem">Est. Total (excl. GST)</span>
+                            <span class="pr-amount" id="priceTotal">—</span>
+                        </div>
+                        <div class="pr-note">
+                            Estimate based on indicative rates. A confirmed quote will be provided by our team.<br><br>
+                            All prices exclude GST. Extensions: $200 + GST per week.<br><br>
+                            ✨ Long-term clients may be eligible for discounted packages.
+                        </div>
+                    </div>
+
+                    <div
+                        style="background:#FFF9F0;border:1px solid rgba(200,162,74,0.3);border-radius:12px;padding:1.25rem;margin-top:1rem;font-size:0.82rem">
+                        <strong style="color:#C8A24A">📅 Base Period: 6 Weeks</strong><br>
+                        <span style="color:#6B7280">Staging period begins on installation date. Extensions available at
+                            $200 + GST/week.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer style="background:#0A0A0A;color:rgba(255,255,255,0.55);padding:2rem 0" role="contentinfo">
+        <div class="container">
+            <div
+                style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;font-size:0.78rem">
+                <span>© 2026 Modern Space Styling Pty Ltd.</span><a href="index.html" style="color:#C8A24A">← Back to
+                    Home</a>
+            </div>
+        </div>
+    </footer>
+
+    <div id="toast-container" class="toast-container"></div>
+    <script src="js/app.js"></script>
+    <script>
+        // State
+        const state = { garage: false, vacant: true };
+
+        // Set toggle buttons
+        function setToggle(field, val) {
+            state[field] = val;
+            if (field === 'garage') {
+                document.getElementById('garageYes').classList.toggle('selected', val);
+                document.getElementById('garageNo').classList.toggle('selected', !val);
+            } else {
+                document.getElementById('vacantYes').classList.toggle('selected', val);
+                document.getElementById('vacantNo').classList.toggle('selected', !val);
+                updateEstimate();
+            }
+        }
+
+        // Lockbox toggle
+        function toggleLockbox() {
+            const lb = document.getElementById('lockbox');
+            lb.type = lb.type === 'password' ? 'text' : 'password';
+        }
+
+        // File upload
+        function handleUpload(inp) {
+            const name = inp.files[0]?.name || '';
+            document.getElementById('uploadFileName').textContent = name ? '✓ ' + name : 'Max 10MB';
+        }
+
+        // Price estimate
+        function updateEstimate() {
+            const beds = parseInt(document.getElementById('bedrooms').value) || 0;
+            const baths = parseInt(document.getElementById('bathrooms').value) || 0;
+            const living = parseInt(document.getElementById('livingAreas').value) || 0;
+            const dining = parseInt(document.getElementById('diningAreas').value) || 0;
+            const vacant = state.vacant;
+
+            if (!beds) {
+                document.getElementById('priceRows').innerHTML = '<div class="pr-row"><span style="color:rgba(255,255,255,0.55)">Select bedrooms to see estimate</span></div>';
+                document.getElementById('priceTotal').textContent = '—';
+                return;
+            }
+
+            const c = Pricing.getConfig();
+            const base = c.basePrice || 800;
+            const bedRate = c.bedroomRate || 250;
+            const bathRate = c.bathroomRate || 150;
+            const livRate = c.livingRate || 200;
+            const dinRate = c.diningRate || 150;
+            const occSur = c.occupiedSurcharge || 300;
+
+            let total = base + beds * bedRate + baths * bathRate + living * livRate + dining * dinRate;
+            if (!vacant) total += occSur;
+
+            const fmt = v => v > 0 ? `$${v.toLocaleString('en-AU')}` : '—';
+
+            let rows = `
+    <div class="pr-row"><span style="color:rgba(255,255,255,0.65)">Base Package (6 weeks)</span><span>${fmt(base)}</span></div>
+    <div class="pr-row"><span style="color:rgba(255,255,255,0.65)">${beds} Bedroom${beds > 1 ? 's' : ''} × ${fmt(bedRate)}</span><span>${fmt(beds * bedRate)}</span></div>`;
+            if (baths) rows += `<div class="pr-row"><span style="color:rgba(255,255,255,0.65)">${baths} Bathroom${baths > 1 ? 's' : ''} × ${fmt(bathRate)}</span><span>${fmt(baths * bathRate)}</span></div>`;
+            if (living) rows += `<div class="pr-row"><span style="color:rgba(255,255,255,0.65)">${living} Living Area${living > 1 ? 's' : ''} × ${fmt(livRate)}</span><span>${fmt(living * livRate)}</span></div>`;
+            if (dining) rows += `<div class="pr-row"><span style="color:rgba(255,255,255,0.65)">${dining} Dining Area${dining > 1 ? 's' : ''} × ${fmt(dinRate)}</span><span>${fmt(dining * dinRate)}</span></div>`;
+            if (!vacant) rows += `<div class="pr-row"><span style="color:rgba(255,255,255,0.65)">Occupied Property</span><span>${fmt(occSur)}</span></div>`;
+
+            document.getElementById('priceRows').innerHTML = rows;
+            document.getElementById('priceTotal').textContent = `from ~$${total.toLocaleString('en-AU')}`;
+        }
+
+        // Detect production (Vercel) vs local dev (file:// or localhost)
+        const IS_PROD = window.location.protocol !== 'file:' && !['localhost', '127.0.0.1'].includes(window.location.hostname);
+
+        async function submitBooking() {
+            const name = document.getElementById('agentName').value.trim();
+            const phone = document.getElementById('agentPhone').value.trim();
+            const email = document.getElementById('agentEmail').value.trim();
+            const agency = document.getElementById('agentAgency').value.trim();
+            const address = document.getElementById('propAddress').value.trim();
+            const date = document.getElementById('installDate').value;
+            const beds = document.getElementById('bedrooms').value;
+            const lockbox = document.getElementById('lockbox').value;
+
+            if (!name || !phone || !email || !agency || !address || !date || !beds || !lockbox) {
+                toast('Please fill in all required fields', 'error'); return;
+            }
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true; btn.textContent = 'Submitting…';
+
+            const beds_ = parseInt(beds);
+            const baths_ = parseInt(document.getElementById('bathrooms').value) || 0;
+            const living_ = parseInt(document.getElementById('livingAreas').value) || 0;
+            const dining_ = parseInt(document.getElementById('diningAreas').value) || 0;
+            const time_ = document.getElementById('installTime').value;
+            const notes_ = document.getElementById('notes').value;
+
+            if (IS_PROD) {
+                // ── PRODUCTION: send to Vercel serverless API ──
+                // Lockbox encryption + Supabase storage + SMS all happen server-side
+                try {
+                    const resp = await fetch('/api/create-booking', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            agentName: name,
+                            agentPhone: phone,
+                            agentEmail: email,
+                            agency,
+                            address,
+                            installDate: date,
+                            installTime: time_,
+                            bedrooms: beds_,
+                            bathrooms: baths_,
+                            livingAreas: living_,
+                            diningAreas: dining_,
+                            garage: state.garage,
+                            vacant: state.vacant,
+                            lockbox,        // encrypted server-side with LOCKBOX_ENCRYPTION_KEY
+                            notes: notes_,
+                            travelSurcharge: false,
+                        }),
+                    });
+
+                    const data = await resp.json();
+
+                    if (!resp.ok) {
+                        toast(data.error || 'Booking failed. Please try again.', 'error');
+                        btn.disabled = false; btn.textContent = 'Submit Booking Request';
+                        return;
+                    }
+
+                    document.getElementById('successJobNum').textContent = data.jobNumber;
+                    document.getElementById('bookingFormWrap').style.display = 'none';
+                    document.getElementById('bookingSuccess').style.display = 'block';
+                    document.getElementById('pricePanel').style.display = 'none';
+
+                } catch (err) {
+                    toast('Network error. Please check your connection and try again.', 'error');
+                    btn.disabled = false; btn.textContent = 'Submit Booking Request';
+                }
+
+            } else {
+                // ── LOCAL DEV: write to localStorage (unchanged behaviour) ──
+                const lockboxEnc = await Crypto.encrypt(lockbox);
+                const estimatedPrice = Pricing.calculate({
+                    bedrooms: beds_, bathrooms: baths_, livingAreas: living_,
+                    diningAreas: dining_, garage: state.garage, vacant: state.vacant,
+                });
+                const jobNumber = genJobNumber();
+                const endDate = DateUtils.addDays(date, 42);
+
+                DB.insert(KEYS.BOOKINGS, {
+                    jobNumber, status: 'pending',
+                    agentName: name, agentPhone: phone, agentEmail: email,
+                    agency, address,
+                    installDate: date, installTime: time_,
+                    bedrooms: beds_, bathrooms: baths_,
+                    livingAreas: living_, diningAreas: dining_,
+                    garage: state.garage, vacant: state.vacant,
+                    lockbox: lockboxEnc, notes: notes_,
+                    endDate, estimatedPrice,
+                });
+
+                logActivity(`New booking from ${name} — ${jobNumber}`);
+                SMS.log('outbound', phone, 'MSS',
+                    `Hi ${name}, your staging booking ${jobNumber} has been received. We'll confirm within 2 business hours. Modern Space Styling.`,
+                    jobNumber);
+
+                document.getElementById('successJobNum').textContent = jobNumber;
+                document.getElementById('bookingFormWrap').style.display = 'none';
+                document.getElementById('bookingSuccess').style.display = 'block';
+                document.getElementById('pricePanel').style.display = 'none';
+            }
+        }
+
+        function resetForm() { location.reload(); }
+
+        // Set min date to today
+        document.getElementById('installDate').min = new Date().toISOString().slice(0, 10);
+    </script>
+</body>
+
+</html>

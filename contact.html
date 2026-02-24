@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact | Modern Space Styling</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <nav class="nav nav--solid">
+        <div class="nav-inner">
+            <a href="index.html" class="nav-logo"><span class="nav-logo-name">Modern Space Styling</span><span
+                    class="nav-logo-tagline">Property Staging · Geelong</span></a>
+            <ul class="nav-links">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="services.html" class="nav-link">Services</a></li>
+                <li><a href="gallery.html" class="nav-link">Gallery</a></li>
+                <li><a href="contact.html" class="nav-link active">Contact</a></li>
+            </ul>
+            <a href="booking.html" class="btn btn-gold btn-sm hide-mobile">Book a Staging</a>
+            <button class="nav-toggler"><span></span><span></span><span></span></button>
+        </div>
+    </nav>
+    <div class="nav-mobile">
+        <a href="index.html" class="nav-link">Home</a><a href="services.html" class="nav-link">Services</a>
+        <a href="gallery.html" class="nav-link">Gallery</a><a href="contact.html" class="nav-link">Contact</a>
+        <a href="booking.html" class="btn btn-gold" style="text-align:center">Book Now</a>
+    </div>
+
+    <div style="background:var(--color-slate);padding:calc(var(--nav-height) + 2.5rem) 0 2.5rem">
+        <div class="container"><span class="eyebrow" style="color:var(--color-sand)">Get In Touch</span>
+            <h1 style="color:var(--color-white);margin-top:0.5rem;font-size:2.5rem">Contact Us</h1>
+        </div>
+    </div>
+
+    <section class="section">
+        <div class="container">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:flex-start">
+                <div class="animate-on-scroll">
+                    <div class="card" style="margin-bottom:2rem">
+                        <h3 style="margin-bottom:1.5rem">Send a Message</h3>
+                        <div style="display:flex;flex-direction:column;gap:1.25rem">
+                            <div class="form-row">
+                                <div class="form-group"><label class="form-label">Full Name <span
+                                            class="required">*</span></label><input type="text" id="cName"
+                                        class="form-control" placeholder="Your name"></div>
+                                <div class="form-group"><label class="form-label">Phone</label><input type="tel"
+                                        id="cPhone" class="form-control" placeholder="+61 4xx xxx xxx"></div>
+                            </div>
+                            <div class="form-group"><label class="form-label">Email <span
+                                        class="required">*</span></label><input type="email" id="cEmail"
+                                    class="form-control" placeholder="you@email.com"></div>
+                            <div class="form-group"><label class="form-label">Subject</label>
+                                <select id="cSubject" class="form-control">
+                                    <option>General Enquiry</option>
+                                    <option>Booking Question</option>
+                                    <option>Pricing Request</option>
+                                    <option>Developer Enquiry</option>
+                                    <option>Partnership</option>
+                                </select>
+                            </div>
+                            <div class="form-group"><label class="form-label">Message <span
+                                        class="required">*</span></label><textarea id="cMessage" class="form-control"
+                                    rows="5" placeholder="How can we help you?"></textarea></div>
+                            <button class="btn btn-gold w-full" onclick="submitContact()">Send Message</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="animate-on-scroll">
+                    <div style="margin-bottom:2rem">
+                        <h3 style="margin-bottom:1.5rem">Reach Us Directly</h3>
+                        <div style="display:flex;flex-direction:column;gap:1.5rem">
+                            <div style="display:flex;gap:1rem;align-items:flex-start">
+                                <div
+                                    style="width:48px;height:48px;background:var(--color-mist);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0">
+                                    📞</div>
+                                <div><strong>Phone</strong><br><a href="tel:+61300000000"
+                                        style="color:var(--color-gold)">1300 MSS VIC</a></div>
+                            </div>
+                            <div style="display:flex;gap:1rem;align-items:flex-start">
+                                <div
+                                    style="width:48px;height:48px;background:var(--color-mist);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0">
+                                    ✉</div>
+                                <div><strong>Email</strong><br><a href="mailto:hello@modernspacestyling.com.au"
+                                        style="color:var(--color-gold)">hello@modernspacestyling.com.au</a></div>
+                            </div>
+                            <div style="display:flex;gap:1rem;align-items:flex-start">
+                                <div
+                                    style="width:48px;height:48px;background:var(--color-mist);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0">
+                                    📍</div>
+                                <div><strong>Location</strong><br>Geelong, VIC 3220<br><small
+                                        style="color:var(--color-charcoal-mid)">Servicing 50km radius</small></div>
+                            </div>
+                            <div style="display:flex;gap:1rem;align-items:flex-start">
+                                <div
+                                    style="width:48px;height:48px;background:var(--color-mist);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0">
+                                    🕐</div>
+                                <div><strong>Business Hours</strong><br>Mon–Fri: 8:00 AM – 5:00 PM<br>Sat: 9:00 AM –
+                                    2:00 PM</div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Map placeholder -->
+                    <div
+                        style="border-radius:var(--radius-lg);overflow:hidden;height:280px;background:var(--color-mist);display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-md)">
+                        <div style="text-align:center;color:var(--color-charcoal-mid)">
+                            <div style="font-size:3rem;margin-bottom:1rem">📍</div>
+                            <strong>Geelong, Victoria</strong><br>
+                            <small>Service radius: 50km</small><br>
+                            <a href="https://maps.google.com/?q=Geelong+VIC+3220" target="_blank"
+                                class="btn btn-sm btn-secondary" style="margin-top:1rem;display:inline-flex">Open in
+                                Maps</a>
+                        </div>
+                    </div>
+                    <div class="card" style="margin-top:1.5rem;background:var(--color-charcoal);color:white">
+                        <h5 style="color:var(--color-sand);margin-bottom:0.75rem">🚀 Ready to Book?</h5>
+                        <p style="font-size:0.875rem;color:rgba(255,255,255,0.75);margin-bottom:1rem">Skip the form and
+                            book directly online. Get your job number instantly.</p>
+                        <a href="booking.html" class="btn btn-gold btn-sm w-full" style="justify-content:center">Book a
+                            Staging</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom" style="border-top:none;padding-top:0"><span>© 2026 Modern Space Styling Pty
+                    Ltd.</span><a href="index.html" style="color:var(--color-sand)">← Back to Home</a></div>
+        </div>
+    </footer>
+    <div id="toast-container" class="toast-container"></div>
+    <script src="js/app.js"></script>
+    <script>
+        function submitContact() {
+            const name = document.getElementById('cName').value.trim();
+            const email = document.getElementById('cEmail').value.trim();
+            const msg = document.getElementById('cMessage').value.trim();
+            if (!name || !email || !msg) { toast('Please fill in all required fields', 'error'); return; }
+            logActivity(`Contact form submitted by ${name} (${email})`);
+            toast('Message sent! We\'ll be in touch soon.', 'success');
+            document.getElementById('cName').value = ''; document.getElementById('cEmail').value = ''; document.getElementById('cMessage').value = '';
+        }
+    </script>
+</body>
+
+</html>

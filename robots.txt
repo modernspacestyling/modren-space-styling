@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /portal/
+Disallow: /js/
+Disallow: /css/
+
+Sitemap: https://www.modernspacestyling.com.au/sitemap.xml
