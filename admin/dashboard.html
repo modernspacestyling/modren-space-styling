@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | MSS Admin</title>
+    <link rel="stylesheet" href="../css/admin.css">
+</head>
+
+<body>
+    <div class="app-layout">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-logo">
+                <div class="sidebar-logo-name">Modern Space Styling</div>
+                <div class="sidebar-logo-sub">Admin Panel</div>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Main</div>
+                <a class="sidebar-link active" href="dashboard.html"><span class="sidebar-icon">📊</span> Dashboard</a>
+                <a class="sidebar-link" href="bookings.html"><span class="sidebar-icon">📋</span> Bookings <span
+                        class="sidebar-badge" id="sbPending">0</span></a>
+                <a class="sidebar-link" href="inventory.html"><span class="sidebar-icon">📦</span> Inventory</a>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Management</div>
+                <a class="sidebar-link" href="pricing.html"><span class="sidebar-icon">💰</span> Pricing</a>
+                <a class="sidebar-link" href="sms.html"><span class="sidebar-icon">💬</span> SMS Centre</a>
+                <a class="sidebar-link" href="team.html"><span class="sidebar-icon">👥</span> Team Contacts</a>
+                <a class="sidebar-link" href="agents.html"><span class="sidebar-icon">🏢</span> Agents <span
+                        class="sidebar-badge" id="sbAgents">0</span></a>
+                <a class="sidebar-link" href="logs.html"><span class="sidebar-icon">📝</span> Activity Log</a>
+            </div>
+            <div class="sidebar-footer">
+                <a class="sidebar-link" href="../index.html" style="padding:0"><span class="sidebar-icon">🏠</span> View
+                    Website</a>
+                <a class="sidebar-link" href="#" onclick="Auth.logout()"
+                    style="padding:0;margin-top:0.5rem;color:#F87171"><span class="sidebar-icon">🚪</span> Logout</a>
+            </div>
+        </aside>
+
+        <!-- TOPBAR -->
+        <header class="topbar">
+            <div class="topbar-title" id="pageTitle">Dashboard</div>
+            <div class="topbar-right">
+                <div id="lowStockAlert"
+                    style="display:none;background:#FEE2E2;color:#991B1B;padding:4px 12px;border-radius:999px;font-size:0.75rem;font-weight:700">
+                    ⚠ Low Stock</div>
+                <div class="topbar-user">
+                    <div class="user-avatar" id="userAvatar">A</div>
+                    <span id="userName">Admin</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN -->
+        <main class="main-content">
+
+            <!-- KPI row -->
+            <div class="kpi-grid" id="kpiGrid"></div>
+
+            <div class="grid-2a">
+                <!-- Recent bookings -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">Recent Bookings</span>
+                        <a href="bookings.html" class="ab ab-outline ab-sm">View All</a>
+                    </div>
+                    <div class="tbl-wrap">
+                        <table class="tbl" id="recentBookings">
+                            <thead>
+                                <tr>
+                                    <th>Job #</th>
+                                    <th>Agent</th>
+                                    <th>Address</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Inventory snapshot -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">Inventory Status</span>
+                        <a href="inventory.html" class="ab ab-outline ab-sm">Manage</a>
+                    </div>
+                    <div class="panel-body" id="invSnapshot"></div>
+                </div>
+            </div>
+
+            <!-- Low stock alerts -->
+            <div class="panel" style="margin-top:1.25rem" id="lowStockPanel">
+                <div class="panel-header"><span class="panel-title">⚠ Low Stock Alerts</span></div>
+                <div class="panel-body" id="lowStockList"></div>
+            </div>
+
+            <!-- Today's jobs -->
+            <div class="panel" style="margin-top:1.25rem">
+                <div class="panel-header"><span class="panel-title">Today's Installations</span></div>
+                <div class="tbl-wrap">
+                    <table class="tbl" id="todayJobs">
+                        <thead>
+                            <tr>
+                                <th>Job #</th>
+                                <th>Agent</th>
+                                <th>Address</th>
+                                <th>Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <div id="toast-container" class="toast-container"></div>
+    <script src="../js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            await seedDatabase();
+            if (!Auth.requireAdmin()) return;
+            const user = Auth.current();
+            document.getElementById('userName').textContent = user.name;
+            document.getElementById('userAvatar').textContent = user.name.charAt(0);
+
+            renderDashboard();
+        });
+
+        function renderDashboard() {
+            const bookings = DB.get(KEYS.BOOKINGS);
+            const agents = DB.get(KEYS.AGENTS);
+            const inventory = DB.get(KEYS.INVENTORY);
+            const today = new Date().toISOString().slice(0, 10);
+
+            const pending = bookings.filter(b => b.status === 'pending').length;
+            const active = bookings.filter(b => b.status === 'active').length;
+            const todayJobs = bookings.filter(b => b.installDate === today);
+            const lowStock = Inventory.getLowStock();
+            const pendingAgents = DB.get(KEYS.AGENTS).filter(a => a.status === 'pending').length;
+
+            // Sidebar badges
+            document.getElementById('sbPending').textContent = pending;
+            document.getElementById('sbAgents').textContent = pendingAgents;
+            if (pendingAgents === 0) document.getElementById('sbAgents').style.display = 'none';
+            if (pending === 0) document.getElementById('sbPending').style.display = 'none';
+
+            // Low stock alert topbar
+            if (lowStock.length) document.getElementById('lowStockAlert').style.display = 'block';
+
+            // KPIs
+            const kpis = [
+                { label: 'Active Jobs', value: active, cls: 'success' },
+                { label: 'Pending Bookings', value: pending, cls: pending ? 'danger' : '' },
+                { label: 'Today\'s Installs', value: todayJobs.length, cls: 'info' },
+                { label: 'Low Stock Alerts', value: lowStock.length, cls: lowStock.length ? 'danger' : '' },
+            ];
+            document.getElementById('kpiGrid').innerHTML = kpis.map(k => `
+    <div class="kpi-card ${k.cls}">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value">${k.value}</div>
+    </div>`).join('');
+
+            // Recent bookings table
+            const recent = [...bookings].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 8);
+            document.querySelector('#recentBookings tbody').innerHTML = recent.map(b => `
+    <tr>
+      <td><a href="bookings.html?job=${b.jobNumber}" style="color:var(--accent);font-weight:600">${b.jobNumber || '—'}</a></td>
+      <td>${b.agentName}</td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${b.address}</td>
+      <td>${statusBadge(b.status)}</td>
+    </tr>`).join('') || '<tr><td colspan="4" class="empty-state">No bookings yet</td></tr>';
+
+            // Inventory snapshot
+            document.getElementById('invSnapshot').innerHTML = inventory.slice(0, 6).map(item => {
+                const pct = item.total ? Math.round((item.available / item.total) * 100) : 0;
+                const cls = pct <= 20 ? 'low' : pct <= 40 ? 'warn' : 'ok';
+                return `<div style="margin-bottom:0.875rem">
+      <div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:3px">
+        <span>${item.name}</span>
+        <span style="font-weight:600;color:${cls === 'low' ? 'var(--danger)' : cls === 'warn' ? 'var(--warning)' : 'var(--success)'}">${item.available}/${item.total}</span>
+      </div>
+      <div class="inv-bar"><div class="inv-fill ${cls}" style="width:${pct}%"></div></div>
+    </div>`;
+            }).join('');
+
+            // Low stock panel
+            const lsp = document.getElementById('lowStockPanel');
+            if (!lowStock.length) { lsp.style.display = 'none'; }
+            else {
+                document.getElementById('lowStockList').innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.75rem">${lowStock.map(item => `<div style="background:#FEF2F2;border-radius:8px;padding:0.875rem;border-left:3px solid var(--danger)">
+        <div style="font-weight:700;font-size:0.85rem">${item.name}</div>
+        <div style="font-size:0.78rem;color:var(--danger);margin-top:2px">${item.available} of ${item.total} available</div>
+      </div>`).join('')
+                    }</div>`;
+            }
+
+            // Today's jobs
+            document.querySelector('#todayJobs tbody').innerHTML = todayJobs.map(b => `
+    <tr>
+      <td><strong>${b.jobNumber}</strong></td>
+      <td>${b.agentName}</td>
+      <td>${b.address}</td>
+      <td>${b.installTime || '—'}</td>
+      <td>${statusBadge(b.status)}</td>
+    </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;padding:1.5rem;color:var(--text-muted)">No installations today</td></tr>';
+        }
+
+        function statusBadge(s) {
+            const map = { pending: 'b-pending', confirmed: 'b-confirmed', on_the_way: 'b-way', arrived: 'b-arrived', active: 'b-active', pickup_ready: 'b-pickup', closed: 'b-closed' };
+            const labels = { pending: 'Pending', confirmed: 'Confirmed', on_the_way: 'On The Way', arrived: 'Arrived', active: 'Active', pickup_ready: 'Pickup Ready', closed: 'Closed' };
+            return `<span class="b ${map[s] || 'b-pending'}">${labels[s] || s}</span>`;
+        }
+    </script>
+</body>
+
+</html>

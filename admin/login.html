@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login | Modern Space Styling</title>
+    <link rel="stylesheet" href="../css/admin.css">
+</head>
+
+<body>
+    <div class="login-page">
+        <div class="login-card">
+            <div class="login-logo">
+                <div class="login-logo-name">Modern Space Styling</div>
+                <div class="login-logo-sub">Admin Portal</div>
+            </div>
+            <h2 class="login-title">Welcome back</h2>
+            <p class="login-sub">Sign in to the admin dashboard</p>
+            <div class="f-group"><label class="f-label">Email Address</label><input type="email" id="email"
+                    class="f-control" placeholder="admin@modernspacestyling.com.au"
+                    value="admin@modernspacestyling.com.au"></div>
+            <div class="f-group"><label class="f-label">Password</label><input type="password" id="password"
+                    class="f-control" placeholder="Password" value="Admin@2026"></div>
+            <div id="loginErr" style="color:#DC2626;font-size:0.8rem;margin-bottom:0.75rem;display:none">Invalid email
+                or password.</div>
+            <button class="ab ab-primary w-full"
+                style="width:100%;justify-content:center;padding:0.75rem;font-size:0.9rem" onclick="doLogin()">Sign
+                In</button>
+            <p style="text-align:center;font-size:0.78rem;color:var(--text-muted);margin-top:1.25rem">Default:
+                <code>admin@modernspacestyling.com.au</code> / <code>Admin@2026</code></p>
+            <hr class="divider">
+            <p style="text-align:center;font-size:0.78rem;color:var(--text-muted)">Are you an agent? <a
+                    href="login.html" style="color:var(--accent);font-weight:600">Agent Login →</a></p>
+        </div>
+    </div>
+    <div id="toast-container" class="toast-container"></div>
+    <script src="../js/app.js"></script>
+    <script>
+        async function doLogin() {
+            const email = document.getElementById('email').value.trim();
+            const pass = document.getElementById('password').value;
+            await seedDatabase();
+            const users = DB.get(KEYS.USERS);
+            const hash = await Crypto.hash(pass);
+            const user = users.find(u => u.email === email && u.password === hash && (u.role === 'admin' || u.role === 'staff'));
+            if (!user) {
+                document.getElementById('loginErr').style.display = 'block';
+                return;
+            }
+            Auth.login(user);
+            window.location.href = 'dashboard.html';
+        }
+        document.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pricing | MSS Admin</title>
+    <link rel="stylesheet" href="../css/admin.css">
+</head>
+
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <div class="sidebar-logo-name">Modern Space Styling</div>
+                <div class="sidebar-logo-sub">Admin Panel</div>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Main</div>
+                <a class="sidebar-link" href="dashboard.html"><span class="sidebar-icon">📊</span> Dashboard</a>
+                <a class="sidebar-link" href="bookings.html"><span class="sidebar-icon">📋</span> Bookings</a>
+                <a class="sidebar-link" href="inventory.html"><span class="sidebar-icon">📦</span> Inventory</a>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Management</div>
+                <a class="sidebar-link active" href="pricing.html"><span class="sidebar-icon">💰</span> Pricing</a>
+                <a class="sidebar-link" href="sms.html"><span class="sidebar-icon">💬</span> SMS Centre</a>
+                <a class="sidebar-link" href="team.html"><span class="sidebar-icon">👥</span> Team Contacts</a>
+                <a class="sidebar-link" href="agents.html"><span class="sidebar-icon">🏢</span> Agents</a>
+                <a class="sidebar-link" href="logs.html"><span class="sidebar-icon">📝</span> Activity Log</a>
+            </div>
+            <div class="sidebar-footer">
+                <a class="sidebar-link" href="../index.html" style="padding:0"><span class="sidebar-icon">🏠</span> View
+                    Website</a>
+                <a class="sidebar-link" href="#" onclick="Auth.logout()"
+                    style="padding:0;margin-top:0.5rem;color:#F87171"><span class="sidebar-icon">🚪</span> Logout</a>
+            </div>
+        </aside>
+        <header class="topbar">
+            <div class="topbar-title">Pricing Editor</div>
+            <div class="topbar-right">
+                <div class="topbar-user">
+                    <div class="user-avatar" id="userAvatar">A</div><span id="userName">Admin</span>
+                </div>
+            </div>
+        </header>
+        <main class="main-content">
+            <div style="max-width:680px">
+                <div class="panel" style="margin-bottom:1.25rem">
+                    <div class="panel-header"><span class="panel-title">💰 Base Package & Rates</span></div>
+                    <div class="panel-body">
+                        <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:1.5rem">⚠ Prices are currently
+                            set to $0 (TBD). Fill in your rates below and click Save. Prices are immediately reflected
+                            on the booking form estimate.</p>
+                        <div class="f-row">
+                            <div class="f-group"><label class="f-label">Base Package Price ($) — 6 weeks</label><input
+                                    type="number" id="basePrice" class="f-control" placeholder="e.g. 1800" min="0"
+                                    step="1"></div>
+                            <div class="f-group"><label class="f-label">Weekly Extension Rate ($ per week)</label><input
+                                    type="number" id="weeklyRate" class="f-control" placeholder="e.g. 180" min="0"
+                                    step="1"></div>
+                        </div>
+                        <div class="f-row">
+                            <div class="f-group"><label class="f-label">Per Bedroom Rate ($)</label><input type="number"
+                                    id="bedroomRate" class="f-control" placeholder="e.g. 150" min="0"></div>
+                            <div class="f-group"><label class="f-label">Per Bathroom Rate ($)</label><input
+                                    type="number" id="bathroomRate" class="f-control" placeholder="e.g. 50" min="0">
+                            </div>
+                        </div>
+                        <div class="f-row">
+                            <div class="f-group"><label class="f-label">Per Living Area Rate ($)</label><input
+                                    type="number" id="livingRate" class="f-control" placeholder="e.g. 200" min="0">
+                            </div>
+                            <div class="f-group"><label class="f-label">Per Dining Area Rate ($)</label><input
+                                    type="number" id="diningRate" class="f-control" placeholder="e.g. 150" min="0">
+                            </div>
+                        </div>
+                        <div class="f-row">
+                            <div class="f-group"><label class="f-label">Garage Surcharge ($)</label><input type="number"
+                                    id="garageRate" class="f-control" placeholder="e.g. 0" min="0"></div>
+                            <div class="f-group"><label class="f-label">Occupied Property Surcharge ($)</label><input
+                                    type="number" id="occupiedSurcharge" class="f-control" placeholder="e.g. 200"
+                                    min="0"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel" style="margin-bottom:1.25rem">
+                    <div class="panel-header"><span class="panel-title">🚗 Travel Surcharge</span></div>
+                    <div class="panel-body">
+                        <div class="f-row">
+                            <div class="f-group"><label class="f-label">Travel Surcharge ($ over 50km)</label><input
+                                    type="number" id="travelSurcharge" class="f-control" placeholder="50" min="0"></div>
+                            <div class="f-group"><label class="f-label">Free Radius (km)</label><input type="number"
+                                    id="freeRadius" class="f-control" value="50" min="0" disabled></div>
+                        </div>
+                        <p style="font-size:0.78rem;color:var(--text-muted);margin-top:0.5rem">Travel surcharge logic is
+                            ready. Google Maps API key required to auto-detect distance. Currently inactive.</p>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header"><span class="panel-title">Preview</span></div>
+                    <div class="panel-body">
+                        <div id="pricePreview" style="font-size:0.85rem;color:var(--text-muted);line-height:2"></div>
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:1rem;margin-top:1.25rem">
+                    <button class="ab ab-accent" style="padding:0.75rem 2rem" onclick="savePricing()">💾 Save
+                        Pricing</button>
+                    <button class="ab ab-outline" onclick="loadPricing()">↺ Reset</button>
+                </div>
+            </div>
+        </main>
+    </div>
+    <div id="toast-container" class="toast-container"></div>
+    <script src="../js/app.js"></script>
+    <script>
+        const fields = ['basePrice', 'weeklyRate', 'bedroomRate', 'bathroomRate', 'livingRate', 'diningRate', 'garageRate', 'occupiedSurcharge', 'travelSurcharge'];
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await seedDatabase();
+            if (!Auth.requireAdmin()) return;
+            const u = Auth.current();
+            document.getElementById('userName').textContent = u.name;
+            document.getElementById('userAvatar').textContent = u.name.charAt(0);
+            loadPricing();
+            fields.forEach(f => document.getElementById(f)?.addEventListener('input', updatePreview));
+        });
+
+        function loadPricing() {
+            const c = Pricing.getConfig();
+            fields.forEach(f => { const el = document.getElementById(f); if (el) el.value = c[f] || 0; });
+            updatePreview();
+        }
+
+        function savePricing() {
+            const config = {};
+            fields.forEach(f => { config[f] = parseFloat(document.getElementById(f)?.value) || 0; });
+            config.baseWeeks = 6;
+            Pricing.saveConfig(config);
+            logActivity('Pricing config updated', Auth.current()?.name);
+            toast('Pricing saved successfully!', 'success');
+            updatePreview();
+        }
+
+        function updatePreview() {
+            const get = id => parseFloat(document.getElementById(id)?.value) || 0;
+            const base = get('basePrice');
+            const weekly = get('weeklyRate');
+            const bed = get('bedroomRate');
+            const bath = get('bathroomRate');
+            const living = get('livingRate');
+            const dining = get('diningRate');
+            const garage = get('garageRate');
+            const occupied = get('occupiedSurcharge');
+            const travel = get('travelSurcharge');
+            const fmt = v => v > 0 ? `$${v.toFixed(2)}` : 'TBD';
+            const sample = base + (3 * bed) + (2 * bath) + (1 * living) + (1 * dining);
+            document.getElementById('pricePreview').innerHTML = `
+    <strong>Example: 3 bed / 2 bath / 1 living / 1 dining (vacant, within 50km)</strong><br>
+    Base Package: ${fmt(base)}<br>
+    3 Bedrooms × ${fmt(bed)} = ${fmt(3 * bed)}<br>
+    2 Bathrooms × ${fmt(bath)} = ${fmt(2 * bath)}<br>
+    1 Living × ${fmt(living)} = ${fmt(living)}<br>
+    1 Dining × ${fmt(dining)} = ${fmt(dining)}<br>
+    <strong>Estimated Total: ${sample > 0 ? '$' + sample.toFixed(2) : 'TBD'}</strong><br><br>
+    Weekly extension rate: ${fmt(weekly)}/week<br>
+    Occupied surcharge: ${fmt(occupied)}<br>
+    Travel surcharge (>50km): ${fmt(travel)}`;
+        }
+    </script>
+</body>
+
+</html>

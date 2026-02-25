@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job History | MSS Agent Portal</title>
+    <link rel="stylesheet" href="../css/admin.css">
+</head>
+
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <div class="sidebar-logo-name">Modern Space Styling</div>
+                <div class="sidebar-logo-sub">Agent Portal</div>
+            </div>
+            <div class="sidebar-section">
+                <a class="sidebar-link" href="dashboard.html"><span class="sidebar-icon">📋</span> My Active Jobs</a>
+                <a class="sidebar-link active" href="history.html"><span class="sidebar-icon">📂</span> Job History</a>
+                <a class="sidebar-link" href="../booking.html" target="_blank"><span class="sidebar-icon">➕</span> Book
+                    New Staging</a>
+            </div>
+            <div class="sidebar-footer">
+                <a class="sidebar-link" href="../index.html" style="padding:0"><span class="sidebar-icon">🌐</span> View
+                    Website</a>
+                <a class="sidebar-link" href="#" onclick="Auth.logout()"
+                    style="padding:0;margin-top:0.5rem;color:#F87171"><span class="sidebar-icon">🚪</span> Logout</a>
+            </div>
+        </aside>
+        <header class="topbar">
+            <div class="topbar-title">Job History</div>
+            <div class="topbar-right">
+                <div class="topbar-user">
+                    <div class="user-avatar" id="userAvatar">A</div><span id="userName">Agent</span>
+                </div>
+            </div>
+        </header>
+        <main class="main-content">
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">All My Bookings</span>
+                    <input class="search-input" id="histSearch" placeholder="Search address, job#..."
+                        style="width:260px" oninput="render()">
+                </div>
+                <div class="tbl-wrap">
+                    <table class="tbl">
+                        <thead>
+                            <tr>
+                                <th>Job #</th>
+                                <th>Address</th>
+                                <th>Install Date</th>
+                                <th>End Date</th>
+                                <th>Rooms</th>
+                                <th>Price</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="histTbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+    <div id="toast-container" class="toast-container"></div>
+    <script src="../js/app.js"></script>
+    <script>
+        const STATUS_LABELS = { pending: 'Pending', confirmed: 'Confirmed', on_the_way: 'On The Way', arrived: 'Arrived', active: 'Active', pickup_ready: 'Pickup Ready', closed: 'Closed' };
+        const STATUS_BADGES = { pending: 'b-pending', confirmed: 'b-confirmed', on_the_way: 'b-way', arrived: 'b-arrived', active: 'b-active', pickup_ready: 'b-pickup', closed: 'b-closed' };
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await seedDatabase();
+            if (!Auth.requireAgent()) return;
+            const u = Auth.current();
+            document.getElementById('userName').textContent = u.name;
+            document.getElementById('userAvatar').textContent = u.name.charAt(0);
+            render();
+        });
+
+        function render() {
+            const u = Auth.current();
+            const search = document.getElementById('histSearch').value.toLowerCase();
+            let jobs = DB.query(KEYS.BOOKINGS, b => b.agentEmail === u.email);
+            if (search) jobs = jobs.filter(j => (j.jobNumber + j.address).toLowerCase().includes(search));
+            jobs = jobs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            document.getElementById('histTbody').innerHTML = jobs.map(b => `<tr>
+    <td><strong style="color:var(--accent)">${b.jobNumber}</strong></td>
+    <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${b.address}</td>
+    <td>${DateUtils.format(b.installDate)}</td>
+    <td>${b.endDate ? DateUtils.format(b.endDate) : '—'}</td>
+    <td><small>🛏${b.bedrooms} 🚿${b.bathrooms} 🛋${b.livingAreas || 0}</small></td>
+    <td>${Pricing.format(b.estimatedPrice)}</td>
+    <td><span class="b ${STATUS_BADGES[b.status] || 'b-pending'}">${STATUS_LABELS[b.status] || b.status}</span></td>
+  </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-muted)">No jobs found<br><a href="../booking.html" style="color:var(--accent)">Book your first staging →</a></td></tr>';
+        }
+    </script>
+</body>
+
+</html>
