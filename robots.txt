@@ -2,7 +2,10 @@ User-agent: *
 Allow: /
 Disallow: /admin/
 Disallow: /portal/
+Disallow: /api/
 Disallow: /js/
 Disallow: /css/
+Disallow: /.well-known/
+Disallow: /.claude/
 
 Sitemap: https://www.modernspacestyling.com.au/sitemap.xml

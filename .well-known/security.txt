@@ -1,0 +1,5 @@
+Contact: mailto:security@modernspacestyling.com.au
+Contact: mailto:hello@modernspacestyling.com.au
+Preferred-Languages: en
+Canonical: https://www.modernspacestyling.com.au/.well-known/security.txt
+Expires: 2027-03-30T00:00:00.000Z

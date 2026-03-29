@@ -26,7 +26,9 @@ const KEYS = {
 // ============================================================
 const Crypto = {
   async getKey() {
-    const raw = 'MSS_AES_KEY_2026_GEELONG_VIC_PROD'; // In prod: from env
+    // Local dev only — in production, lockbox encryption happens server-side
+    // via LOCKBOX_ENCRYPTION_KEY env var in /api/create-booking.js
+    const raw = 'LOCAL_DEV_DEMO_KEY_NOT_FOR_PROD_X';
     const enc = new TextEncoder().encode(raw.padEnd(32, '0').slice(0, 32));
     return await window.crypto.subtle.importKey('raw', enc, 'AES-GCM', false, ['encrypt', 'decrypt']);
   },
@@ -587,12 +589,66 @@ SMS.buildTemplate = function (key, booking) {
 };
 
 // ============================================================
+// CSRF TOKEN
+// ============================================================
+const CSRF = {
+  generate() {
+    const token = Array.from(window.crypto.getRandomValues(new Uint8Array(32)))
+      .map(b => b.toString(16).padStart(2, '0')).join('');
+    sessionStorage.setItem('mss_csrf', token);
+    return token;
+  },
+  get() {
+    return sessionStorage.getItem('mss_csrf') || this.generate();
+  },
+};
+
+// ============================================================
+// LOGIN BRUTE-FORCE PROTECTION
+// ============================================================
+const LoginGuard = {
+  MAX_ATTEMPTS: 5,
+  LOCKOUT_MS: 15 * 60 * 1000, // 15 minutes
+  _key: 'mss_login_guard',
+  _getData() {
+    try { return JSON.parse(localStorage.getItem(this._key)) || {}; } catch { return {}; }
+  },
+  recordFail() {
+    const d = this._getData();
+    d.attempts = (d.attempts || 0) + 1;
+    d.lastAttempt = Date.now();
+    if (d.attempts >= this.MAX_ATTEMPTS) d.lockedUntil = Date.now() + this.LOCKOUT_MS;
+    localStorage.setItem(this._key, JSON.stringify(d));
+    return d;
+  },
+  isLocked() {
+    const d = this._getData();
+    if (d.lockedUntil && Date.now() < d.lockedUntil) {
+      const mins = Math.ceil((d.lockedUntil - Date.now()) / 60000);
+      return { locked: true, minutes: mins };
+    }
+    if (d.lockedUntil && Date.now() >= d.lockedUntil) {
+      localStorage.removeItem(this._key);
+    }
+    return { locked: false };
+  },
+  reset() {
+    localStorage.removeItem(this._key);
+  },
+  attemptsLeft() {
+    const d = this._getData();
+    return Math.max(0, this.MAX_ATTEMPTS - (d.attempts || 0));
+  }
+};
+
+// ============================================================
 // INIT
 // ============================================================
 document.addEventListener('DOMContentLoaded', async () => {
   await seedDatabase();
   initNav();
   initScrollAnimations();
+  CSRF.generate(); // Generate CSRF token on page load
   // Run check once per session
   if (!sessionStorage.getItem('mss_cron_ran')) {
     runDailyCountdownCheck();
