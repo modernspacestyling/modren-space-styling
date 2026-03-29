@@ -170,7 +170,7 @@ async function seedDatabase() {
     basePrice: 800,          // Base 6-week package
     baseWeeks: 6,
     weeklyRate: 200,         // $200/week extension + GST
-    travelSurcharge: 50,     // $50 over 50km
+    travelSurcharge: 50,     // $50 over 100km
     occupiedSurcharge: 300,  // Occupied property surcharge
     bedroomRate: 250,        // Per bedroom
     bathroomRate: 150,       // Per bathroom

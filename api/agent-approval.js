@@ -82,7 +82,7 @@ module.exports = async function handler(req, res) {
         } else {
             smsBody =
                 `Hi ${agent.name}, unfortunately your Modern Space Styling agent registration could not be approved at this time. ` +
-                `Please contact us at hello@modernspacestyling.com.au for assistance.`;
+                `Please contact us at modrenspacestyling@gmail.com for assistance.`;
         }
 
         try {

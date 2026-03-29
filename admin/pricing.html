@@ -90,10 +90,10 @@
                     <div class="panel-header"><span class="panel-title">🚗 Travel Surcharge</span></div>
                     <div class="panel-body">
                         <div class="f-row">
-                            <div class="f-group"><label class="f-label">Travel Surcharge ($ over 50km)</label><input
+                            <div class="f-group"><label class="f-label">Travel Surcharge ($ over 100km)</label><input
                                     type="number" id="travelSurcharge" class="f-control" placeholder="50" min="0"></div>
                             <div class="f-group"><label class="f-label">Free Radius (km)</label><input type="number"
-                                    id="freeRadius" class="f-control" value="50" min="0" disabled></div>
+                                    id="freeRadius" class="f-control" value="100" min="0" disabled></div>
                         </div>
                         <p style="font-size:0.78rem;color:var(--text-muted);margin-top:0.5rem">Travel surcharge logic is
                             ready. Google Maps API key required to auto-detect distance. Currently inactive.</p>
@@ -160,7 +160,7 @@
             const fmt = v => v > 0 ? `$${v.toFixed(2)}` : 'TBD';
             const sample = base + (3 * bed) + (2 * bath) + (1 * living) + (1 * dining);
             document.getElementById('pricePreview').innerHTML = `
-    <strong>Example: 3 bed / 2 bath / 1 living / 1 dining (vacant, within 50km)</strong><br>
+    <strong>Example: 3 bed / 2 bath / 1 living / 1 dining (vacant, within 100km)</strong><br>
     Base Package: ${fmt(base)}<br>
     3 Bedrooms × ${fmt(bed)} = ${fmt(3 * bed)}<br>
     2 Bathrooms × ${fmt(bath)} = ${fmt(2 * bath)}<br>
@@ -169,7 +169,7 @@
     <strong>Estimated Total: ${sample > 0 ? '$' + sample.toFixed(2) : 'TBD'}</strong><br><br>
     Weekly extension rate: ${fmt(weekly)}/week<br>
     Occupied surcharge: ${fmt(occupied)}<br>
-    Travel surcharge (>50km): ${fmt(travel)}`;
+    Travel surcharge (>100km): ${fmt(travel)}`;
         }
     </script>
 </body>
