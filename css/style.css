@@ -6,19 +6,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  /* Luxury Color Palette */
-  --color-sand: #C5B39A;
-  --color-sand-light: #E8DDD0;
-  --color-sand-dark: #A8956E;
-  --color-charcoal: #2C2C2C;
-  --color-charcoal-mid: #4A4A4A;
-  --color-cream: #FAF7F2;
+  /* Luxury Color Palette — Premium Property Staging */
+  --color-sand: #BFA88A;
+  --color-sand-light: #E5DDD2;
+  --color-sand-dark: #A8926E;
+  --color-charcoal: #1C1C1C;
+  --color-charcoal-mid: #3A3A3A;
+  --color-cream: #FAFAF7;
   --color-white: #FFFFFF;
-  --color-slate: #1A1A2E;
-  --color-mist: #F0EBE3;
-  --color-gold: #C8A24A;
-  --color-gold-light: #E0BF6A;
-  --color-nav-bg: #111111;
+  --color-slate: #0F0F1A;
+  --color-mist: #F2EDE6;
+  --color-gold: #B8963E;
+  --color-gold-light: #D4AF5C;
+  --color-nav-bg: #0A0A0A;
 
   /* Semantic Colors */
   --color-success: #4CAF7D;
@@ -325,23 +325,39 @@ p {
 .nav-logo {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 2px;
+  position: relative;
 }
 
 .nav-logo-name {
   font-family: var(--font-heading);
-  font-size: 1.25rem;
+  font-size: 1.35rem;
   font-weight: 700;
   color: #FFFFFF;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.06em;
+  line-height: 1.1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nav-logo-name::before {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 28px;
+  background: linear-gradient(180deg, var(--color-gold) 0%, var(--color-gold-light) 100%);
+  border-radius: 2px;
+  flex-shrink: 0;
 }
 
 .nav-logo-tagline {
-  font-size: 0.65rem;
-  letter-spacing: 0.15em;
+  font-size: 0.6rem;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--color-gold);
-  font-weight: 500;
+  font-weight: 600;
+  padding-left: calc(3px + 0.5rem);
 }
 
 .nav-links {
