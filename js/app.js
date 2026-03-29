@@ -481,10 +481,15 @@ function closeAllModals() { $$('.modal-overlay').forEach(m => m.classList.remove
 
 // Scroll animations
 function initScrollAnimations() {
+  // Use lower threshold for faster triggering + rootMargin to start early
   const observer = new IntersectionObserver(entries => {
     entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
-  }, { threshold: 0.12 });
+  }, { threshold: 0.05, rootMargin: '0px 0px 60px 0px' });
   $$('.animate-on-scroll').forEach(el => observer.observe(el));
+  // Fallback: if elements still not visible after 1.5s, force show
+  setTimeout(() => {
+    $$('.animate-on-scroll:not(.visible)').forEach(el => el.classList.add('visible'));
+  }, 1500);
 }
 
 // Sticky nav

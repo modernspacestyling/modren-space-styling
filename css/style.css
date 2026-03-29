@@ -453,7 +453,7 @@ p {
 .hero-bg {
   position: absolute;
   inset: 0;
-  background-image: url('https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1600&q=80');
+  background-image: url('https://images.unsplash.com/photo-1600210492493-0946911123ea?w=1920&q=85');
   background-size: cover;
   background-position: center;
   transform: scale(1.05);
@@ -1262,14 +1262,23 @@ textarea.form-control {
 }
 
 .animate-on-scroll {
-  opacity: 0;
-  transform: translateY(28px);
-  transition: all 0.7s ease;
+  opacity: 0.15;
+  transform: translateY(18px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
 }
 
 .animate-on-scroll.visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* Fallback: if JS disabled or slow, show content after 1s */
+@media (prefers-reduced-motion: reduce) {
+  .animate-on-scroll {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }
 
 /* ============================================================
