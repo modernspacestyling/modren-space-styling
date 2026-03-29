@@ -18,6 +18,7 @@ const KEYS = {
   ACTIVITY: 'mss_activity',
   USERS: 'mss_users',
   SESSION: 'mss_session',
+  PHOTO_BOOKINGS: 'mss_photo_bookings',
 };
 
 // ============================================================

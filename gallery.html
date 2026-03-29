@@ -147,6 +147,7 @@
             <ul class="nav-links">
                 <li><a href="index.html" class="nav-link">Home</a></li>
                 <li><a href="services.html" class="nav-link">Services</a></li>
+                <li><a href="photography.html" class="nav-link">Photography</a></li>
                 <li><a href="gallery.html" class="nav-link active">Gallery</a></li>
                 <li><a href="contact.html" class="nav-link">Contact</a></li>
             </ul>
@@ -156,6 +157,7 @@
     </nav>
     <div class="nav-mobile">
         <a href="index.html" class="nav-link">Home</a><a href="services.html" class="nav-link">Services</a>
+        <a href="photography.html" class="nav-link">Photography</a>
         <a href="gallery.html" class="nav-link">Gallery</a><a href="contact.html" class="nav-link">Contact</a>
         <a href="booking.html" class="btn btn-gold" style="text-align:center">Book Now</a>
     </div>
@@ -175,6 +177,7 @@
                 <button class="filter-btn" data-filter="bedroom">Bedroom</button>
                 <button class="filter-btn" data-filter="dining">Dining</button>
                 <button class="filter-btn" data-filter="outdoor">Outdoor</button>
+                <button class="filter-btn" data-filter="photography">Photography</button>
             </div>
             <div class="masonry" id="gallery">
                 <div class="masonry-item" data-cat="living" onclick="openLightbox(0)"><img
@@ -232,6 +235,23 @@
                         src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80" alt="Alfresco">
                     <div class="masonry-overlay">🔍</div>
                 </div>
+                <!-- Photography samples -->
+                <div class="masonry-item" data-cat="photography" onclick="openLightbox(12)"><img
+                        src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=600&q=80" alt="Property exterior photography">
+                    <div class="masonry-overlay">🔍</div>
+                </div>
+                <div class="masonry-item" data-cat="photography" onclick="openLightbox(13)"><img
+                        src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=600&q=80" alt="Aerial drone shot">
+                    <div class="masonry-overlay">🔍</div>
+                </div>
+                <div class="masonry-item" data-cat="photography" onclick="openLightbox(14)"><img
+                        src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&q=80" alt="Twilight property photo">
+                    <div class="masonry-overlay">🔍</div>
+                </div>
+                <div class="masonry-item" data-cat="photography" onclick="openLightbox(15)"><img
+                        src="https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=600&q=80" alt="Modern home exterior">
+                    <div class="masonry-overlay">🔍</div>
+                </div>
             </div>
         </div>
     </section>
@@ -273,6 +293,10 @@
             'https://images.unsplash.com/photo-1600489000022-c2086d79f9d4?w=1200&q=90',
             'https://images.unsplash.com/photo-1600607687939-ce8a6d8f73b3?w=1200&q=90',
             'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&q=90',
+            'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200&q=90',
+            'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1200&q=90',
+            'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&q=90',
+            'https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=1200&q=90',
         ];
         let cur = 0;
         function openLightbox(i) { cur = i; document.getElementById('lbImg').src = imgs[i]; document.getElementById('lightbox').classList.add('open'); }

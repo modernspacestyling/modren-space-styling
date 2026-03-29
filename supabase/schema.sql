@@ -216,6 +216,37 @@ CREATE POLICY "Public can read pricing" ON pricing_config FOR SELECT USING (true
 -- All writes happen via /api functions using service_role key
 
 -- ============================================================
+-- PHOTO BOOKINGS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS photo_bookings (
+  id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  job_number      TEXT UNIQUE NOT NULL,
+  status          TEXT NOT NULL DEFAULT 'pending'
+                  CHECK (status IN ('pending','confirmed','scheduled','completed','delivered','cancelled')),
+  client_name     TEXT NOT NULL,
+  client_phone    TEXT NOT NULL,
+  client_email    TEXT NOT NULL,
+  agency          TEXT,
+  address         TEXT NOT NULL,
+  property_type   TEXT NOT NULL DEFAULT 'sale' CHECK (property_type IN ('sale', 'rent')),
+  preferred_date  DATE NOT NULL,
+  preferred_time  TEXT,
+  package         TEXT NOT NULL CHECK (package IN ('essential', 'premium', 'ultimate')),
+  bedrooms        INTEGER NOT NULL DEFAULT 0,
+  bathrooms       INTEGER NOT NULL DEFAULT 0,
+  addons          JSONB DEFAULT '[]'::jsonb,
+  notes           TEXT,
+  estimated_price NUMERIC(10,2),
+  created_at      TIMESTAMPTZ DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TRIGGER photo_bookings_updated_at BEFORE UPDATE ON photo_bookings
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+ALTER TABLE photo_bookings ENABLE ROW LEVEL SECURITY;
+
+-- ============================================================
 -- INDEXES
 -- ============================================================
 CREATE INDEX IF NOT EXISTS idx_bookings_job_number ON bookings (job_number);
@@ -223,3 +254,5 @@ CREATE INDEX IF NOT EXISTS idx_bookings_status     ON bookings (status);
 CREATE INDEX IF NOT EXISTS idx_bookings_end_date   ON bookings (end_date);
 CREATE INDEX IF NOT EXISTS idx_sms_log_job_number  ON sms_log  (job_number);
 CREATE INDEX IF NOT EXISTS idx_agents_email        ON agents   (email);
+CREATE INDEX IF NOT EXISTS idx_photo_job_number   ON photo_bookings (job_number);
+CREATE INDEX IF NOT EXISTS idx_photo_status       ON photo_bookings (status);

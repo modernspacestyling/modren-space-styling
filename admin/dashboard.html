@@ -22,6 +22,8 @@
                 <a class="sidebar-link active" href="dashboard.html"><span class="sidebar-icon">📊</span> Dashboard</a>
                 <a class="sidebar-link" href="bookings.html"><span class="sidebar-icon">📋</span> Bookings <span
                         class="sidebar-badge" id="sbPending">0</span></a>
+                <a class="sidebar-link" href="photo-bookings.html"><span class="sidebar-icon">📸</span> Photo Bookings <span
+                        class="sidebar-badge" id="sbPhotoPending">0</span></a>
                 <a class="sidebar-link" href="inventory.html"><span class="sidebar-icon">📦</span> Inventory</a>
             </div>
             <div class="sidebar-section">
@@ -145,12 +147,16 @@
             const todayJobs = bookings.filter(b => b.installDate === today);
             const lowStock = Inventory.getLowStock();
             const pendingAgents = DB.get(KEYS.AGENTS).filter(a => a.status === 'pending').length;
+            const photoBookings = DB.get(KEYS.PHOTO_BOOKINGS);
+            const photoPending = photoBookings.filter(b => b.status === 'pending').length;
 
             // Sidebar badges
             document.getElementById('sbPending').textContent = pending;
             document.getElementById('sbAgents').textContent = pendingAgents;
+            document.getElementById('sbPhotoPending').textContent = photoPending;
             if (pendingAgents === 0) document.getElementById('sbAgents').style.display = 'none';
             if (pending === 0) document.getElementById('sbPending').style.display = 'none';
+            if (photoPending === 0) document.getElementById('sbPhotoPending').style.display = 'none';
 
             // Low stock alert topbar
             if (lowStock.length) document.getElementById('lowStockAlert').style.display = 'block';
@@ -161,6 +167,7 @@
                 { label: 'Pending Bookings', value: pending, cls: pending ? 'danger' : '' },
                 { label: 'Today\'s Installs', value: todayJobs.length, cls: 'info' },
                 { label: 'Low Stock Alerts', value: lowStock.length, cls: lowStock.length ? 'danger' : '' },
+                { label: 'Photo Bookings', value: photoBookings.length, cls: 'info' },
             ];
             document.getElementById('kpiGrid').innerHTML = kpis.map(k => `
     <div class="kpi-card ${k.cls}">

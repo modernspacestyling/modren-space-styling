@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Professional real estate photography in Geelong — interior, exterior, drone, video walkthroughs, floor plans. Packages from $349.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://www.modernspacestyling.com.au/photography.html">
+    <title>Real Estate Photography | Modern Space Styling Geelong</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .photo-card {
+            background: white;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+            transition: transform 0.25s, box-shadow 0.25s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .photo-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.14);
+        }
+
+        .photo-card-header {
+            background: #111111;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .photo-card.featured .photo-card-header {
+            background: linear-gradient(135deg, #111111 0%, #1a1a1a 100%);
+            border-bottom: 3px solid #C8A24A;
+        }
+
+        .photo-card-body {
+            padding: 2rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .photo-price {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #C8A24A;
+            line-height: 1.1;
+        }
+
+        .photo-includes {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            margin-bottom: 1.5rem;
+            flex: 1;
+        }
+
+        .photo-includes li {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 0.875rem;
+            color: #4A4A4A;
+        }
+
+        .photo-includes li::before {
+            content: '\2713';
+            color: #C8A24A;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .photo-detail {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+
+        .photo-detail.reverse {
+            direction: rtl;
+        }
+
+        .photo-detail.reverse>* {
+            direction: ltr;
+        }
+
+        @media (max-width:800px) {
+
+            .photo-detail,
+            .photo-detail.reverse {
+                grid-template-columns: 1fr;
+                direction: ltr;
+            }
+        }
+
+        .photo-detail img {
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+            width: 100%;
+            height: 380px;
+            object-fit: cover;
+        }
+
+        .photo-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            margin-top: 1.25rem;
+        }
+
+        .photo-list li {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.875rem;
+        }
+
+        .photo-list li::before {
+            content: '\2713';
+            color: #C8A24A;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .addon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.25rem;
+            margin-top: 2rem;
+        }
+
+        .addon-card {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(200, 162, 74, 0.25);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .addon-card .addon-price {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem;
+            color: #C8A24A;
+            font-weight: 700;
+            margin-top: 0.5rem;
+        }
+
+        .faq-item {
+            border-bottom: 1px solid #E8DDD0;
+        }
+
+        .faq-q {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem 0;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .faq-a {
+            display: none;
+            padding-bottom: 1.25rem;
+            font-size: 0.875rem;
+            color: #6B7280;
+            line-height: 1.8;
+        }
+
+        .faq-item.open .faq-a {
+            display: block;
+        }
+
+        .faq-icon {
+            transition: transform 0.3s;
+            font-size: 1.2rem;
+            color: #C8A24A;
+        }
+
+        .faq-item.open .faq-icon {
+            transform: rotate(45deg);
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="nav nav--solid" id="mainNav" aria-label="Main navigation">
+        <div class="nav-inner">
+            <a href="index.html" class="nav-logo"><span class="nav-logo-name">Modern Space Styling</span><span
+                    class="nav-logo-tagline">Property Staging · Geelong</span></a>
+            <ul class="nav-links">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="services.html" class="nav-link">Services</a></li>
+                <li><a href="photography.html" class="nav-link active">Photography</a></li>
+                <li><a href="gallery.html" class="nav-link">Gallery</a></li>
+                <li><a href="contact.html" class="nav-link">Contact</a></li>
+            </ul>
+            <a href="booking.html" class="btn btn-gold btn-sm hide-mobile nav-cta">Book Now</a>
+            <button class="nav-toggler" aria-label="Menu"><span></span><span></span><span></span></button>
+        </div>
+    </nav>
+    <div class="nav-mobile" id="mobileMenu">
+        <a href="index.html" class="nav-link">Home</a>
+        <a href="services.html" class="nav-link">Services &amp; Pricing</a>
+        <a href="photography.html" class="nav-link">Photography</a>
+        <a href="gallery.html" class="nav-link">Gallery</a>
+        <a href="contact.html" class="nav-link">Contact</a>
+        <a href="photography-booking.html" class="btn btn-gold" style="text-align:center;display:block">Book Photography</a>
+    </div>
+
+    <!-- PAGE HEADER -->
+    <div style="background:#111111;padding:calc(var(--nav-height) + 2.5rem) 0 2.5rem">
+        <div class="container">
+            <span class="eyebrow" style="color:#C8A24A">Real Estate Media</span>
+            <h1 style="color:white;margin-top:0.5rem">Property Photography</h1>
+            <p style="color:rgba(255,255,255,0.65);max-width:560px;margin-top:0.75rem">Professional photography, video
+                walkthroughs, drone aerials and floor plans for properties listed for sale or rent across Geelong.</p>
+        </div>
+    </div>
+
+    <!-- PRICING PACKAGES -->
+    <section class="section" aria-labelledby="photoPricingHeading">
+        <div class="container">
+            <div class="section-header animate-on-scroll" style="text-align:center;margin-bottom:3rem">
+                <span class="eyebrow">Photography Packages</span>
+                <h2 id="photoPricingHeading" style="margin-top:0.5rem">Choose Your Package</h2>
+                <div style="width:60px;height:2px;background:#C8A24A;margin:1.25rem auto 0"></div>
+                <p style="max-width:600px;margin:1rem auto 0;color:#6B7280">Professional real estate media that helps
+                    your listings stand out. All packages include edited, high-resolution images delivered within 24
+                    hours.</p>
+            </div>
+
+            <div class="grid grid-3 animate-on-scroll" style="align-items:stretch">
+
+                <!-- Essential -->
+                <div class="photo-card">
+                    <div class="photo-card-header">
+                        <div
+                            style="font-size:0.72rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#C8A24A;margin-bottom:0.75rem">
+                            Essential</div>
+                        <div style="font-size:0.85rem;color:rgba(255,255,255,0.55);margin-bottom:0.5rem">Photos Only
+                        </div>
+                        <div class="photo-price">$349</div>
+                        <div style="font-size:0.8rem;color:rgba(255,255,255,0.45);margin-top:4px">+ GST</div>
+                    </div>
+                    <div class="photo-card-body">
+                        <ul class="photo-includes">
+                            <li>Up to 20 high-resolution photos</li>
+                            <li>Interior &amp; exterior coverage</li>
+                            <li>Professional editing &amp; colour correction</li>
+                            <li>Wide-angle lens photography</li>
+                            <li>Digital delivery within 24 hours</li>
+                            <li>Optimised for online listings</li>
+                        </ul>
+                        <a href="photography-booking.html?package=essential" class="btn btn-gold"
+                            style="width:100%;justify-content:center">Book Essential</a>
+                    </div>
+                </div>
+
+                <!-- Premium -->
+                <div class="photo-card featured" style="border:2px solid #C8A24A">
+                    <div class="photo-card-header" style="position:relative">
+                        <div
+                            style="position:absolute;top:-1px;left:50%;transform:translateX(-50%);background:#C8A24A;color:black;font-size:0.65rem;font-weight:700;letter-spacing:0.1em;padding:4px 14px;border-radius:0 0 8px 8px">
+                            MOST POPULAR</div>
+                        <div
+                            style="font-size:0.72rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#C8A24A;margin-bottom:0.75rem;padding-top:1rem">
+                            Premium</div>
+                        <div style="font-size:0.85rem;color:rgba(255,255,255,0.55);margin-bottom:0.5rem">Photos + Video
+                            + Floor Plan</div>
+                        <div class="photo-price">$449</div>
+                        <div style="font-size:0.8rem;color:rgba(255,255,255,0.45);margin-top:4px">+ GST</div>
+                    </div>
+                    <div class="photo-card-body">
+                        <ul class="photo-includes">
+                            <li>Up to 30 high-resolution photos</li>
+                            <li>Interior &amp; exterior coverage</li>
+                            <li>2-minute video walkthrough</li>
+                            <li>2D floor plan drawing</li>
+                            <li>Professional editing &amp; grading</li>
+                            <li>Digital delivery within 24 hours</li>
+                            <li>Optimised for REA &amp; Domain</li>
+                        </ul>
+                        <a href="photography-booking.html?package=premium" class="btn btn-gold"
+                            style="width:100%;justify-content:center">Book Premium</a>
+                    </div>
+                </div>
+
+                <!-- Ultimate -->
+                <div class="photo-card">
+                    <div class="photo-card-header">
+                        <div
+                            style="font-size:0.72rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#C8A24A;margin-bottom:0.75rem">
+                            Ultimate</div>
+                        <div style="font-size:0.85rem;color:rgba(255,255,255,0.55);margin-bottom:0.5rem">Full Media
+                            Package</div>
+                        <div class="photo-price">$599</div>
+                        <div style="font-size:0.8rem;color:rgba(255,255,255,0.45);margin-top:4px">+ GST</div>
+                    </div>
+                    <div class="photo-card-body">
+                        <ul class="photo-includes">
+                            <li>Up to 40 high-resolution photos</li>
+                            <li>Interior, exterior &amp; street view</li>
+                            <li>3-minute cinematic video walkthrough</li>
+                            <li>Drone aerial photography &amp; video</li>
+                            <li>2D floor plan drawing</li>
+                            <li>Interactive virtual tour</li>
+                            <li>Premium editing &amp; colour grading</li>
+                            <li>Delivery within 24 hours</li>
+                        </ul>
+                        <a href="photography-booking.html?package=ultimate" class="btn btn-gold"
+                            style="width:100%;justify-content:center">Book Ultimate</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="animate-on-scroll"
+                style="background:#FFF9F0;border:1px solid rgba(200,162,74,0.3);border-radius:12px;padding:1.75rem 2rem;margin-top:2.5rem;text-align:center">
+                <p style="color:#6B7280;font-size:0.875rem;line-height:1.9;margin:0">
+                    All prices exclude GST. Packages available for properties <strong>for sale</strong> and <strong>for
+                        rent</strong> across Geelong and surrounds.<br>
+                    <strong style="color:#C8A24A">Bundle with staging and receive 10% off photography.</strong>
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ADD-ONS -->
+    <section class="section" style="background:#111111" aria-labelledby="addonsHeading">
+        <div class="container">
+            <div class="animate-on-scroll" style="text-align:center;margin-bottom:2rem">
+                <span class="eyebrow" style="color:#C8A24A">Enhance Your Listing</span>
+                <h2 id="addonsHeading" style="color:white;margin-top:0.5rem">Add-Ons</h2>
+                <div style="width:60px;height:2px;background:#C8A24A;margin:1.25rem auto 0"></div>
+            </div>
+            <div class="addon-grid animate-on-scroll">
+                <div class="addon-card">
+                    <div style="font-size:2rem;margin-bottom:0.5rem">🌅</div>
+                    <strong style="color:white">Twilight Photography</strong>
+                    <p style="font-size:0.82rem;color:rgba(255,255,255,0.55);margin-top:0.5rem">Stunning dusk/twilight
+                        exterior shots that make your listing glow.</p>
+                    <div class="addon-price">+$150</div>
+                    <div style="font-size:0.72rem;color:rgba(255,255,255,0.4);margin-top:2px">+ GST</div>
+                </div>
+                <div class="addon-card">
+                    <div style="font-size:2rem;margin-bottom:0.5rem">🚁</div>
+                    <strong style="color:white">Drone Only</strong>
+                    <p style="font-size:0.82rem;color:rgba(255,255,255,0.55);margin-top:0.5rem">Aerial photos &amp;
+                        video showcasing the property and surrounds.</p>
+                    <div class="addon-price">+$200</div>
+                    <div style="font-size:0.72rem;color:rgba(255,255,255,0.4);margin-top:2px">+ GST</div>
+                </div>
+                <div class="addon-card">
+                    <div style="font-size:2rem;margin-bottom:0.5rem">🖥</div>
+                    <strong style="color:white">Virtual Staging</strong>
+                    <p style="font-size:0.82rem;color:rgba(255,255,255,0.55);margin-top:0.5rem">Digitally furnish empty
+                        rooms in your photos for maximum buyer appeal.</p>
+                    <div class="addon-price">+$100<span
+                            style="font-size:0.8rem;font-family:Inter,sans-serif">/room</span></div>
+                    <div style="font-size:0.72rem;color:rgba(255,255,255,0.4);margin-top:2px">+ GST</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SERVICES DETAIL -->
+    <section class="section section--mist" aria-labelledby="photoServicesHeading">
+        <div class="container">
+            <div class="section-header animate-on-scroll" style="text-align:center;margin-bottom:3.5rem">
+                <span class="eyebrow">What We Deliver</span>
+                <h2 id="photoServicesHeading" style="margin-top:0.5rem">Our Photography Services</h2>
+                <div style="width:60px;height:2px;background:#C8A24A;margin:1.25rem auto 0"></div>
+            </div>
+
+            <div class="photo-detail animate-on-scroll" style="margin-bottom:5rem">
+                <img src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80"
+                    alt="Professional real estate photography Geelong">
+                <div>
+                    <span class="eyebrow">High Impact</span>
+                    <h3 style="margin:0.5rem 0;font-size:1.6rem">Interior &amp; Exterior Photography</h3>
+                    <div style="width:48px;height:2px;background:#C8A24A;margin:1rem 0"></div>
+                    <p>Crisp, professional images that showcase every room at its best. Wide-angle coverage, perfect
+                        lighting, and expert composition to help buyers and renters fall in love with the property.</p>
+                    <ul class="photo-list">
+                        <li>HDR photography for perfect exposure</li>
+                        <li>Wide-angle lens for spacious feel</li>
+                        <li>Professional colour correction</li>
+                        <li>Optimised for REA, Domain &amp; social media</li>
+                        <li>Same-day or next-day delivery</li>
+                    </ul>
+                    <a href="photography-booking.html" class="btn btn-gold" style="margin-top:1.5rem">Book
+                        Photography</a>
+                </div>
+            </div>
+
+            <div class="photo-detail reverse animate-on-scroll" style="margin-bottom:5rem">
+                <img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80"
+                    alt="Drone aerial photography Geelong property">
+                <div>
+                    <span class="eyebrow">Bird's Eye View</span>
+                    <h3 style="margin:0.5rem 0;font-size:1.6rem">Drone Aerial Photography &amp; Video</h3>
+                    <div style="width:48px;height:2px;background:#C8A24A;margin:1rem 0"></div>
+                    <p>Stunning aerial perspectives that show the full property, land size, neighbourhood, and proximity
+                        to local amenities. CASA-certified drone operators for safe, legal flights.</p>
+                    <ul class="photo-list">
+                        <li>4K aerial photos &amp; video</li>
+                        <li>Property boundary &amp; land overview</li>
+                        <li>Neighbourhood &amp; lifestyle context</li>
+                        <li>CASA-certified operators</li>
+                    </ul>
+                    <a href="photography-booking.html?package=ultimate" class="btn btn-gold"
+                        style="margin-top:1.5rem">Book with Drone</a>
+                </div>
+            </div>
+
+            <div class="photo-detail animate-on-scroll">
+                <img src="https://images.unsplash.com/photo-1600607687939-ce8a6d8f73b3?w=800&q=80"
+                    alt="Property video walkthrough and floor plan Geelong">
+                <div>
+                    <span class="eyebrow">Full Experience</span>
+                    <h3 style="margin:0.5rem 0;font-size:1.6rem">Video Walkthroughs &amp; Floor Plans</h3>
+                    <div style="width:48px;height:2px;background:#C8A24A;margin:1rem 0"></div>
+                    <p>Give buyers a complete picture with cinematic video tours and accurate floor plans. Perfect for
+                        interstate buyers, investors, and premium listings that demand the full experience.</p>
+                    <ul class="photo-list">
+                        <li>Cinematic video with smooth transitions</li>
+                        <li>Background music &amp; branding overlay</li>
+                        <li>Accurate 2D floor plan drawings</li>
+                        <li>Interactive virtual tour option</li>
+                    </ul>
+                    <a href="photography-booking.html?package=premium" class="btn btn-gold"
+                        style="margin-top:1.5rem">Book Video + Floor Plan</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="section" aria-labelledby="photoHowHeading">
+        <div class="container">
+            <div class="section-header animate-on-scroll" style="text-align:center;margin-bottom:3rem">
+                <span class="eyebrow">Simple Process</span>
+                <h2 id="photoHowHeading" style="margin-top:0.5rem">How It Works</h2>
+                <div style="width:60px;height:2px;background:#C8A24A;margin:1.25rem auto 0"></div>
+            </div>
+            <div class="grid grid-4">
+                <div class="animate-on-scroll" style="text-align:center">
+                    <div
+                        style="width:64px;height:64px;background:#111111;border-radius:50%;margin:0 auto 1.25rem;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;color:#C8A24A">
+                        1</div>
+                    <h3 style="font-size:1rem;margin-bottom:0.5rem">Book Online</h3>
+                    <p style="font-size:0.875rem">Choose your package, select your date, and book in minutes.</p>
+                </div>
+                <div class="animate-on-scroll" style="text-align:center">
+                    <div
+                        style="width:64px;height:64px;background:#111111;border-radius:50%;margin:0 auto 1.25rem;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;color:#C8A24A">
+                        2</div>
+                    <h3 style="font-size:1rem;margin-bottom:0.5rem">We Confirm</h3>
+                    <p style="font-size:0.875rem">Receive SMS confirmation with your photographer's details.</p>
+                </div>
+                <div class="animate-on-scroll" style="text-align:center">
+                    <div
+                        style="width:64px;height:64px;background:#111111;border-radius:50%;margin:0 auto 1.25rem;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;color:#C8A24A">
+                        3</div>
+                    <h3 style="font-size:1rem;margin-bottom:0.5rem">We Shoot</h3>
+                    <p style="font-size:0.875rem">Our team arrives on time. Professional setup and capture.</p>
+                </div>
+                <div class="animate-on-scroll" style="text-align:center">
+                    <div
+                        style="width:64px;height:64px;background:#111111;border-radius:50%;margin:0 auto 1.25rem;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;color:#C8A24A">
+                        4</div>
+                    <h3 style="font-size:1rem;margin-bottom:0.5rem">Delivered</h3>
+                    <p style="font-size:0.875rem">Edited images, video &amp; plans delivered within 24 hours.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOR SALE & FOR RENT -->
+    <section class="section" style="background:#111111" aria-labelledby="propertyTypesHeading">
+        <div class="container">
+            <div class="animate-on-scroll" style="text-align:center;margin-bottom:3rem">
+                <span class="eyebrow" style="color:#C8A24A">For Every Listing</span>
+                <h2 id="propertyTypesHeading" style="color:white;margin-top:0.5rem">Sale &amp; Rental Properties</h2>
+                <div style="width:60px;height:2px;background:#C8A24A;margin:1.25rem auto 0"></div>
+            </div>
+            <div class="grid grid-2 animate-on-scroll">
+                <div
+                    style="background:rgba(255,255,255,0.06);border:1px solid rgba(200,162,74,0.25);border-radius:16px;padding:2.5rem;text-align:center">
+                    <div style="font-size:2.5rem;margin-bottom:1rem">🏡</div>
+                    <h3 style="color:white;font-size:1.3rem;margin-bottom:0.75rem">For Sale</h3>
+                    <p style="color:rgba(255,255,255,0.6);font-size:0.9rem;line-height:1.8">Premium photography that
+                        helps sell faster and for more. First impressions matter — 95% of buyers start their search
+                        online.</p>
+                    <a href="photography-booking.html" class="btn btn-gold"
+                        style="margin-top:1.5rem">Book for Sale Listing</a>
+                </div>
+                <div
+                    style="background:rgba(255,255,255,0.06);border:1px solid rgba(200,162,74,0.25);border-radius:16px;padding:2.5rem;text-align:center">
+                    <div style="font-size:2.5rem;margin-bottom:1rem">🔑</div>
+                    <h3 style="color:white;font-size:1.3rem;margin-bottom:0.75rem">For Rent</h3>
+                    <p style="color:rgba(255,255,255,0.6);font-size:0.9rem;line-height:1.8">Attract quality tenants
+                        faster with professional photos. Reduce vacancy time and showcase your rental at its best.</p>
+                    <a href="photography-booking.html" class="btn btn-gold"
+                        style="margin-top:1.5rem">Book for Rental Listing</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section" aria-labelledby="photoFaqHeading">
+        <div class="container" style="max-width:760px">
+            <div class="section-header animate-on-scroll" style="text-align:center;margin-bottom:3rem">
+                <span class="eyebrow">Common Questions</span>
+                <h2 id="photoFaqHeading" style="margin-top:0.5rem">Photography FAQ</h2>
+                <div style="width:60px;height:2px;background:#C8A24A;margin:1.25rem auto 0"></div>
+            </div>
+            <div id="faqList">
+                <div class="faq-item">
+                    <div class="faq-q">How long does a photography session take? <span class="faq-icon">+</span></div>
+                    <div class="faq-a">A standard session takes 30-60 minutes depending on property size. Video
+                        walkthroughs and drone sessions may take up to 90 minutes for larger properties.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q">When will I receive my images? <span class="faq-icon">+</span></div>
+                    <div class="faq-a">All images are professionally edited and delivered within 24 hours via a secure
+                        download link. Rush delivery (same day) is available on request.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q">Do you shoot for rental properties too? <span class="faq-icon">+</span></div>
+                    <div class="faq-a">Absolutely. Our packages work for both sale and rental listings. Quality photos
+                        attract better tenants faster and reduce vacancy periods.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q">Can I bundle photography with staging? <span class="faq-icon">+</span></div>
+                    <div class="faq-a">Yes! Bundle any photography package with a staging booking and receive 10% off
+                        the photography price. Just mention it when booking or select the bundle option.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q">Are drone flights legal in my area? <span class="faq-icon">+</span></div>
+                    <div class="faq-a">Our drone operators are CASA-certified and check all local regulations before
+                        every flight. Some areas (near airports, restricted zones) may limit drone use — we'll advise
+                        you at booking.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q">What if the weather is bad on shoot day? <span class="faq-icon">+</span></div>
+                    <div class="faq-a">We'll reschedule at no extra cost if weather conditions (heavy rain, strong
+                        winds) prevent a quality shoot. We'll contact you the morning of the shoot if rescheduling is
+                        needed.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <div style="background:#111111;padding:4rem 0">
+        <div class="container" style="text-align:center">
+            <h2 style="color:white;margin-bottom:1rem">Ready to Showcase Your Listing?</h2>
+            <p style="color:rgba(255,255,255,0.6);margin-bottom:2rem">Book professional photography online. Packages
+                from $349 + GST.</p>
+            <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
+                <a href="photography-booking.html" class="btn btn-gold btn-lg">Book Photography</a>
+                <a href="booking.html" class="btn btn-light btn-lg">Book Staging</a>
+            </div>
+        </div>
+    </div>
+
+    <footer style="background:#0A0A0A;color:rgba(255,255,255,0.55);padding:2rem 0" role="contentinfo">
+        <div class="container">
+            <div
+                style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;font-size:0.78rem">
+                <span>&copy; 2026 Modern Space Styling Pty Ltd.</span><a href="index.html" style="color:#C8A24A">&larr;
+                    Back to Home</a>
+            </div>
+        </div>
+    </footer>
+
+    <div id="toast-container" class="toast-container"></div>
+    <script src="js/app.js"></script>
+    <script>
+        document.querySelectorAll('.faq-q').forEach(q => {
+            q.addEventListener('click', () => {
+                const item = q.parentElement;
+                const wasOpen = item.classList.contains('open');
+                document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+                if (!wasOpen) item.classList.add('open');
+            });
+        });
+    </script>
+</body>
+
+</html>

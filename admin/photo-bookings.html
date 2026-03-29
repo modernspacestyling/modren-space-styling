@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Bookings | MSS Admin</title>
+    <link rel="stylesheet" href="../css/admin.css">
+</head>
+
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <div class="sidebar-logo-name">Modern Space Styling</div>
+                <div class="sidebar-logo-sub">Admin Panel</div>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Main</div>
+                <a class="sidebar-link" href="dashboard.html"><span class="sidebar-icon">📊</span> Dashboard</a>
+                <a class="sidebar-link" href="bookings.html"><span class="sidebar-icon">📋</span> Bookings</a>
+                <a class="sidebar-link active" href="photo-bookings.html"><span class="sidebar-icon">📸</span> Photo Bookings</a>
+                <a class="sidebar-link" href="inventory.html"><span class="sidebar-icon">📦</span> Inventory</a>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Management</div>
+                <a class="sidebar-link" href="pricing.html"><span class="sidebar-icon">💰</span> Pricing</a>
+                <a class="sidebar-link" href="sms.html"><span class="sidebar-icon">💬</span> SMS Centre</a>
+                <a class="sidebar-link" href="team.html"><span class="sidebar-icon">👥</span> Team Contacts</a>
+                <a class="sidebar-link" href="agents.html"><span class="sidebar-icon">🏢</span> Agents</a>
+                <a class="sidebar-link" href="logs.html"><span class="sidebar-icon">📝</span> Activity Log</a>
+            </div>
+            <div class="sidebar-footer">
+                <a class="sidebar-link" href="../index.html" style="padding:0"><span class="sidebar-icon">🏠</span> View Website</a>
+                <a class="sidebar-link" href="#" onclick="Auth.logout()" style="padding:0;margin-top:0.5rem;color:#F87171"><span class="sidebar-icon">🚪</span> Logout</a>
+            </div>
+        </aside>
+
+        <header class="topbar">
+            <div class="topbar-title">Photo Bookings</div>
+            <div class="topbar-right">
+                <div class="topbar-user">
+                    <div class="user-avatar" id="userAvatar">A</div><span id="userName">Admin</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <!-- Filters -->
+            <div class="panel" style="margin-bottom:1.25rem">
+                <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:center">
+                    <input type="text" class="f-control" id="searchInput" placeholder="Search by job#, name, address..." style="flex:1;min-width:200px" oninput="renderTable()">
+                    <select class="f-control" id="statusFilter" style="width:180px" onchange="renderTable()">
+                        <option value="">All Statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="scheduled">Scheduled</option>
+                        <option value="completed">Completed</option>
+                        <option value="delivered">Delivered</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                    <select class="f-control" id="packageFilter" style="width:150px" onchange="renderTable()">
+                        <option value="">All Packages</option>
+                        <option value="essential">Essential</option>
+                        <option value="premium">Premium</option>
+                        <option value="ultimate">Ultimate</option>
+                    </select>
+                    <a href="../photography-booking.html" class="ab ab-primary ab-sm" target="_blank">+ New Photo Booking</a>
+                </div>
+            </div>
+
+            <!-- KPI row -->
+            <div class="kpi-grid" id="kpiGrid" style="margin-bottom:1.25rem"></div>
+
+            <!-- Table -->
+            <div class="panel">
+                <div class="tbl-wrap">
+                    <table class="tbl" id="photoTable">
+                        <thead>
+                            <tr>
+                                <th>Job #</th>
+                                <th>Client</th>
+                                <th>Address</th>
+                                <th>Type</th>
+                                <th>Package</th>
+                                <th>Date</th>
+                                <th>Price</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Detail Modal -->
+            <div class="modal-overlay" id="detailModal">
+                <div class="modal" style="max-width:600px">
+                    <div class="modal-header">
+                        <h3 id="modalTitle">Photo Booking Details</h3>
+                        <button class="modal-close" onclick="closeModal('detailModal')">&times;</button>
+                    </div>
+                    <div class="modal-body" id="modalBody"></div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <div id="toast-container" class="toast-container"></div>
+    <script src="../js/app.js"></script>
+    <script>
+        const PHOTO_STATUS = {
+            pending: { label: 'Pending', cls: 'b-pending' },
+            confirmed: { label: 'Confirmed', cls: 'b-confirmed' },
+            scheduled: { label: 'Scheduled', cls: 'b-info' },
+            completed: { label: 'Completed', cls: 'b-active' },
+            delivered: { label: 'Delivered', cls: 'b-closed' },
+            cancelled: { label: 'Cancelled', cls: 'b-warning' },
+        };
+
+        const PKG_LABELS = {
+            essential: 'Essential ($349)',
+            premium: 'Premium ($449)',
+            ultimate: 'Ultimate ($599)',
+        };
+
+        function photoBadge(status) {
+            const s = PHOTO_STATUS[status] || { label: status, cls: 'b-pending' };
+            return `<span class="b ${s.cls}">${s.label}</span>`;
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await seedDatabase();
+            if (!Auth.requireAdmin()) return;
+            const user = Auth.current();
+            document.getElementById('userName').textContent = user.name;
+            document.getElementById('userAvatar').textContent = user.name.charAt(0);
+            renderTable();
+        });
+
+        function renderTable() {
+            const bookings = DB.get(KEYS.PHOTO_BOOKINGS);
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const statusF = document.getElementById('statusFilter').value;
+            const pkgF = document.getElementById('packageFilter').value;
+
+            let filtered = bookings;
+            if (search) {
+                filtered = filtered.filter(b =>
+                    (b.jobNumber || '').toLowerCase().includes(search) ||
+                    (b.clientName || '').toLowerCase().includes(search) ||
+                    (b.address || '').toLowerCase().includes(search)
+                );
+            }
+            if (statusF) filtered = filtered.filter(b => b.status === statusF);
+            if (pkgF) filtered = filtered.filter(b => b.package === pkgF);
+
+            // Sort newest first
+            filtered.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
+            // KPIs
+            const total = bookings.length;
+            const pending = bookings.filter(b => b.status === 'pending').length;
+            const confirmed = bookings.filter(b => b.status === 'confirmed' || b.status === 'scheduled').length;
+            const delivered = bookings.filter(b => b.status === 'delivered').length;
+            const revenue = bookings.filter(b => b.status !== 'cancelled')
+                .reduce((sum, b) => sum + (b.estimatedPrice || 0), 0);
+
+            document.getElementById('kpiGrid').innerHTML = [
+                { label: 'Total Bookings', value: total, cls: '' },
+                { label: 'Pending', value: pending, cls: pending ? 'danger' : '' },
+                { label: 'Confirmed/Scheduled', value: confirmed, cls: 'info' },
+                { label: 'Est. Revenue', value: '$' + revenue.toLocaleString('en-AU'), cls: 'success' },
+            ].map(k => `<div class="kpi-card ${k.cls}"><div class="kpi-label">${k.label}</div><div class="kpi-value">${k.value}</div></div>`).join('');
+
+            // Table
+            document.getElementById('tableBody').innerHTML = filtered.map(b => `
+                <tr>
+                    <td><a href="#" onclick="showDetail('${b.id}');return false" style="color:var(--accent);font-weight:600">${b.jobNumber || '\u2014'}</a></td>
+                    <td>${b.clientName || '\u2014'}</td>
+                    <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${b.address || '\u2014'}</td>
+                    <td><span style="text-transform:capitalize;font-size:0.78rem;font-weight:600">${b.propertyType || 'sale'}</span></td>
+                    <td><span style="font-size:0.78rem;font-weight:600;text-transform:capitalize">${b.package || '\u2014'}</span></td>
+                    <td style="white-space:nowrap">${DateUtils.format(b.preferredDate)}</td>
+                    <td style="font-weight:600">$${(b.estimatedPrice || 0).toLocaleString('en-AU')}</td>
+                    <td>
+                        <select class="f-control" style="font-size:0.75rem;padding:4px 8px;min-width:120px" onchange="updateStatus('${b.id}', this.value)">
+                            ${Object.keys(PHOTO_STATUS).map(s => `<option value="${s}" ${b.status === s ? 'selected' : ''}>${PHOTO_STATUS[s].label}</option>`).join('')}
+                        </select>
+                    </td>
+                    <td><button class="ab ab-outline ab-sm" onclick="showDetail('${b.id}')">View</button></td>
+                </tr>
+            `).join('') || '<tr><td colspan="9" class="empty-state">No photo bookings found</td></tr>';
+        }
+
+        function updateStatus(id, newStatus) {
+            DB.update(KEYS.PHOTO_BOOKINGS, id, { status: newStatus });
+            const booking = DB.getOne(KEYS.PHOTO_BOOKINGS, id);
+            logActivity(`Photo booking ${booking?.jobNumber} status changed to ${newStatus}`);
+            toast(`Status updated to ${PHOTO_STATUS[newStatus]?.label || newStatus}`, 'success');
+            renderTable();
+        }
+
+        function showDetail(id) {
+            const b = DB.getOne(KEYS.PHOTO_BOOKINGS, id);
+            if (!b) return;
+
+            const addonsHtml = (b.addons || []).map(a => {
+                if (a.key === 'twilight') return '<li>Twilight Photography (+$150)</li>';
+                if (a.key === 'drone') return '<li>Drone Aerial (+$200)</li>';
+                if (a.key === 'virtual_staging') return `<li>Virtual Staging (${a.rooms || 1} room${(a.rooms || 1) > 1 ? 's' : ''}) (+$${(a.rooms || 1) * 100})</li>`;
+                return '';
+            }).join('');
+
+            document.getElementById('modalTitle').textContent = b.jobNumber || 'Photo Booking';
+            document.getElementById('modalBody').innerHTML = `
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
+                    <div>
+                        <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:0.75rem">Client Details</div>
+                        <div style="font-size:0.85rem;line-height:2">
+                            <strong>Name:</strong> ${b.clientName}<br>
+                            <strong>Phone:</strong> <a href="tel:${b.clientPhone}">${b.clientPhone}</a><br>
+                            <strong>Email:</strong> <a href="mailto:${b.clientEmail}">${b.clientEmail}</a><br>
+                            ${b.agency ? `<strong>Agency:</strong> ${b.agency}<br>` : ''}
+                        </div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:0.75rem">Property Details</div>
+                        <div style="font-size:0.85rem;line-height:2">
+                            <strong>Address:</strong> ${b.address}<br>
+                            <strong>Type:</strong> <span style="text-transform:capitalize">For ${b.propertyType || 'sale'}</span><br>
+                            <strong>Rooms:</strong> ${b.bedrooms || 0} bed / ${b.bathrooms || 0} bath<br>
+                        </div>
+                    </div>
+                </div>
+                <hr style="border:none;border-top:1px solid #E8DDD0;margin:1.25rem 0">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
+                    <div>
+                        <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:0.75rem">Booking Details</div>
+                        <div style="font-size:0.85rem;line-height:2">
+                            <strong>Package:</strong> <span style="text-transform:capitalize">${b.package}</span><br>
+                            <strong>Date:</strong> ${DateUtils.format(b.preferredDate)}<br>
+                            <strong>Time:</strong> ${b.preferredTime || '09:00'}<br>
+                            <strong>Status:</strong> ${photoBadge(b.status)}<br>
+                        </div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:0.75rem">Pricing</div>
+                        <div style="font-size:0.85rem;line-height:2">
+                            <strong>Est. Price:</strong> <span style="color:var(--accent);font-weight:700;font-size:1.1rem">$${(b.estimatedPrice || 0).toLocaleString('en-AU')}</span> + GST<br>
+                            ${addonsHtml ? `<strong>Add-ons:</strong><ul style="margin:0.25rem 0 0 1rem;font-size:0.82rem">${addonsHtml}</ul>` : ''}
+                        </div>
+                    </div>
+                </div>
+                ${b.notes ? `<hr style="border:none;border-top:1px solid #E8DDD0;margin:1.25rem 0"><div style="font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:0.5rem">Notes</div><div style="font-size:0.85rem;color:#6B7280;background:#F9FAFB;padding:1rem;border-radius:8px">${b.notes}</div>` : ''}
+            `;
+            openModal('detailModal');
+        }
+    </script>
+</body>
+
+</html>
