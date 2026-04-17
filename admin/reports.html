@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Reports | MSS Admin</title>
+    <link rel="stylesheet" href="../css/admin.css">
+    <style>
+        .report-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.25rem}
+        .report-card h3{font-size:1rem;margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem}
+        .report-row{display:flex;justify-content:space-between;padding:0.6rem 0;border-bottom:1px solid var(--border);font-size:0.9rem}
+        .report-row:last-child{border-bottom:none}
+        .report-row.total{font-weight:700;font-size:1rem;border-top:2px solid var(--text);border-bottom:none;padding-top:0.8rem;margin-top:0.25rem}
+        .report-row .label{color:var(--text-muted)}
+        .report-row .value{font-weight:600}
+        .report-row .value.income{color:var(--success)}
+        .report-row .value.expense{color:var(--danger)}
+        .report-row .value.profit{color:var(--accent)}
+        .bar-chart{display:flex;flex-direction:column;gap:0.5rem;margin-top:0.75rem}
+        .bar-row{display:flex;align-items:center;gap:0.75rem;font-size:0.82rem}
+        .bar-label{width:120px;text-align:right;color:var(--text-muted);flex-shrink:0}
+        .bar-track{flex:1;height:24px;background:var(--bg);border-radius:4px;overflow:hidden;position:relative}
+        .bar-fill{height:100%;border-radius:4px;transition:width 0.5s ease}
+        .bar-fill.income{background:var(--success)}
+        .bar-fill.expense{background:var(--danger)}
+        .bar-amount{width:100px;text-align:right;font-weight:600;font-size:0.82rem}
+    </style>
+</head>
+
+<body>
+    <div class="app-layout">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-logo">
+                <div class="sidebar-logo-name">Modern Space Styling</div>
+                <div class="sidebar-logo-sub">Admin Panel</div>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Main</div>
+                <a class="sidebar-link" href="dashboard.html"><span class="sidebar-icon">📊</span> Dashboard</a>
+                <a class="sidebar-link" href="bookings.html"><span class="sidebar-icon">📋</span> Bookings</a>
+                <a class="sidebar-link" href="photo-bookings.html"><span class="sidebar-icon">📸</span> Photo Bookings</a>
+                <a class="sidebar-link" href="inventory.html"><span class="sidebar-icon">📦</span> Inventory</a>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Finance</div>
+                <a class="sidebar-link" href="invoices.html"><span class="sidebar-icon">🧾</span> Invoices</a>
+                <a class="sidebar-link" href="expenses.html"><span class="sidebar-icon">💸</span> Expenses</a>
+                <a class="sidebar-link active" href="reports.html"><span class="sidebar-icon">📈</span> Reports</a>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Management</div>
+                <a class="sidebar-link" href="pricing.html"><span class="sidebar-icon">💰</span> Pricing</a>
+                <a class="sidebar-link" href="sms.html"><span class="sidebar-icon">💬</span> SMS Centre</a>
+                <a class="sidebar-link" href="team.html"><span class="sidebar-icon">👥</span> Team Contacts</a>
+                <a class="sidebar-link" href="agents.html"><span class="sidebar-icon">🏢</span> Agents</a>
+                <a class="sidebar-link" href="logs.html"><span class="sidebar-icon">📝</span> Activity Log</a>
+            </div>
+            <div class="sidebar-footer">
+                <a class="sidebar-link" href="../index.html" style="padding:0"><span class="sidebar-icon">🏠</span> View Website</a>
+                <a class="sidebar-link" href="#" onclick="Auth.logout()" style="padding:0;margin-top:0.5rem;color:#F87171"><span class="sidebar-icon">🚪</span> Logout</a>
+            </div>
+        </aside>
+
+        <!-- TOPBAR -->
+        <header class="topbar">
+            <div class="topbar-title" id="pageTitle">Financial Reports</div>
+            <div class="topbar-right">
+                <select id="reportPeriod" class="fi" onchange="renderReports()" style="width:180px"></select>
+                <div class="topbar-user">
+                    <div class="user-avatar" id="userAvatar">A</div>
+                    <span id="userName">Admin</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN -->
+        <main class="main-content">
+
+            <!-- KPI Row -->
+            <div class="kpi-grid" id="reportKpis"></div>
+
+            <!-- P&L Summary -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem" id="reportGrid">
+
+                <div class="report-card" id="incomeCard">
+                    <h3>Income</h3>
+                    <div id="incomeBreakdown"></div>
+                </div>
+
+                <div class="report-card" id="expenseCard">
+                    <h3>Expenses</h3>
+                    <div id="expenseBreakdown"></div>
+                </div>
+
+            </div>
+
+            <!-- P&L Statement -->
+            <div class="report-card" id="plCard">
+                <h3>Profit & Loss Statement</h3>
+                <div id="plStatement"></div>
+            </div>
+
+            <!-- Monthly Trend -->
+            <div class="report-card">
+                <h3>Monthly Trend (Last 6 Months)</h3>
+                <div id="monthlyTrend"></div>
+            </div>
+
+            <!-- Weekly Breakdown -->
+            <div class="report-card">
+                <h3>Weekly Breakdown — <span id="weeklyMonth"></span></h3>
+                <div class="tbl-wrap">
+                    <table class="tbl" id="weeklyTable">
+                        <thead>
+                            <tr>
+                                <th>Week</th>
+                                <th style="text-align:right">Income</th>
+                                <th style="text-align:right">Expenses</th>
+                                <th style="text-align:right">Net Profit</th>
+                                <th style="text-align:right">Jobs</th>
+                            </tr>
+                        </thead>
+                        <tbody id="weeklyBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <div id="toast-container" class="toast-container"></div>
+    <script src="../js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            await seedDatabase();
+            if (!Auth.requireAdmin()) return;
+            const user = Auth.current();
+            document.getElementById('userName').textContent = user.name;
+            document.getElementById('userAvatar').textContent = user.name.charAt(0);
+            populatePeriodFilter();
+            renderReports();
+        });
+
+        function populatePeriodFilter() {
+            const sel = document.getElementById('reportPeriod');
+            const now = new Date();
+            for (let i = 0; i < 12; i++) {
+                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                const opt = document.createElement('option');
+                opt.value = d.toISOString().slice(0, 7);
+                opt.textContent = d.toLocaleDateString('en-AU', { month: 'long', year: 'numeric' });
+                if (i === 0) opt.selected = true;
+                sel.appendChild(opt);
+            }
+        }
+
+        function fmt(n) { return '$' + Math.abs(n).toLocaleString('en-AU', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+
+        function getMonthData(monthKey) {
+            const bookings = DB.get(KEYS.BOOKINGS).filter(b => b.createdAt && b.createdAt.startsWith(monthKey) && b.status !== 'cancelled');
+            const photoBookings = DB.get(KEYS.PHOTO_BOOKINGS).filter(b => b.createdAt && b.createdAt.startsWith(monthKey) && b.status !== 'cancelled');
+            const expenses = DB.get(KEYS.EXPENSES).filter(e => e.date && e.date.startsWith(monthKey));
+
+            const stagingIncome = bookings.reduce((s, b) => s + (b.estimatedPrice || b.estimated_price || 0), 0);
+            const photoIncome = photoBookings.reduce((s, b) => s + (b.estimatedPrice || b.estimated_price || 0), 0);
+            const totalIncome = stagingIncome + photoIncome;
+
+            const fixedExp = expenses.filter(e => e.type === 'fixed').reduce((s, e) => s + (e.total || 0), 0);
+            const variableExp = expenses.filter(e => e.type === 'variable').reduce((s, e) => s + (e.total || 0), 0);
+            const oneOffExp = expenses.filter(e => e.type === 'one-off').reduce((s, e) => s + (e.total || 0), 0);
+            const totalExpenses = fixedExp + variableExp + oneOffExp;
+            const netProfit = totalIncome - totalExpenses;
+
+            return { bookings, photoBookings, expenses, stagingIncome, photoIncome, totalIncome, fixedExp, variableExp, oneOffExp, totalExpenses, netProfit };
+        }
+
+        function renderReports() {
+            const monthKey = document.getElementById('reportPeriod').value;
+            const data = getMonthData(monthKey);
+
+            // KPIs
+            const kpiGrid = document.getElementById('reportKpis');
+            kpiGrid.textContent = '';
+            const kpis = [
+                {label: 'Total Income', value: fmt(data.totalIncome), cls: 'success'},
+                {label: 'Total Expenses', value: fmt(data.totalExpenses), cls: 'danger'},
+                {label: 'Net Profit', value: (data.netProfit >= 0 ? '' : '-') + fmt(data.netProfit), cls: data.netProfit >= 0 ? 'success' : 'danger'},
+                {label: 'Jobs Completed', value: String(data.bookings.length + data.photoBookings.length), cls: 'info'},
+            ];
+            kpis.forEach(k => {
+                const card = document.createElement('div');
+                card.className = 'kpi-card ' + k.cls;
+                const lbl = document.createElement('div'); lbl.className = 'kpi-label'; lbl.textContent = k.label;
+                const val = document.createElement('div'); val.className = 'kpi-value'; val.textContent = k.value;
+                card.append(lbl, val);
+                kpiGrid.appendChild(card);
+            });
+
+            // Income breakdown
+            const incDiv = document.getElementById('incomeBreakdown');
+            incDiv.textContent = '';
+            [
+                {label: 'Staging Bookings (' + data.bookings.length + ')', value: data.stagingIncome, cls: 'income'},
+                {label: 'Photography Bookings (' + data.photoBookings.length + ')', value: data.photoIncome, cls: 'income'},
+                {label: 'Total Income', value: data.totalIncome, cls: 'income', total: true},
+            ].forEach(r => {
+                const row = document.createElement('div');
+                row.className = 'report-row' + (r.total ? ' total' : '');
+                const lbl = document.createElement('span'); lbl.className = 'label'; lbl.textContent = r.label;
+                const val = document.createElement('span'); val.className = 'value ' + r.cls; val.textContent = fmt(r.value);
+                row.append(lbl, val);
+                incDiv.appendChild(row);
+            });
+
+            // Expense breakdown
+            const expDiv = document.getElementById('expenseBreakdown');
+            expDiv.textContent = '';
+
+            const catTotals = {};
+            data.expenses.forEach(e => {
+                const cat = e.category || 'other';
+                catTotals[cat] = (catTotals[cat] || 0) + (e.total || 0);
+            });
+
+            const CAT_LABELS = { rent: 'Warehouse Rent', insurance: 'Insurance', truck: 'Truck / Transport', designer: 'Interior Designer', supplies: 'Supplies', photography: 'Photography', software: 'Software', other: 'Other' };
+            Object.entries(catTotals).sort((a, b) => b[1] - a[1]).forEach(([cat, total]) => {
+                const row = document.createElement('div'); row.className = 'report-row';
+                const lbl = document.createElement('span'); lbl.className = 'label'; lbl.textContent = CAT_LABELS[cat] || cat;
+                const val = document.createElement('span'); val.className = 'value expense'; val.textContent = fmt(total);
+                row.append(lbl, val); expDiv.appendChild(row);
+            });
+            const totalRow = document.createElement('div'); totalRow.className = 'report-row total';
+            const totalLbl = document.createElement('span'); totalLbl.className = 'label'; totalLbl.textContent = 'Total Expenses';
+            const totalVal = document.createElement('span'); totalVal.className = 'value expense'; totalVal.textContent = fmt(data.totalExpenses);
+            totalRow.append(totalLbl, totalVal); expDiv.appendChild(totalRow);
+
+            // P&L Statement
+            const plDiv = document.getElementById('plStatement');
+            plDiv.textContent = '';
+            [
+                {label: 'Gross Income (Staging)', value: data.stagingIncome, cls: 'income'},
+                {label: 'Gross Income (Photography)', value: data.photoIncome, cls: 'income'},
+                {label: 'Total Revenue', value: data.totalIncome, cls: 'income', total: true},
+                {label: '', value: 0, spacer: true},
+                {label: 'Fixed Expenses', value: data.fixedExp, cls: 'expense'},
+                {label: 'Variable Expenses (Per Job)', value: data.variableExp, cls: 'expense'},
+                {label: 'One-Off Purchases', value: data.oneOffExp, cls: 'expense'},
+                {label: 'Total Expenses', value: data.totalExpenses, cls: 'expense', total: true},
+                {label: '', value: 0, spacer: true},
+                {label: 'NET PROFIT / (LOSS)', value: data.netProfit, cls: data.netProfit >= 0 ? 'profit' : 'expense', total: true},
+            ].forEach(r => {
+                if (r.spacer) {
+                    const spacer = document.createElement('div');
+                    spacer.style.height = '0.5rem';
+                    plDiv.appendChild(spacer);
+                    return;
+                }
+                const row = document.createElement('div');
+                row.className = 'report-row' + (r.total ? ' total' : '');
+                const lbl = document.createElement('span'); lbl.className = 'label'; lbl.textContent = r.label;
+                const val = document.createElement('span'); val.className = 'value ' + r.cls;
+                val.textContent = (r.cls === 'expense' && r.value > 0 ? '-' : '') + fmt(r.value);
+                row.append(lbl, val);
+                plDiv.appendChild(row);
+            });
+
+            // Monthly Trend (last 6 months)
+            renderMonthlyTrend();
+
+            // Weekly Breakdown
+            renderWeeklyBreakdown(monthKey, data);
+        }
+
+        function renderMonthlyTrend() {
+            const container = document.getElementById('monthlyTrend');
+            container.textContent = '';
+            const now = new Date();
+            const months = [];
+            let maxVal = 1;
+
+            for (let i = 5; i >= 0; i--) {
+                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                const key = d.toISOString().slice(0, 7);
+                const label = d.toLocaleDateString('en-AU', { month: 'short' });
+                const md = getMonthData(key);
+                months.push({ label, income: md.totalIncome, expense: md.totalExpenses });
+                maxVal = Math.max(maxVal, md.totalIncome, md.totalExpenses);
+            }
+
+            const chart = document.createElement('div');
+            chart.className = 'bar-chart';
+
+            months.forEach(m => {
+                // Income bar
+                const incRow = document.createElement('div'); incRow.className = 'bar-row';
+                const incLabel = document.createElement('div'); incLabel.className = 'bar-label'; incLabel.textContent = m.label;
+                const incTrack = document.createElement('div'); incTrack.className = 'bar-track';
+                const incFill = document.createElement('div'); incFill.className = 'bar-fill income';
+                incFill.style.width = Math.max(2, (m.income / maxVal) * 100) + '%';
+                incTrack.appendChild(incFill);
+                const incAmt = document.createElement('div'); incAmt.className = 'bar-amount'; incAmt.style.color = 'var(--success)'; incAmt.textContent = fmt(m.income);
+                incRow.append(incLabel, incTrack, incAmt);
+
+                // Expense bar
+                const expRow = document.createElement('div'); expRow.className = 'bar-row';
+                const expLabel = document.createElement('div'); expLabel.className = 'bar-label'; expLabel.textContent = '';
+                const expTrack = document.createElement('div'); expTrack.className = 'bar-track';
+                const expFill = document.createElement('div'); expFill.className = 'bar-fill expense';
+                expFill.style.width = Math.max(2, (m.expense / maxVal) * 100) + '%';
+                expTrack.appendChild(expFill);
+                const expAmt = document.createElement('div'); expAmt.className = 'bar-amount'; expAmt.style.color = 'var(--danger)'; expAmt.textContent = fmt(m.expense);
+                expRow.append(expLabel, expTrack, expAmt);
+
+                chart.append(incRow, expRow);
+
+                // Spacer
+                const spacer = document.createElement('div'); spacer.style.height = '0.25rem';
+                chart.appendChild(spacer);
+            });
+
+            const legend = document.createElement('div');
+            legend.style.cssText = 'display:flex;gap:1.5rem;margin-top:0.75rem;font-size:0.78rem;color:var(--text-muted)';
+            const legInc = document.createElement('span'); legInc.textContent = 'Income'; legInc.style.cssText = 'display:flex;align-items:center;gap:4px';
+            const dotInc = document.createElement('span'); dotInc.style.cssText = 'width:12px;height:12px;background:var(--success);border-radius:2px;display:inline-block';
+            legInc.prepend(dotInc);
+            const legExp = document.createElement('span'); legExp.textContent = 'Expenses'; legExp.style.cssText = 'display:flex;align-items:center;gap:4px';
+            const dotExp = document.createElement('span'); dotExp.style.cssText = 'width:12px;height:12px;background:var(--danger);border-radius:2px;display:inline-block';
+            legExp.prepend(dotExp);
+            legend.append(legInc, legExp);
+
+            container.append(chart, legend);
+        }
+
+        function renderWeeklyBreakdown(monthKey, data) {
+            const [year, month] = monthKey.split('-').map(Number);
+            const monthLabel = new Date(year, month - 1, 1).toLocaleDateString('en-AU', { month: 'long', year: 'numeric' });
+            document.getElementById('weeklyMonth').textContent = monthLabel;
+
+            const weeks = [];
+            const firstDay = new Date(year, month - 1, 1);
+            const lastDay = new Date(year, month, 0);
+
+            let weekStart = new Date(firstDay);
+            let weekNum = 1;
+            while (weekStart <= lastDay) {
+                const weekEnd = new Date(weekStart);
+                weekEnd.setDate(weekEnd.getDate() + 6);
+                if (weekEnd > lastDay) weekEnd.setTime(lastDay.getTime());
+
+                const ws = weekStart.toISOString().slice(0, 10);
+                const we = weekEnd.toISOString().slice(0, 10);
+
+                const weekBookings = data.bookings.filter(b => {
+                    const cd = (b.createdAt || '').slice(0, 10);
+                    return cd >= ws && cd <= we;
+                });
+                const weekPhotoBookings = data.photoBookings.filter(b => {
+                    const cd = (b.createdAt || '').slice(0, 10);
+                    return cd >= ws && cd <= we;
+                });
+                const weekExpenses = data.expenses.filter(e => e.date >= ws && e.date <= we);
+
+                const income = weekBookings.reduce((s, b) => s + (b.estimatedPrice || b.estimated_price || 0), 0)
+                    + weekPhotoBookings.reduce((s, b) => s + (b.estimatedPrice || b.estimated_price || 0), 0);
+                const expenses = weekExpenses.reduce((s, e) => s + (e.total || 0), 0);
+
+                weeks.push({
+                    label: 'Week ' + weekNum + ' (' + weekStart.getDate() + '-' + weekEnd.getDate() + ')',
+                    income, expenses, profit: income - expenses,
+                    jobs: weekBookings.length + weekPhotoBookings.length
+                });
+
+                weekStart = new Date(weekEnd);
+                weekStart.setDate(weekStart.getDate() + 1);
+                weekNum++;
+            }
+
+            const tbody = document.getElementById('weeklyBody');
+            tbody.textContent = '';
+            weeks.forEach(w => {
+                const tr = document.createElement('tr');
+                const cells = [
+                    { text: w.label },
+                    { text: fmt(w.income), style: 'text-align:right;color:var(--success);font-weight:600' },
+                    { text: fmt(w.expenses), style: 'text-align:right;color:var(--danger);font-weight:600' },
+                    { text: (w.profit >= 0 ? '' : '-') + fmt(w.profit), style: 'text-align:right;font-weight:700;color:' + (w.profit >= 0 ? 'var(--success)' : 'var(--danger)') },
+                    { text: String(w.jobs), style: 'text-align:right' },
+                ];
+                cells.forEach(c => {
+                    const td = document.createElement('td');
+                    td.textContent = c.text;
+                    if (c.style) td.style.cssText = c.style;
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+
+            // Totals row
+            const totalTr = document.createElement('tr');
+            totalTr.style.fontWeight = '700';
+            totalTr.style.borderTop = '2px solid var(--text)';
+            const totals = [
+                { text: 'TOTAL' },
+                { text: fmt(weeks.reduce((s, w) => s + w.income, 0)), style: 'text-align:right;color:var(--success)' },
+                { text: fmt(weeks.reduce((s, w) => s + w.expenses, 0)), style: 'text-align:right;color:var(--danger)' },
+                { text: fmt(weeks.reduce((s, w) => s + w.profit, 0)), style: 'text-align:right' },
+                { text: String(weeks.reduce((s, w) => s + w.jobs, 0)), style: 'text-align:right' },
+            ];
+            totals.forEach(c => {
+                const td = document.createElement('td');
+                td.textContent = c.text;
+                if (c.style) td.style.cssText = c.style;
+                totalTr.appendChild(td);
+            });
+            tbody.appendChild(totalTr);
+        }
+    </script>
+</body>
+
+</html>

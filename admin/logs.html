@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity Log | MSS Admin</title>
+    <link rel="stylesheet" href="../css/admin.css">
+</head>
+
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <div class="sidebar-logo-name">Modern Space Styling</div>
+                <div class="sidebar-logo-sub">Admin Panel</div>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Main</div>
+                <a class="sidebar-link" href="dashboard.html"><span class="sidebar-icon">📊</span> Dashboard</a>
+                <a class="sidebar-link" href="bookings.html"><span class="sidebar-icon">📋</span> Bookings</a>
+                <a class="sidebar-link" href="photo-bookings.html"><span class="sidebar-icon">📸</span> Photo Bookings</a>
+                <a class="sidebar-link" href="inventory.html"><span class="sidebar-icon">📦</span> Inventory</a>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Finance</div>
+                <a class="sidebar-link" href="invoices.html"><span class="sidebar-icon">🧾</span> Invoices</a>
+                <a class="sidebar-link" href="expenses.html"><span class="sidebar-icon">💸</span> Expenses</a>
+                <a class="sidebar-link" href="reports.html"><span class="sidebar-icon">📈</span> Reports</a>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Management</div>
+                <a class="sidebar-link" href="pricing.html"><span class="sidebar-icon">💰</span> Pricing</a>
+                <a class="sidebar-link" href="sms.html"><span class="sidebar-icon">💬</span> SMS Centre</a>
+                <a class="sidebar-link" href="team.html"><span class="sidebar-icon">👥</span> Team Contacts</a>
+                <a class="sidebar-link" href="agents.html"><span class="sidebar-icon">🏢</span> Agents</a>
+                <a class="sidebar-link active" href="logs.html"><span class="sidebar-icon">📝</span> Activity Log</a>
+            </div>
+            <div class="sidebar-footer">
+                <a class="sidebar-link" href="../index.html" style="padding:0"><span class="sidebar-icon">🏠</span> View
+                    Website</a>
+                <a class="sidebar-link" href="#" onclick="Auth.logout()"
+                    style="padding:0;margin-top:0.5rem;color:#F87171"><span class="sidebar-icon">🚪</span> Logout</a>
+            </div>
+        </aside>
+        <header class="topbar">
+            <div class="topbar-title">Activity Log</div>
+            <div class="topbar-right">
+                <button class="ab ab-danger ab-sm"
+                    onclick="if(confirm('Clear all logs?')){localStorage.removeItem('mss_activity');render();}">Clear
+                    Logs</button>
+                <div class="topbar-user">
+                    <div class="user-avatar" id="userAvatar">A</div><span id="userName">Admin</span>
+                </div>
+            </div>
+        </header>
+        <main class="main-content">
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">System Activity (newest first)</span>
+                    <input class="search-input" id="logSearch" placeholder="Search logs..." style="width:260px"
+                        oninput="render()">
+                </div>
+                <div class="tbl-wrap">
+                    <table class="tbl">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>User</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logTbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+    <div id="toast-container" class="toast-container"></div>
+    <script src="../js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            await seedDatabase();
+            if (!Auth.requireAdmin()) return;
+            const u = Auth.current();
+            document.getElementById('userName').textContent = u.name;
+            document.getElementById('userAvatar').textContent = u.name.charAt(0);
+            render();
+        });
+
+        function render() {
+            const search = document.getElementById('logSearch').value.toLowerCase();
+            let logs = DB.get(KEYS.ACTIVITY);
+            if (search) logs = logs.filter(l => l.message.toLowerCase().includes(search) || (l.user || '').toLowerCase().includes(search));
+            logs = logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            document.getElementById('logTbody').innerHTML = logs.map(l => `<tr>
+    <td style="white-space:nowrap;font-size:0.78rem;color:var(--text-muted)">${new Date(l.timestamp).toLocaleString('en-AU')}</td>
+    <td><span class="tag">${l.user || 'System'}</span></td>
+    <td>${l.message}</td>
+  </tr>`).join('') || '<tr><td colspan="3" style="text-align:center;padding:2rem;color:var(--text-muted)">No activity logged yet</td></tr>';
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Env / secrets
+.env
+.env.local
+.env.*.local
+.vercel
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Mobile dev (Expo)
+mobile/.expo/
+mobile/node_modules/
+mobile/dist/
+mobile/web-build/
+
+# Claude code review graph
+.code-review-graph/
+
+# Temp
+tmp/
+temp/

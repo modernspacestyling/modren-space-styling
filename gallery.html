@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staging &amp; Photography Gallery | Modern Space Styling Geelong</title>
+    <link rel="stylesheet" href="css/style.css">
+    <meta name="description" content="Browse our property staging and real estate photography gallery — living rooms, bedrooms, dining, outdoor, and professional photography in Geelong.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://www.modernspacestyling.com.au/gallery.html">
+    <meta property="og:title" content="Staging &amp; Photography Gallery | Modern Space Styling Geelong">
+    <meta property="og:description" content="Real properties, real results. Browse our staging and photography portfolio.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.modernspacestyling.com.au/gallery.html">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=1200&q=80">
+    <meta property="og:site_name" content="Modern Space Styling">
+    <meta property="og:locale" content="en_AU">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Staging &amp; Photography Gallery | Modern Space Styling Geelong">
+    <meta name="twitter:description" content="Browse our property staging and photography portfolio in Geelong.">
+    <meta name="twitter:image" content="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=1200&q=80">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://images.unsplash.com">
+    <script type="application/ld+json">
+    [{"@context":"https://schema.org","@type":"ImageGallery","name":"Modern Space Styling Portfolio","description":"Property staging and real estate photography gallery showcasing work across Geelong.","url":"https://www.modernspacestyling.com.au/gallery.html"},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://www.modernspacestyling.com.au/"},{"@type":"ListItem","position":2,"name":"Gallery","item":"https://www.modernspacestyling.com.au/gallery.html"}]}]
+    </script>
+    <style>
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1.25rem;
+            border: 1.5px solid var(--color-sand-light);
+            border-radius: var(--radius-full);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            background: white;
+            color: var(--color-charcoal-mid);
+        }
+
+        .filter-btn.active,
+        .filter-btn:hover {
+            background: var(--color-charcoal);
+            color: white;
+            border-color: var(--color-charcoal);
+        }
+
+        .masonry {
+            columns: 3 280px;
+            gap: 1rem;
+        }
+
+        .masonry-item {
+            break-inside: avoid;
+            margin-bottom: 1rem;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .masonry-item img {
+            width: 100%;
+            display: block;
+            transition: transform 0.5s ease;
+        }
+
+        .masonry-item:hover img {
+            transform: scale(1.04);
+        }
+
+        .masonry-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(26, 26, 46, 0.55);
+            opacity: 0;
+            transition: opacity 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+        }
+
+        .masonry-item:hover .masonry-overlay {
+            opacity: 1;
+        }
+
+        /* Lightbox */
+        .lightbox {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.92);
+            z-index: 5000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .lightbox.open {
+            display: flex;
+        }
+
+        .lightbox img {
+            max-width: 90vw;
+            max-height: 88vh;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .lb-close {
+            position: absolute;
+            top: 1.5rem;
+            right: 2rem;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        .lb-close:hover {
+            opacity: 1;
+        }
+
+        .lb-prev,
+        .lb-next {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white;
+            font-size: 2.5rem;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+            padding: 1rem;
+        }
+
+        .lb-prev {
+            left: 1rem;
+        }
+
+        .lb-next {
+            right: 1rem;
+        }
+
+        .lb-prev:hover,
+        .lb-next:hover {
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="nav nav--solid">
+        <div class="nav-inner">
+            <a href="index.html" class="nav-logo"><span class="nav-logo-name">Modern Space Styling</span><span
+                    class="nav-logo-tagline">Property Staging · Geelong</span></a>
+            <ul class="nav-links">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="services.html" class="nav-link">Services</a></li>
+                <li><a href="photography.html" class="nav-link">Photography</a></li>
+                <li><a href="gallery.html" class="nav-link active">Gallery</a></li>
+                <li><a href="contact.html" class="nav-link">Contact</a></li>
+            </ul>
+            <a href="booking.html" class="btn btn-gold btn-sm hide-mobile">Book a Staging</a>
+            <button class="nav-toggler"><span></span><span></span><span></span></button>
+        </div>
+    </nav>
+    <div class="nav-mobile">
+        <a href="index.html" class="nav-link">Home</a><a href="services.html" class="nav-link">Services</a>
+        <a href="photography.html" class="nav-link">Photography</a>
+        <a href="gallery.html" class="nav-link">Gallery</a><a href="contact.html" class="nav-link">Contact</a>
+        <a href="booking.html" class="btn btn-gold" style="text-align:center">Book Now</a>
+    </div>
+
+    <div style="background:var(--color-slate);padding:calc(var(--nav-height) + 2.5rem) 0 2.5rem">
+        <div class="container"><span class="eyebrow" style="color:var(--color-sand)">Portfolio</span>
+            <h1 style="color:var(--color-white);margin-top:0.5rem;font-size:2.5rem">Our Work</h1>
+            <p style="color:rgba(255,255,255,0.7)">Real properties, real results. Every room styled with purpose.</p>
+        </div>
+    </div>
+
+    <section class="section">
+        <div class="container">
+            <div class="filter-bar">
+                <button class="filter-btn active" data-filter="all">All Rooms</button>
+                <button class="filter-btn" data-filter="living">Living</button>
+                <button class="filter-btn" data-filter="bedroom">Bedroom</button>
+                <button class="filter-btn" data-filter="dining">Dining</button>
+                <button class="filter-btn" data-filter="outdoor">Outdoor</button>
+                <button class="filter-btn" data-filter="photography">Photography</button>
+            </div>
+            <div class="masonry" id="gallery">
+                <div class="masonry-item" data-cat="living" onclick="openLightbox(0)"><img loading="lazy"
+                        src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=600&q=80"
+                        alt="Living Room 1">
+                    <div class="masonry-overlay">🔍</div>
+                </div>
+                <div class="masonry-item" data-cat="bedroom" onclick="openLightbox(1)"><img loading="lazy"
+                        src="https://images.unsplash.com/photo-1588854337236-6889d631faa8?w=600&q=80"
+                        alt="Master Bedroom">
+                    <div class="masonry-overlay">🔍</div>
+                </div>
+                <div class="masonry-item" data-cat="dining" onclick="openLightbox(2)"><img loading="lazy"
+                        src="https://images.unsplash.com/photo-1556912173-3bb406ef7e8a?w=600&q=80" alt="Dining Area">
+                    <div class="masonry-overlay">🔍</div>
+                </div>
+                <div class="masonry-item" data-cat="bedroom" onclick="openLightbox(3)"><img loading="lazy"
+                        src="https://images.unsplash.com/photo-1617325247661-675ab4b64ae2?w=600&q=80" alt="Bedroom 2">
+                    <div class="masonry-overlay">🔍</div>
+                </div>
+                <div class="masonry-item" data-cat="living" onclick="openLightbox(4)"><img loading="lazy"
+                        src="https://images.unsplash.com/photo-1600566753190-17f0baa2a6c0?w=600&q=80"
+                        alt="Open Plan Living">
+                    <div class="masonry-overlay">🔍</div>
+                </div>
+                <div class="masonry-item" data-cat="living" onclick="openLightbox(5)"><img loading="lazy"
+                        src="https://images.unsplash.com/photo-1600585154084-4e5fe7c39198?w=600&q=80"
+                        alt="Modern Living">
+                    <div class="masonry-overlay">🔍</div>
+                </div>
+                <div class="masonry-item" data-cat="outdoor" onclick="openLightbox(6)"><img loading="lazy"
+                        src="https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=600&q=80"
+                        alt="Outdoor Area">
+                    <div class="masonry-overlay">🔍</div>
+                </div>
+                <div class="masonry-item" data-cat="living" onclick="openLightbox(7)"><img loading="lazy"
+                        src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=600&q=80"
+                        alt="Feature Wall Living">
+                    <div class="masonry-overlay">🔍</div>
+                </div>
+                <div class="masonry-item" data-cat="bedroom" onclick="openLightbox(8)"><img loading="lazy"
+                        src="https://images.unsplash.com/photo-1616594039964-ae9021a400a0?w=600&q=80" alt="Kids Room">
+                    <div class="masonry-overlay">🔍</div>
+                </div>
+                <div class="masonry-item" data-cat="dining" onclick="openLightbox(9)"><img loading="lazy"
+                        src="https://images.unsplash.com/photo-1617806118233-18e1de247200?w=600&q=80"
+                        alt="Formal Dining">
+                    <div class="masonry-overlay">🔍</div>
+                </div>
+                <div class="masonry-item" data-cat="living" onclick="openLightbox(10)"><img loading="lazy"
+                        src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=600&q=80" alt="Study Nook">
+                    <div class="masonry-overlay">🔍</div>
+                </div>
+                <div class="masonry-item" data-cat="outdoor" onclick="openLightbox(11)"><img loading="lazy"
+                        src="https://images.unsplash.com/photo-1600573472591-ee6981cf35ba?w=600&q=80" alt="Alfresco">
+                    <div class="masonry-overlay">🔍</div>
+                </div>
+                <!-- Photography samples -->
+                <div class="masonry-item" data-cat="photography" onclick="openLightbox(12)"><img loading="lazy"
+                        src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=600&q=80" alt="Property exterior photography">
+                    <div class="masonry-overlay">🔍</div>
+                </div>
+                <div class="masonry-item" data-cat="photography" onclick="openLightbox(13)"><img loading="lazy"
+                        src="https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600&q=80" alt="Aerial drone shot">
+                    <div class="masonry-overlay">🔍</div>
+                </div>
+                <div class="masonry-item" data-cat="photography" onclick="openLightbox(14)"><img loading="lazy"
+                        src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&q=80" alt="Twilight property photo">
+                    <div class="masonry-overlay">🔍</div>
+                </div>
+                <div class="masonry-item" data-cat="photography" onclick="openLightbox(15)"><img loading="lazy"
+                        src="https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=600&q=80" alt="Modern home exterior">
+                    <div class="masonry-overlay">🔍</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox">
+        <span class="lb-close" onclick="closeLightbox()">×</span>
+        <span class="lb-prev" onclick="lbNav(-1)">‹</span>
+        <img id="lbImg" src="" alt="">
+        <span class="lb-next" onclick="lbNav(1)">›</span>
+    </div>
+
+    <section class="section cta-banner" style="background:linear-gradient(135deg,var(--color-slate) 0%,#0f172a 100%)">
+        <div class="container text-center">
+            <h2 style="color:var(--color-white);margin-bottom:1rem">Love What You See?</h2>
+            <p style="color:rgba(255,255,255,0.7);margin-bottom:2rem">Book your property staging online today.</p>
+            <a href="booking.html" class="btn btn-gold btn-lg">Book a Staging</a>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom" style="border-top:none;padding-top:0"><span>© 2026 Modern Space Styling Pty
+                    Ltd.</span><a href="index.html" style="color:var(--color-sand)">← Back to Home</a></div>
+        </div>
+    </footer>
+    <script src="js/app.js"></script>
+    <script>
+        const imgs = [
+            'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=1200&q=90',
+            'https://images.unsplash.com/photo-1588854337236-6889d631faa8?w=1200&q=90',
+            'https://images.unsplash.com/photo-1556912173-3bb406ef7e8a?w=1200&q=90',
+            'https://images.unsplash.com/photo-1617325247661-675ab4b64ae2?w=1200&q=90',
+            'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c0?w=1200&q=90',
+            'https://images.unsplash.com/photo-1600585154084-4e5fe7c39198?w=1200&q=90',
+            'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=1200&q=90',
+            'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=1200&q=90',
+            'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?w=1200&q=90',
+            'https://images.unsplash.com/photo-1617806118233-18e1de247200?w=1200&q=90',
+            'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1200&q=90',
+            'https://images.unsplash.com/photo-1600573472591-ee6981cf35ba?w=1200&q=90',
+            'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200&q=90',
+            'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=1200&q=90',
+            'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&q=90',
+            'https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=1200&q=90',
+        ];
+        let cur = 0;
+        function openLightbox(i) { cur = i; document.getElementById('lbImg').src = imgs[i]; document.getElementById('lightbox').classList.add('open'); }
+        function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
+        function lbNav(dir) { cur = (cur + dir + imgs.length) % imgs.length; document.getElementById('lbImg').src = imgs[cur]; }
+        document.getElementById('lightbox').addEventListener('click', e => { if (e.target === e.currentTarget) closeLightbox(); });
+
+        // Filter
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const f = btn.dataset.filter;
+                document.querySelectorAll('.masonry-item').forEach(item => {
+                    item.style.display = (f === 'all' || item.dataset.cat === f) ? '' : 'none';
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

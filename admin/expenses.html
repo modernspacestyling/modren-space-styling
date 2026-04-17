@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expenses | MSS Admin</title>
+    <link rel="stylesheet" href="../css/admin.css">
+</head>
+
+<body>
+    <div class="app-layout">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-logo">
+                <div class="sidebar-logo-name">Modern Space Styling</div>
+                <div class="sidebar-logo-sub">Admin Panel</div>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Main</div>
+                <a class="sidebar-link" href="dashboard.html"><span class="sidebar-icon">📊</span> Dashboard</a>
+                <a class="sidebar-link" href="bookings.html"><span class="sidebar-icon">📋</span> Bookings</a>
+                <a class="sidebar-link" href="photo-bookings.html"><span class="sidebar-icon">📸</span> Photo Bookings</a>
+                <a class="sidebar-link" href="inventory.html"><span class="sidebar-icon">📦</span> Inventory</a>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Finance</div>
+                <a class="sidebar-link" href="invoices.html"><span class="sidebar-icon">🧾</span> Invoices</a>
+                <a class="sidebar-link active" href="expenses.html"><span class="sidebar-icon">💸</span> Expenses</a>
+                <a class="sidebar-link" href="reports.html"><span class="sidebar-icon">📈</span> Reports</a>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Management</div>
+                <a class="sidebar-link" href="pricing.html"><span class="sidebar-icon">💰</span> Pricing</a>
+                <a class="sidebar-link" href="sms.html"><span class="sidebar-icon">💬</span> SMS Centre</a>
+                <a class="sidebar-link" href="team.html"><span class="sidebar-icon">👥</span> Team Contacts</a>
+                <a class="sidebar-link" href="agents.html"><span class="sidebar-icon">🏢</span> Agents</a>
+                <a class="sidebar-link" href="logs.html"><span class="sidebar-icon">📝</span> Activity Log</a>
+            </div>
+            <div class="sidebar-footer">
+                <a class="sidebar-link" href="../index.html" style="padding:0"><span class="sidebar-icon">🏠</span> View Website</a>
+                <a class="sidebar-link" href="#" onclick="Auth.logout()" style="padding:0;margin-top:0.5rem;color:#F87171"><span class="sidebar-icon">🚪</span> Logout</a>
+            </div>
+        </aside>
+
+        <!-- TOPBAR -->
+        <header class="topbar">
+            <div class="topbar-title" id="pageTitle">Expense Tracker</div>
+            <div class="topbar-right">
+                <button class="ab ab-accent" onclick="showAddExpense()">+ Add Expense</button>
+                <div class="topbar-user">
+                    <div class="user-avatar" id="userAvatar">A</div>
+                    <span id="userName">Admin</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN -->
+        <main class="main-content">
+
+            <!-- KPI Row -->
+            <div class="kpi-grid" id="expenseKpis"></div>
+
+            <!-- Filters -->
+            <div class="panel" style="margin-bottom:1.25rem">
+                <div class="panel-body" style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap">
+                    <div>
+                        <label style="font-size:0.75rem;font-weight:600;display:block;margin-bottom:4px">Month</label>
+                        <select id="filterMonth" class="fi" onchange="renderExpenses()" style="width:160px">
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:0.75rem;font-weight:600;display:block;margin-bottom:4px">Category</label>
+                        <select id="filterCategory" class="fi" onchange="renderExpenses()" style="width:160px">
+                            <option value="all">All Categories</option>
+                            <option value="rent">Warehouse Rent</option>
+                            <option value="insurance">Insurance</option>
+                            <option value="truck">Truck / Transport</option>
+                            <option value="designer">Interior Designer</option>
+                            <option value="supplies">Supplies / Materials</option>
+                            <option value="photography">Photography</option>
+                            <option value="software">Software / Subscriptions</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:0.75rem;font-weight:600;display:block;margin-bottom:4px">Type</label>
+                        <select id="filterType" class="fi" onchange="renderExpenses()" style="width:140px">
+                            <option value="all">All Types</option>
+                            <option value="fixed">Fixed</option>
+                            <option value="variable">Variable (Per Job)</option>
+                            <option value="one-off">One-Off</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Expenses Table -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">All Expenses</span>
+                    <span class="panel-title" id="totalDisplay" style="color:var(--danger);font-weight:700"></span>
+                </div>
+                <div class="tbl-wrap">
+                    <table class="tbl" id="expenseTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Category</th>
+                                <th>Type</th>
+                                <th>Job #</th>
+                                <th style="text-align:right">Amount</th>
+                                <th style="text-align:right">GST</th>
+                                <th style="text-align:right">Total</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="expenseBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Fixed Monthly Summary -->
+            <div class="panel" style="margin-top:1.25rem">
+                <div class="panel-header"><span class="panel-title">Fixed Monthly Expenses</span></div>
+                <div class="panel-body" id="fixedSummary"></div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ADD/EDIT EXPENSE MODAL -->
+    <div id="expenseModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center">
+        <div style="background:white;border-radius:12px;padding:2rem;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-md)">
+            <h3 style="margin-bottom:1.25rem;font-size:1.1rem" id="modalTitle">Add Expense</h3>
+            <form id="expenseForm" onsubmit="saveExpense(event)">
+                <input type="hidden" id="expId">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+                    <div>
+                        <label class="fl">Date *</label>
+                        <input type="date" id="expDate" class="fi" required>
+                    </div>
+                    <div>
+                        <label class="fl">Category *</label>
+                        <select id="expCategory" class="fi" required>
+                            <option value="">Select...</option>
+                            <option value="rent">Warehouse Rent</option>
+                            <option value="insurance">Insurance</option>
+                            <option value="truck">Truck / Transport</option>
+                            <option value="designer">Interior Designer</option>
+                            <option value="supplies">Supplies / Materials</option>
+                            <option value="photography">Photography</option>
+                            <option value="software">Software / Subscriptions</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div style="grid-column:1/-1">
+                        <label class="fl">Description *</label>
+                        <input type="text" id="expDescription" class="fi" placeholder="e.g. Monthly warehouse rent" required>
+                    </div>
+                    <div>
+                        <label class="fl">Amount (ex GST) *</label>
+                        <input type="number" id="expAmount" class="fi" step="0.01" min="0" required placeholder="0.00">
+                    </div>
+                    <div>
+                        <label class="fl">GST</label>
+                        <input type="number" id="expGst" class="fi" step="0.01" min="0" value="0" placeholder="Auto-calc 10%">
+                    </div>
+                    <div>
+                        <label class="fl">Type *</label>
+                        <select id="expType" class="fi" required>
+                            <option value="fixed">Fixed Monthly</option>
+                            <option value="variable">Variable (Per Job)</option>
+                            <option value="one-off">One-Off Purchase</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="fl">Linked Job # (optional)</label>
+                        <input type="text" id="expJobNumber" class="fi" placeholder="MSS-2026-0001">
+                    </div>
+                    <div style="grid-column:1/-1">
+                        <label class="fl">Notes</label>
+                        <textarea id="expNotes" class="fi" rows="2" placeholder="Optional notes..."></textarea>
+                    </div>
+                </div>
+                <div style="display:flex;justify-content:flex-end;gap:0.75rem;margin-top:1.5rem">
+                    <button type="button" class="ab ab-outline" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="ab ab-accent">Save Expense</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast-container" class="toast-container"></div>
+    <script src="../js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            await seedDatabase();
+            if (!Auth.requireAdmin()) return;
+            const user = Auth.current();
+            document.getElementById('userName').textContent = user.name;
+            document.getElementById('userAvatar').textContent = user.name.charAt(0);
+            populateMonthFilter();
+            seedFixedExpenses();
+            renderExpenses();
+        });
+
+        function seedFixedExpenses() {
+            if (localStorage.getItem('mss_expenses_seeded')) return;
+            const now = new Date();
+            for (let i = 0; i < 3; i++) {
+                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                const dateStr = d.toISOString().slice(0, 10);
+                DB.insert(KEYS.EXPENSES, {
+                    date: dateStr,
+                    description: 'Warehouse Rent — Monthly',
+                    category: 'rent',
+                    type: 'fixed',
+                    amount: 1630.00,
+                    gst: 163.00,
+                    total: 1793.00,
+                    jobNumber: '',
+                    notes: 'Fixed monthly warehouse rent',
+                    recurring: true
+                });
+            }
+            localStorage.setItem('mss_expenses_seeded', 'true');
+        }
+
+        function populateMonthFilter() {
+            const sel = document.getElementById('filterMonth');
+            const now = new Date();
+            sel.textContent = '';
+            const allOpt = document.createElement('option');
+            allOpt.value = 'all'; allOpt.textContent = 'All Months';
+            sel.appendChild(allOpt);
+            for (let i = 0; i < 12; i++) {
+                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                const opt = document.createElement('option');
+                opt.value = d.toISOString().slice(0, 7);
+                opt.textContent = d.toLocaleDateString('en-AU', { month: 'long', year: 'numeric' });
+                if (i === 0) opt.selected = true;
+                sel.appendChild(opt);
+            }
+        }
+
+        const CAT_LABELS = { rent: 'Warehouse Rent', insurance: 'Insurance', truck: 'Truck / Transport', designer: 'Interior Designer', supplies: 'Supplies', photography: 'Photography', software: 'Software', other: 'Other' };
+        const TYPE_LABELS = { fixed: 'Fixed', variable: 'Per Job', 'one-off': 'One-Off' };
+        const TYPE_CLS = { fixed: 'info', variable: 'warning', 'one-off': '' };
+
+        function renderExpenses() {
+            const expenses = DB.get(KEYS.EXPENSES);
+            const month = document.getElementById('filterMonth').value;
+            const cat = document.getElementById('filterCategory').value;
+            const type = document.getElementById('filterType').value;
+
+            let filtered = expenses.filter(e => {
+                if (month !== 'all' && !e.date.startsWith(month)) return false;
+                if (cat !== 'all' && e.category !== cat) return false;
+                if (type !== 'all' && e.type !== type) return false;
+                return true;
+            }).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            const curMonth = new Date().toISOString().slice(0, 7);
+            const allThisMonth = expenses.filter(e => e.date.startsWith(curMonth));
+            const totalThisMonth = allThisMonth.reduce((s, e) => s + (e.total || 0), 0);
+            const fixedThisMonth = allThisMonth.filter(e => e.type === 'fixed').reduce((s, e) => s + (e.total || 0), 0);
+            const variableThisMonth = allThisMonth.filter(e => e.type === 'variable').reduce((s, e) => s + (e.total || 0), 0);
+            const filteredTotal = filtered.reduce((s, e) => s + (e.total || 0), 0);
+
+            const kpiGrid = document.getElementById('expenseKpis');
+            kpiGrid.textContent = '';
+            [{label:'This Month Total',value:totalThisMonth},{label:'Fixed Costs',value:fixedThisMonth},{label:'Variable Costs',value:variableThisMonth},{label:'Entries',value:filtered.length,raw:true}].forEach(k => {
+                const card = document.createElement('div');
+                card.className = 'kpi-card';
+                const lbl = document.createElement('div');
+                lbl.className = 'kpi-label'; lbl.textContent = k.label;
+                const val = document.createElement('div');
+                val.className = 'kpi-value'; val.textContent = k.raw ? k.value : '$' + k.value.toLocaleString('en-AU', {minimumFractionDigits: 2});
+                card.appendChild(lbl); card.appendChild(val);
+                kpiGrid.appendChild(card);
+            });
+
+            document.getElementById('totalDisplay').textContent = 'Showing: $' + filteredTotal.toLocaleString('en-AU', {minimumFractionDigits: 2});
+
+            const tbody = document.getElementById('expenseBody');
+            tbody.textContent = '';
+            if (!filtered.length) {
+                const tr = document.createElement('tr');
+                const td = document.createElement('td');
+                td.colSpan = 9; td.style.textAlign = 'center'; td.style.padding = '2rem'; td.style.color = 'var(--text-muted)';
+                td.textContent = 'No expenses found';
+                tr.appendChild(td); tbody.appendChild(tr);
+            } else {
+                filtered.forEach(e => {
+                    const tr = document.createElement('tr');
+
+                    const tdDate = document.createElement('td');
+                    tdDate.textContent = formatDate(e.date);
+
+                    const tdDesc = document.createElement('td');
+                    const strong = document.createElement('strong');
+                    strong.textContent = e.description;
+                    tdDesc.appendChild(strong);
+                    if (e.notes) {
+                        const br = document.createElement('br'); tdDesc.appendChild(br);
+                        const small = document.createElement('small');
+                        small.style.color = 'var(--text-muted)'; small.textContent = e.notes;
+                        tdDesc.appendChild(small);
+                    }
+
+                    const tdCat = document.createElement('td');
+                    tdCat.textContent = CAT_LABELS[e.category] || e.category;
+
+                    const tdType = document.createElement('td');
+                    const badge = document.createElement('span');
+                    badge.className = 'status-badge ' + (TYPE_CLS[e.type] || '');
+                    badge.textContent = TYPE_LABELS[e.type] || e.type;
+                    tdType.appendChild(badge);
+
+                    const tdJob = document.createElement('td');
+                    tdJob.textContent = e.jobNumber || '\u2014';
+
+                    const tdAmt = document.createElement('td');
+                    tdAmt.style.textAlign = 'right'; tdAmt.textContent = '$' + (e.amount || 0).toFixed(2);
+
+                    const tdGst = document.createElement('td');
+                    tdGst.style.textAlign = 'right'; tdGst.style.color = 'var(--text-muted)'; tdGst.textContent = '$' + (e.gst || 0).toFixed(2);
+
+                    const tdTotal = document.createElement('td');
+                    tdTotal.style.textAlign = 'right'; tdTotal.style.fontWeight = '700'; tdTotal.textContent = '$' + (e.total || 0).toFixed(2);
+
+                    const tdActions = document.createElement('td');
+                    const btnEdit = document.createElement('button');
+                    btnEdit.className = 'ab ab-outline ab-sm'; btnEdit.textContent = 'Edit'; btnEdit.style.marginRight = '4px';
+                    btnEdit.addEventListener('click', () => editExpense(e.id));
+                    const btnDel = document.createElement('button');
+                    btnDel.className = 'ab ab-sm'; btnDel.textContent = 'Del'; btnDel.style.color = 'var(--danger)';
+                    btnDel.addEventListener('click', () => deleteExpense(e.id));
+                    tdActions.appendChild(btnEdit); tdActions.appendChild(btnDel);
+
+                    tr.append(tdDate, tdDesc, tdCat, tdType, tdJob, tdAmt, tdGst, tdTotal, tdActions);
+                    tbody.appendChild(tr);
+                });
+            }
+
+            renderFixedSummary();
+        }
+
+        function renderFixedSummary() {
+            const container = document.getElementById('fixedSummary');
+            container.textContent = '';
+            const grid = document.createElement('div');
+            grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:1rem';
+
+            [{label:'Warehouse Rent',amount:1630,gst:163,active:true},{label:'Insurance',amount:0,gst:0,active:false}].forEach(f => {
+                const card = document.createElement('div');
+                card.style.cssText = 'border:1px solid var(--border);border-radius:var(--radius);padding:1rem';
+                const title = document.createElement('div');
+                title.style.fontWeight = '600'; title.style.marginBottom = '0.25rem'; title.textContent = f.label;
+                const price = document.createElement('div');
+                price.style.cssText = 'font-size:1.4rem;font-weight:700;color:' + (f.active ? 'var(--text)' : 'var(--text-muted)');
+                price.textContent = '$' + f.amount.toLocaleString('en-AU', {minimumFractionDigits:2});
+                const gstSpan = document.createElement('span');
+                gstSpan.style.cssText = 'font-size:0.75rem;color:var(--text-muted)';
+                gstSpan.textContent = ' + $' + f.gst.toFixed(2) + ' GST';
+                price.appendChild(gstSpan);
+                const statusDiv = document.createElement('div');
+                statusDiv.style.marginTop = '0.5rem';
+                const statusBadge = document.createElement('span');
+                statusBadge.className = 'status-badge ' + (f.active ? 'success' : '');
+                statusBadge.textContent = f.active ? 'Active' : 'Coming Soon';
+                statusDiv.appendChild(statusBadge);
+                card.append(title, price, statusDiv);
+                grid.appendChild(card);
+            });
+            container.appendChild(grid);
+            const note = document.createElement('p');
+            note.style.cssText = 'margin-top:1rem;font-size:0.8rem;color:var(--text-muted)';
+            note.textContent = 'Variable expenses (truck, interior designer) are added manually per job.';
+            container.appendChild(note);
+        }
+
+        function formatDate(d) {
+            if (!d) return '\u2014';
+            const dt = new Date(d + 'T00:00:00');
+            return dt.toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric' });
+        }
+
+        function showAddExpense() {
+            document.getElementById('modalTitle').textContent = 'Add Expense';
+            document.getElementById('expenseForm').reset();
+            document.getElementById('expId').value = '';
+            document.getElementById('expDate').value = new Date().toISOString().slice(0, 10);
+            document.getElementById('expenseModal').style.display = 'flex';
+        }
+
+        function editExpense(id) {
+            const e = DB.getOne(KEYS.EXPENSES, id);
+            if (!e) return;
+            document.getElementById('modalTitle').textContent = 'Edit Expense';
+            document.getElementById('expId').value = e.id;
+            document.getElementById('expDate').value = e.date;
+            document.getElementById('expCategory').value = e.category;
+            document.getElementById('expDescription').value = e.description;
+            document.getElementById('expAmount').value = e.amount;
+            document.getElementById('expGst').value = e.gst;
+            document.getElementById('expType').value = e.type;
+            document.getElementById('expJobNumber').value = e.jobNumber || '';
+            document.getElementById('expNotes').value = e.notes || '';
+            document.getElementById('expenseModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('expenseModal').style.display = 'none';
+        }
+
+        function saveExpense(ev) {
+            ev.preventDefault();
+            const amount = parseFloat(document.getElementById('expAmount').value) || 0;
+            let gst = parseFloat(document.getElementById('expGst').value);
+            if (isNaN(gst)) gst = amount * 0.10;
+
+            const data = {
+                date: document.getElementById('expDate').value,
+                description: document.getElementById('expDescription').value.trim(),
+                category: document.getElementById('expCategory').value,
+                type: document.getElementById('expType').value,
+                amount: amount,
+                gst: Math.round(gst * 100) / 100,
+                total: Math.round((amount + gst) * 100) / 100,
+                jobNumber: document.getElementById('expJobNumber').value.trim(),
+                notes: document.getElementById('expNotes').value.trim(),
+            };
+
+            const id = document.getElementById('expId').value;
+            if (id) {
+                DB.update(KEYS.EXPENSES, id, data);
+                showToast('Expense updated', 'success');
+            } else {
+                DB.insert(KEYS.EXPENSES, data);
+                showToast('Expense added', 'success');
+            }
+
+            closeModal();
+            renderExpenses();
+        }
+
+        function deleteExpense(id) {
+            if (!confirm('Delete this expense?')) return;
+            DB.delete(KEYS.EXPENSES, id);
+            showToast('Expense deleted');
+            renderExpenses();
+        }
+
+        document.getElementById('expAmount').addEventListener('input', () => {
+            const amount = parseFloat(document.getElementById('expAmount').value) || 0;
+            document.getElementById('expGst').value = (amount * 0.10).toFixed(2);
+        });
+    </script>
+</body>
+
+</html>

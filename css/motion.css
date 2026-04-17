@@ -1,0 +1,235 @@
+/* ================================================
+   motion.css — Micro-interactions, animations, UX polish
+   Added 2026-04-15. Shared by booking.html + photography-booking.html.
+   Uses prefers-reduced-motion for accessibility.
+   ================================================ */
+
+/* -------- Keyframes -------- */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+@keyframes shimmer {
+    0%   { background-position: -400px 0; }
+    100% { background-position: 400px 0; }
+}
+@keyframes pulseRing {
+    0%   { box-shadow: 0 0 0 0 rgba(200,162,74,0.4); }
+    70%  { box-shadow: 0 0 0 10px rgba(200,162,74,0); }
+    100% { box-shadow: 0 0 0 0 rgba(200,162,74,0); }
+}
+@keyframes priceBump {
+    0%   { transform: scale(1); }
+    30%  { transform: scale(1.08); color: #B8963E; }
+    100% { transform: scale(1); }
+}
+@keyframes checkmarkPop {
+    0%   { transform: scale(0) rotate(-45deg); opacity: 0; }
+    60%  { transform: scale(1.2) rotate(0deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+@keyframes slideInRight {
+    from { opacity: 0; transform: translateX(20px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes glowSoft {
+    0%,100% { box-shadow: 0 4px 20px rgba(184,150,62,0.12); }
+    50%     { box-shadow: 0 6px 28px rgba(184,150,62,0.28); }
+}
+
+/* -------- Section entrance animations -------- */
+.field-section-title,
+.form-row,
+.form-group {
+    animation: fadeInUp 0.45s ease-out backwards;
+}
+.form-group:nth-child(1) { animation-delay: 0.05s; }
+.form-group:nth-child(2) { animation-delay: 0.10s; }
+.form-group:nth-child(3) { animation-delay: 0.15s; }
+.form-group:nth-child(4) { animation-delay: 0.20s; }
+
+/* -------- Form field micro-interactions -------- */
+.form-control,
+input.form-control,
+select.form-control,
+textarea.form-control {
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.25s ease,
+        transform 0.15s ease,
+        background-color 0.2s ease;
+}
+.form-control:hover:not(:focus) {
+    border-color: rgba(184,150,62,0.55);
+}
+.form-control:focus {
+    outline: none;
+    border-color: #B8963E !important;
+    box-shadow: 0 0 0 3px rgba(184,150,62,0.18);
+    transform: translateY(-1px);
+    background-color: #fffdf7;
+}
+
+/* -------- Package / toggle button lift & hover glow -------- */
+.pkg-btn,
+.toggle-btn,
+.addon-check {
+    transition:
+        transform 0.2s cubic-bezier(.2,.8,.2,1.2),
+        box-shadow 0.25s ease,
+        border-color 0.2s ease,
+        background-color 0.2s ease;
+    will-change: transform;
+}
+.pkg-btn:hover,
+.toggle-btn:hover,
+.addon-check:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 24px rgba(28,28,28,0.08), 0 2px 6px rgba(184,150,62,0.12);
+    border-color: rgba(184,150,62,0.6);
+}
+.pkg-btn:active,
+.toggle-btn:active {
+    transform: translateY(-1px) scale(0.99);
+}
+.pkg-btn.selected {
+    animation: pulseRing 0.9s ease-out 1;
+}
+
+/* -------- Primary CTA button (btn-gold) pulse + press -------- */
+.btn-gold {
+    position: relative;
+    overflow: hidden;
+    transition:
+        transform 0.18s ease,
+        box-shadow 0.25s ease,
+        background-color 0.2s ease,
+        letter-spacing 0.2s ease;
+}
+.btn-gold:not(:disabled):hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(184,150,62,0.35);
+    letter-spacing: 0.5px;
+}
+.btn-gold:not(:disabled):active {
+    transform: translateY(0) scale(0.98);
+}
+.btn-gold:not(:disabled)::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 0; height: 0;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.35);
+    transform: translate(-50%, -50%);
+    transition: width 0.5s ease, height 0.5s ease;
+    pointer-events: none;
+}
+.btn-gold:not(:disabled):active::after {
+    width: 320px; height: 320px;
+    transition: 0s;
+}
+.btn-gold:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    animation: shimmer 1.4s linear infinite;
+    background: linear-gradient(90deg, #B8963E 0%, #d4b35e 50%, #B8963E 100%);
+    background-size: 400px 100%;
+    color: #fff;
+}
+
+/* -------- Price panel motion -------- */
+[id="priceTotal"],
+.price-total,
+.price-total-val {
+    transition: color 0.2s ease;
+    display: inline-block;
+}
+.price-bump {
+    animation: priceBump 0.45s ease-out;
+}
+.pr-row {
+    animation: slideInRight 0.3s ease-out;
+}
+
+/* Price panel sticky subtle glow when ready */
+.price-panel,
+[class*="price-panel"],
+[id*="priceBox"] {
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+.price-panel.ready,
+.price-ready {
+    animation: glowSoft 2.8s ease-in-out infinite;
+}
+
+/* -------- Checkbox / addon check animation -------- */
+.addon-check input[type="checkbox"] {
+    transition: transform 0.15s ease;
+}
+.addon-check.checked {
+    background-color: #fffdf7;
+    border-color: #B8963E;
+    box-shadow: 0 4px 14px rgba(184,150,62,0.15);
+}
+.addon-check.checked .addon-label::before {
+    content: '✓ ';
+    color: #B8963E;
+    font-weight: 700;
+    display: inline-block;
+    animation: checkmarkPop 0.3s cubic-bezier(.2,.8,.2,1.4);
+}
+
+/* -------- Toast upgrade: slide + fade -------- */
+.toast {
+    animation: fadeInUp 0.35s cubic-bezier(.2,.8,.2,1.2) backwards !important;
+}
+
+/* -------- Success confirmation screen / thank-you modal -------- */
+.booking-success,
+.success-state {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+/* -------- Required field asterisk gentle pulse -------- */
+.required {
+    animation: fadeIn 0.6s ease-in;
+}
+
+/* -------- Input invalid state (red flash) -------- */
+@keyframes invalidShake {
+    0%,100% { transform: translateX(0); }
+    20%,60% { transform: translateX(-6px); }
+    40%,80% { transform: translateX(6px); }
+}
+.form-control.invalid,
+.input-invalid {
+    animation: invalidShake 0.4s ease;
+    border-color: #cc3300 !important;
+    box-shadow: 0 0 0 3px rgba(204,51,0,0.15);
+}
+
+/* -------- Skeleton loading state -------- */
+.skeleton {
+    background: linear-gradient(90deg, #f0ece4 0%, #f8f5ef 50%, #f0ece4 100%);
+    background-size: 400px 100%;
+    animation: shimmer 1.4s linear infinite;
+    border-radius: 6px;
+    color: transparent;
+}
+
+/* -------- Reduced motion support (a11y) -------- */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}

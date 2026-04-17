@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoices | MSS Admin</title>
+    <link rel="stylesheet" href="../css/admin.css">
+</head>
+
+<body>
+    <div class="app-layout">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-logo">
+                <div class="sidebar-logo-name">Modern Space Styling</div>
+                <div class="sidebar-logo-sub">Admin Panel</div>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Main</div>
+                <a class="sidebar-link" href="dashboard.html"><span class="sidebar-icon">📊</span> Dashboard</a>
+                <a class="sidebar-link" href="bookings.html"><span class="sidebar-icon">📋</span> Bookings</a>
+                <a class="sidebar-link" href="photo-bookings.html"><span class="sidebar-icon">📸</span> Photo Bookings</a>
+                <a class="sidebar-link" href="inventory.html"><span class="sidebar-icon">📦</span> Inventory</a>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Finance</div>
+                <a class="sidebar-link active" href="invoices.html"><span class="sidebar-icon">🧾</span> Invoices</a>
+                <a class="sidebar-link" href="expenses.html"><span class="sidebar-icon">💸</span> Expenses</a>
+                <a class="sidebar-link" href="reports.html"><span class="sidebar-icon">📈</span> Reports</a>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Management</div>
+                <a class="sidebar-link" href="pricing.html"><span class="sidebar-icon">💰</span> Pricing</a>
+                <a class="sidebar-link" href="sms.html"><span class="sidebar-icon">💬</span> SMS Centre</a>
+                <a class="sidebar-link" href="team.html"><span class="sidebar-icon">👥</span> Team Contacts</a>
+                <a class="sidebar-link" href="agents.html"><span class="sidebar-icon">🏢</span> Agents</a>
+                <a class="sidebar-link" href="logs.html"><span class="sidebar-icon">📝</span> Activity Log</a>
+            </div>
+            <div class="sidebar-footer">
+                <a class="sidebar-link" href="../index.html" style="padding:0"><span class="sidebar-icon">🏠</span> View Website</a>
+                <a class="sidebar-link" href="#" onclick="Auth.logout()" style="padding:0;margin-top:0.5rem;color:#F87171"><span class="sidebar-icon">🚪</span> Logout</a>
+            </div>
+        </aside>
+
+        <!-- TOPBAR -->
+        <header class="topbar">
+            <div class="topbar-title" id="pageTitle">Invoices</div>
+            <div class="topbar-right">
+                <span class="topbar-user" id="adminUser">Admin</span>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+
+            <!-- Stats cards -->
+            <div id="invoiceStats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:2rem;">
+                <div style="background:#1C1C1C;border-radius:12px;padding:1.2rem;border-left:4px solid #B8963E;">
+                    <div style="font-size:0.75rem;color:#B8963E;text-transform:uppercase;letter-spacing:1px;">Total Invoiced</div>
+                    <div id="statTotal" style="font-size:1.8rem;font-weight:700;color:#fff;margin-top:0.3rem;">$0</div>
+                </div>
+                <div style="background:#1C1C1C;border-radius:12px;padding:1.2rem;border-left:4px solid #22c55e;">
+                    <div style="font-size:0.75rem;color:#22c55e;text-transform:uppercase;letter-spacing:1px;">Paid</div>
+                    <div id="statPaid" style="font-size:1.8rem;font-weight:700;color:#fff;margin-top:0.3rem;">$0</div>
+                </div>
+                <div style="background:#1C1C1C;border-radius:12px;padding:1.2rem;border-left:4px solid #f59e0b;">
+                    <div style="font-size:0.75rem;color:#f59e0b;text-transform:uppercase;letter-spacing:1px;">Pending</div>
+                    <div id="statPending" style="font-size:1.8rem;font-weight:700;color:#fff;margin-top:0.3rem;">$0</div>
+                </div>
+                <div style="background:#1C1C1C;border-radius:12px;padding:1.2rem;border-left:4px solid #ef4444;">
+                    <div style="font-size:0.75rem;color:#ef4444;text-transform:uppercase;letter-spacing:1px;">Overdue</div>
+                    <div id="statOverdue" style="font-size:1.8rem;font-weight:700;color:#fff;margin-top:0.3rem;">$0</div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div style="display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;align-items:center;">
+                <select id="filterStatus" style="padding:0.5rem 1rem;border-radius:8px;border:1px solid #333;background:#1C1C1C;color:#fff;font-size:0.85rem;">
+                    <option value="all">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="overdue">Overdue</option>
+                    <option value="paid">Paid</option>
+                    <option value="waived">Waived</option>
+                </select>
+                <select id="filterType" style="padding:0.5rem 1rem;border-radius:8px;border:1px solid #333;background:#1C1C1C;color:#fff;font-size:0.85rem;">
+                    <option value="all">All Types</option>
+                    <option value="staging">Staging</option>
+                    <option value="photo">Photography</option>
+                </select>
+                <input type="text" id="searchBox" placeholder="Search invoice, job, customer..."
+                    style="padding:0.5rem 1rem;border-radius:8px;border:1px solid #333;background:#1C1C1C;color:#fff;font-size:0.85rem;flex:1;min-width:200px;">
+            </div>
+
+            <!-- Invoice table -->
+            <div style="overflow-x:auto;">
+                <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+                    <thead>
+                        <tr style="background:#1C1C1C;color:#B8963E;text-transform:uppercase;font-size:0.7rem;letter-spacing:1px;">
+                            <th style="padding:12px 16px;text-align:left;">Invoice #</th>
+                            <th style="padding:12px 16px;text-align:left;">Job #</th>
+                            <th style="padding:12px 16px;text-align:left;">Customer</th>
+                            <th style="padding:12px 16px;text-align:left;">Type</th>
+                            <th style="padding:12px 16px;text-align:right;">Amount</th>
+                            <th style="padding:12px 16px;text-align:left;">Due Date</th>
+                            <th style="padding:12px 16px;text-align:center;">Status</th>
+                            <th style="padding:12px 16px;text-align:center;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="invoiceTableBody">
+                        <tr><td colspan="8" style="padding:2rem;text-align:center;color:#666;">Loading invoices...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Mark Paid Modal -->
+            <div id="markPaidModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;">
+                <div style="background:#1C1C1C;border-radius:12px;padding:2rem;max-width:400px;width:90%;border:1px solid #333;">
+                    <h3 style="color:#B8963E;margin:0 0 1.5rem;">Mark Invoice as Paid</h3>
+                    <div id="modalInvoiceInfo" style="color:#ccc;margin-bottom:1rem;font-size:0.9rem;"></div>
+                    <div style="margin-bottom:1rem;">
+                        <label style="color:#999;font-size:0.8rem;display:block;margin-bottom:4px;">Amount Paid ($)</label>
+                        <input type="number" id="paidAmount" step="0.01" style="width:100%;padding:0.5rem;border-radius:8px;border:1px solid #333;background:#111;color:#fff;">
+                    </div>
+                    <div style="margin-bottom:1rem;">
+                        <label style="color:#999;font-size:0.8rem;display:block;margin-bottom:4px;">Payment Method</label>
+                        <select id="paidMethod" style="width:100%;padding:0.5rem;border-radius:8px;border:1px solid #333;background:#111;color:#fff;">
+                            <option value="bank_transfer">Bank Transfer</option>
+                            <option value="cash">Cash</option>
+                            <option value="card">Card</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom:1.5rem;">
+                        <label style="color:#999;font-size:0.8rem;display:block;margin-bottom:4px;">Notes (optional)</label>
+                        <input type="text" id="paidNotes" placeholder="e.g. Reference number" style="width:100%;padding:0.5rem;border-radius:8px;border:1px solid #333;background:#111;color:#fff;">
+                    </div>
+                    <div style="display:flex;gap:1rem;">
+                        <button onclick="confirmMarkPaid()" style="flex:1;padding:0.7rem;border-radius:8px;border:none;background:#22c55e;color:#fff;font-weight:600;cursor:pointer;">Confirm Paid</button>
+                        <button onclick="closeModal()" style="flex:1;padding:0.7rem;border-radius:8px;border:1px solid #333;background:transparent;color:#999;cursor:pointer;">Cancel</button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="../js/app.js"></script>
+    <script>
+        // ── Auth check ──
+        if (!Auth.check()) { window.location.href = 'login.html'; }
+
+        const SUPABASE_URL = window.__ENV?.SUPABASE_URL || localStorage.getItem('mss_supabase_url') || '';
+        const SUPABASE_KEY = window.__ENV?.SUPABASE_KEY || localStorage.getItem('mss_supabase_key') || '';
+        let allInvoices = [];
+        let selectedInvoiceId = null;
+
+        async function fetchInvoices() {
+            try {
+                const resp = await fetch(SUPABASE_URL + '/rest/v1/invoices?select=*&order=created_at.desc', {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': 'Bearer ' + SUPABASE_KEY,
+                    }
+                });
+                allInvoices = await resp.json();
+                updateStats();
+                renderTable();
+            } catch (err) {
+                console.error('Failed to fetch invoices:', err);
+                var tb = document.getElementById('invoiceTableBody');
+                tb.textContent = '';
+                var tr = document.createElement('tr');
+                var td = document.createElement('td');
+                td.colSpan = 8;
+                td.style.cssText = 'padding:2rem;text-align:center;color:#ef4444;';
+                td.textContent = 'Failed to load invoices';
+                tr.appendChild(td);
+                tb.appendChild(tr);
+            }
+        }
+
+        function updateStats() {
+            var total = 0, paid = 0, pending = 0, overdue = 0;
+            for (var i = 0; i < allInvoices.length; i++) {
+                var amt = parseFloat(allInvoices[i].total_inc_gst || 0);
+                total += amt;
+                if (allInvoices[i].payment_status === 'paid') paid += amt;
+                else if (allInvoices[i].payment_status === 'pending') pending += amt;
+                else if (allInvoices[i].payment_status === 'overdue') overdue += amt;
+            }
+            document.getElementById('statTotal').textContent = '$' + total.toLocaleString('en-AU', { minimumFractionDigits: 0 });
+            document.getElementById('statPaid').textContent = '$' + paid.toLocaleString('en-AU', { minimumFractionDigits: 0 });
+            document.getElementById('statPending').textContent = '$' + pending.toLocaleString('en-AU', { minimumFractionDigits: 0 });
+            document.getElementById('statOverdue').textContent = '$' + overdue.toLocaleString('en-AU', { minimumFractionDigits: 0 });
+        }
+
+        function fmtDate(d) {
+            if (!d) return '\u2014';
+            return new Date(d).toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric' });
+        }
+
+        function createStatusBadge(status) {
+            var span = document.createElement('span');
+            var colors = {
+                pending: { bg: '#f59e0b22', text: '#f59e0b', label: 'Pending' },
+                paid: { bg: '#22c55e22', text: '#22c55e', label: 'Paid' },
+                overdue: { bg: '#ef444422', text: '#ef4444', label: 'Overdue' },
+                partial: { bg: '#3b82f622', text: '#3b82f6', label: 'Partial' },
+                waived: { bg: '#6b728022', text: '#6b7280', label: 'Waived' },
+            };
+            var c = colors[status] || colors.pending;
+            span.style.cssText = 'background:' + c.bg + ';color:' + c.text + ';padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:600;';
+            span.textContent = c.label;
+            return span;
+        }
+
+        function renderTable() {
+            var statusFilter = document.getElementById('filterStatus').value;
+            var typeFilter = document.getElementById('filterType').value;
+            var search = document.getElementById('searchBox').value.toLowerCase();
+            var todayStr = new Date().toISOString().slice(0, 10);
+            var in7Days = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
+
+            var tbody = document.getElementById('invoiceTableBody');
+            tbody.textContent = '';
+
+            var filtered = allInvoices.filter(function(inv) {
+                if (statusFilter !== 'all' && inv.payment_status !== statusFilter) return false;
+                if (typeFilter !== 'all' && inv.type !== typeFilter) return false;
+                if (search) {
+                    var hay = (inv.invoice_number + ' ' + inv.job_number + ' ' + inv.customer_name + ' ' + inv.customer_email + ' ' + inv.address).toLowerCase();
+                    if (hay.indexOf(search) === -1) return false;
+                }
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                var emptyTr = document.createElement('tr');
+                var emptyTd = document.createElement('td');
+                emptyTd.colSpan = 8;
+                emptyTd.style.cssText = 'padding:2rem;text-align:center;color:#666;';
+                emptyTd.textContent = 'No invoices found';
+                emptyTr.appendChild(emptyTd);
+                tbody.appendChild(emptyTr);
+                return;
+            }
+
+            filtered.forEach(function(inv) {
+                var isDueSoon = inv.payment_status === 'pending' && inv.due_date <= in7Days && inv.due_date >= todayStr;
+                var tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid #222';
+                if (inv.payment_status === 'overdue') tr.style.background = 'rgba(239,68,68,0.05)';
+                else if (isDueSoon) tr.style.background = 'rgba(245,158,11,0.05)';
+
+                // Invoice #
+                var td1 = document.createElement('td');
+                td1.style.cssText = 'padding:12px 16px;color:#B8963E;font-weight:600;';
+                td1.textContent = inv.invoice_number;
+                tr.appendChild(td1);
+
+                // Job #
+                var td2 = document.createElement('td');
+                td2.style.cssText = 'padding:12px 16px;color:#ccc;';
+                td2.textContent = inv.job_number;
+                tr.appendChild(td2);
+
+                // Customer
+                var td3 = document.createElement('td');
+                td3.style.cssText = 'padding:12px 16px;';
+                var nameDiv = document.createElement('div');
+                nameDiv.style.cssText = 'color:#fff;font-weight:500;';
+                nameDiv.textContent = inv.customer_name;
+                var emailDiv = document.createElement('div');
+                emailDiv.style.cssText = 'color:#666;font-size:0.75rem;';
+                emailDiv.textContent = inv.customer_email;
+                td3.appendChild(nameDiv);
+                td3.appendChild(emailDiv);
+                tr.appendChild(td3);
+
+                // Type
+                var td4 = document.createElement('td');
+                td4.style.cssText = 'padding:12px 16px;color:#999;text-transform:capitalize;';
+                td4.textContent = inv.type;
+                tr.appendChild(td4);
+
+                // Amount
+                var td5 = document.createElement('td');
+                td5.style.cssText = 'padding:12px 16px;text-align:right;color:#fff;font-weight:600;';
+                td5.textContent = '$' + parseFloat(inv.total_inc_gst).toLocaleString('en-AU', { minimumFractionDigits: 2 });
+                tr.appendChild(td5);
+
+                // Due Date
+                var td6 = document.createElement('td');
+                td6.style.cssText = 'padding:12px 16px;';
+                if (inv.payment_status === 'overdue') td6.style.color = '#ef4444';
+                else if (isDueSoon) td6.style.color = '#f59e0b';
+                else td6.style.color = '#999';
+                td6.textContent = fmtDate(inv.due_date);
+                if (isDueSoon) {
+                    var warn = document.createElement('div');
+                    warn.style.cssText = 'font-size:0.7rem;color:#f59e0b;';
+                    warn.textContent = 'Due soon!';
+                    td6.appendChild(warn);
+                }
+                if (inv.payment_status === 'overdue') {
+                    var od = document.createElement('div');
+                    od.style.cssText = 'font-size:0.7rem;color:#ef4444;';
+                    od.textContent = 'OVERDUE';
+                    td6.appendChild(od);
+                }
+                tr.appendChild(td6);
+
+                // Status
+                var td7 = document.createElement('td');
+                td7.style.cssText = 'padding:12px 16px;text-align:center;';
+                td7.appendChild(createStatusBadge(inv.payment_status));
+                tr.appendChild(td7);
+
+                // Actions
+                var td8 = document.createElement('td');
+                td8.style.cssText = 'padding:12px 16px;text-align:center;';
+                if (inv.payment_status !== 'paid' && inv.payment_status !== 'waived') {
+                    var btn = document.createElement('button');
+                    btn.style.cssText = 'padding:4px 12px;border-radius:6px;border:1px solid #22c55e;background:transparent;color:#22c55e;font-size:0.75rem;cursor:pointer;';
+                    btn.textContent = 'Mark Paid';
+                    btn.setAttribute('data-id', inv.id);
+                    btn.setAttribute('data-num', inv.invoice_number);
+                    btn.setAttribute('data-amt', inv.total_inc_gst);
+                    btn.addEventListener('click', function() {
+                        openMarkPaid(this.getAttribute('data-id'), this.getAttribute('data-num'), parseFloat(this.getAttribute('data-amt')));
+                    });
+                    td8.appendChild(btn);
+                } else if (inv.payment_status === 'paid') {
+                    var paidSpan = document.createElement('span');
+                    paidSpan.style.cssText = 'color:#22c55e;font-size:0.75rem;';
+                    paidSpan.textContent = fmtDate(inv.paid_date);
+                    td8.appendChild(paidSpan);
+                }
+                tr.appendChild(td8);
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        function openMarkPaid(id, invoiceNum, amount) {
+            selectedInvoiceId = id;
+            document.getElementById('modalInvoiceInfo').textContent = 'Invoice: ' + invoiceNum;
+            document.getElementById('paidAmount').value = amount;
+            document.getElementById('markPaidModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('markPaidModal').style.display = 'none';
+            selectedInvoiceId = null;
+        }
+
+        async function confirmMarkPaid() {
+            if (!selectedInvoiceId) return;
+            var amount = parseFloat(document.getElementById('paidAmount').value) || 0;
+            var method = document.getElementById('paidMethod').value;
+            var notes = document.getElementById('paidNotes').value;
+
+            try {
+                var resp = await fetch(SUPABASE_URL + '/rest/v1/invoices?id=eq.' + selectedInvoiceId, {
+                    method: 'PATCH',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': 'Bearer ' + SUPABASE_KEY,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=minimal',
+                    },
+                    body: JSON.stringify({
+                        payment_status: 'paid',
+                        paid_date: new Date().toISOString().slice(0, 10),
+                        paid_amount: amount,
+                        payment_method: method,
+                        payment_notes: notes || null,
+                    }),
+                });
+
+                if (resp.ok) {
+                    closeModal();
+                    fetchInvoices();
+                } else {
+                    alert('Failed to update invoice');
+                }
+            } catch (err) {
+                console.error('Mark paid error:', err);
+                alert('Error updating invoice');
+            }
+        }
+
+        // ── Filters ──
+        document.getElementById('filterStatus').addEventListener('change', renderTable);
+        document.getElementById('filterType').addEventListener('change', renderTable);
+        document.getElementById('searchBox').addEventListener('input', renderTable);
+
+        // ── Init ──
+        fetchInvoices();
+    </script>
+</body>
+</html>

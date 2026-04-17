@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#1C1C1C">
+  <title>MSS Admin</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#F5F5F7;color:#1A1A2E;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+    :root{--gold:#B8963E;--charcoal:#1C1C1C;--bg:#F5F5F7;--surface:#FFF;--border:#E8E8EE;--muted:#6B7280;--success:#16A34A;--danger:#DC2626;--warning:#D97706;--info:#2563EB}
+    .nav{position:fixed;bottom:0;left:0;right:0;background:#FFF;border-top:1px solid var(--border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+    .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 0;color:var(--muted);font-size:10px;font-weight:600;text-decoration:none}
+    .nav-item.active{color:var(--gold)}
+    .nav-icon{font-size:22px;margin-bottom:2px}
+    .page{display:none;padding:0 16px 90px;min-height:100vh}
+    .page.active{display:block}
+    .header{background:var(--charcoal);margin:0 -16px;padding:52px 20px 20px;color:#FFF}
+    .header-brand{font-size:11px;color:var(--gold);letter-spacing:3px;text-transform:uppercase;margin-bottom:4px}
+    .header-title{font-size:22px;font-weight:700}
+    .kpi-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
+    .kpi{background:#FFF;border-radius:12px;padding:16px;border-left:3px solid var(--gold)}
+    .kpi-label{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+    .kpi-val{font-size:22px;font-weight:800;margin-top:4px}
+    .card{background:#FFF;border-radius:14px;padding:18px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+    .card-title{font-size:16px;font-weight:700;margin-bottom:12px}
+    .form-group{margin-bottom:16px}
+    .form-label{display:block;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+    .form-input{width:100%;padding:14px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;font-family:inherit;background:#FFF;color:var(--charcoal);-webkit-appearance:none}
+    .form-input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(184,150,62,.12)}
+    select.form-input{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%236B7280' fill='none' stroke-width='2'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .btn{width:100%;padding:16px;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+    .btn-gold{background:var(--gold);color:var(--charcoal)}
+    .btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--charcoal)}
+    .btn-danger{background:var(--danger);color:#FFF}
+    .badge{display:inline-block;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700}
+    .badge-success{background:#DCFCE7;color:var(--success)}
+    .badge-warning{background:#FEF3C7;color:var(--warning)}
+    .badge-info{background:#DBEAFE;color:var(--info)}
+    .badge-muted{background:#F3F4F6;color:var(--muted)}
+    /* Receipt */
+    .camera-btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+    .camera-btn{background:var(--charcoal);border:none;border-radius:14px;padding:28px 16px;text-align:center;color:#FFF;font-family:inherit;cursor:pointer}
+    .camera-btn:active{opacity:.9}
+    .camera-btn .icon{font-size:36px;margin-bottom:8px}
+    .camera-btn .label{font-size:13px;font-weight:700}
+    .preview-img{width:100%;border-radius:12px;margin:16px 0;max-height:300px;object-fit:cover}
+    /* Expense list */
+    .exp-row{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid #F3F4F6}
+    .exp-desc{font-size:14px;font-weight:600}
+    .exp-meta{display:flex;gap:8px;align-items:center;margin-top:4px}
+    .exp-total{font-size:16px;font-weight:700;text-align:right}
+    .exp-gst{font-size:11px;color:var(--muted)}
+    /* P&L */
+    .pl-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #F3F4F6;font-size:14px}
+    .pl-row.total{border-top:2px solid var(--charcoal);border-bottom:none;font-weight:700;padding-top:12px;margin-top:4px}
+    .pl-label{color:var(--muted)}
+    .pl-value{font-weight:600}
+    .profit-box{background:#F9FAFB;border-radius:12px;padding:16px;display:flex;justify-content:space-between;align-items:center;margin-top:16px}
+    .profit-label{font-size:14px;font-weight:800;letter-spacing:1px}
+    .profit-val{font-size:22px;font-weight:800}
+    .fab{position:fixed;bottom:80px;right:20px;width:56px;height:56px;border-radius:28px;background:var(--gold);border:none;font-size:28px;color:#FFF;box-shadow:0 4px 12px rgba(0,0,0,.2);z-index:50;cursor:pointer}
+    .toast{position:fixed;top:60px;left:16px;right:16px;background:var(--success);color:#FFF;padding:14px 18px;border-radius:12px;font-weight:600;font-size:14px;z-index:200;transform:translateY(-120px);transition:transform .3s;text-align:center}
+    .toast.show{transform:translateY(0)}
+    .toast.error{background:var(--danger)}
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:150;align-items:flex-end;justify-content:center}
+    .modal-overlay.show{display:flex}
+    .modal-content{background:#FFF;border-radius:24px 24px 0 0;padding:24px 20px 40px;width:100%;max-height:85vh;overflow-y:auto}
+    .modal-title{font-size:18px;font-weight:700;margin-bottom:20px}
+    .modal-actions{display:flex;gap:12px;margin-top:20px}
+    .modal-actions .btn{flex:1}
+  </style>
+</head>
+<body>
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="pageDash">
+    <div class="header"><div class="header-brand">MSS Admin</div><div class="header-title">Dashboard</div></div>
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-label">Active Jobs</div><div class="kpi-val" style="color:var(--success)">4</div></div>
+      <div class="kpi"><div class="kpi-label">Pending</div><div class="kpi-val" style="color:var(--warning)">2</div></div>
+      <div class="kpi"><div class="kpi-label">This Month Income</div><div class="kpi-val" style="color:var(--success)">$9,850</div></div>
+      <div class="kpi"><div class="kpi-label">This Month Expenses</div><div class="kpi-val" style="color:var(--danger)">$2,869</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Quick Actions</div>
+      <div class="camera-btns">
+        <button class="camera-btn" onclick="showPage('pageReceipt')"><div class="icon">📷</div><div class="label">Scan Receipt</div></button>
+        <button class="camera-btn" onclick="showPage('pageExpenses')"><div class="icon">💸</div><div class="label">Add Expense</div></button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+        <button class="camera-btn" onclick="showPage('pageBookings')"><div class="icon">📋</div><div class="label">Bookings</div></button>
+        <button class="camera-btn" onclick="showPage('pageReports')"><div class="icon">📈</div><div class="label">Reports</div></button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Recent Activity</div>
+      <div class="exp-row"><div><div class="exp-desc">New booking MSS-2026-0008</div><div class="exp-meta"><span class="badge badge-warning">Pending</span><span style="font-size:12px;color:var(--muted)">Today</span></div></div></div>
+      <div class="exp-row"><div><div class="exp-desc">Photo booking PHOTO-2026-0001</div><div class="exp-meta"><span class="badge badge-success">Confirmed</span><span style="font-size:12px;color:var(--muted)">Today</span></div></div></div>
+      <div class="exp-row"><div><div class="exp-desc">Warehouse rent paid</div><div class="exp-meta"><span class="badge badge-info">Fixed</span><span style="font-size:12px;color:var(--muted)">1 Apr</span></div></div></div>
+    </div>
+  </div>
+
+  <!-- BOOKINGS -->
+  <div class="page" id="pageBookings">
+    <div class="header"><div class="header-brand">MSS Admin</div><div class="header-title">Bookings</div></div>
+    <div style="display:flex;gap:8px;margin:16px 0;overflow-x:auto">
+      <button class="badge badge-info" style="padding:8px 16px;border:none;font-family:inherit;font-size:13px;cursor:pointer" onclick="filterBookings('all')">All</button>
+      <button class="badge badge-warning" style="padding:8px 16px;border:none;font-family:inherit;font-size:13px;cursor:pointer" onclick="filterBookings('pending')">Pending</button>
+      <button class="badge badge-success" style="padding:8px 16px;border:none;font-family:inherit;font-size:13px;cursor:pointer" onclick="filterBookings('active')">Active</button>
+      <button class="badge badge-muted" style="padding:8px 16px;border:none;font-family:inherit;font-size:13px;cursor:pointer" onclick="filterBookings('closed')">Closed</button>
+    </div>
+    <div id="bookingsList"></div>
+  </div>
+
+  <!-- RECEIPT SCANNER -->
+  <div class="page" id="pageReceipt">
+    <div class="header"><div class="header-brand">MSS Admin</div><div class="header-title">Scan Receipt</div></div>
+    <div style="margin-top:16px">
+      <div class="card">
+        <div class="card-title">Upload Receipt Photo</div>
+        <div class="camera-btns">
+          <button class="camera-btn" onclick="document.getElementById('cameraInput').click()"><div class="icon">📷</div><div class="label">Take Photo</div></button>
+          <button class="camera-btn" onclick="document.getElementById('galleryInput').click()"><div class="icon">🖼</div><div class="label">Gallery</div></button>
+        </div>
+        <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none" onchange="handleImage(this)">
+        <input type="file" id="galleryInput" accept="image/*" style="display:none" onchange="handleImage(this)">
+        <img id="receiptPreview" class="preview-img" style="display:none" alt="Receipt preview">
+      </div>
+
+      <div id="receiptForm" style="display:none">
+        <div class="form-group"><label class="form-label">Amount (ex GST) *</label><input class="form-input" id="rAmount" type="number" step="0.01" placeholder="0.00" inputmode="decimal" oninput="calcGst()"></div>
+        <div class="form-group"><label class="form-label">GST (auto 10%)</label><input class="form-input" id="rGst" type="number" step="0.01" placeholder="Auto-calculated" readonly style="background:#F9FAFB"></div>
+        <div class="form-group"><label class="form-label">Category *</label>
+          <select class="form-input" id="rCategory">
+            <option value="truck">Truck / Transport</option>
+            <option value="designer">Interior Designer</option>
+            <option value="supplies">Supplies / Materials</option>
+            <option value="photography">Photography</option>
+            <option value="software">Software</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Description</label><input class="form-input" id="rDesc" placeholder="What was this for?"></div>
+        <div class="form-group"><label class="form-label">Job # (optional)</label><input class="form-input" id="rJob" placeholder="MSS-2026-0001"></div>
+        <div class="form-group"><label class="form-label">Notes</label><textarea class="form-input" id="rNotes" rows="2" placeholder="Optional notes..."></textarea></div>
+        <button class="btn btn-gold" onclick="saveReceipt()">Save Expense</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXPENSES -->
+  <div class="page" id="pageExpenses">
+    <div class="header"><div class="header-brand">MSS Admin</div><div class="header-title">Expenses</div></div>
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-label">This Month</div><div class="kpi-val" id="expTotal">$2,869.50</div></div>
+      <div class="kpi"><div class="kpi-label">Entries</div><div class="kpi-val" id="expCount">4</div></div>
+    </div>
+    <div id="expenseList"></div>
+    <button class="fab" onclick="showAddExpense()">+</button>
+  </div>
+
+  <!-- REPORTS -->
+  <div class="page" id="pageReports">
+    <div class="header"><div class="header-brand">MSS Admin</div><div class="header-title">Financial Reports</div></div>
+    <div style="margin-top:16px">
+      <div class="card">
+        <div class="card-title">April 2026 — P&L</div>
+        <div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:1px;margin-bottom:8px">INCOME</div>
+        <div class="pl-row"><span class="pl-label">Staging Bookings (4)</span><span class="pl-value" style="color:var(--success)">$8,500.00</span></div>
+        <div class="pl-row"><span class="pl-label">Photography (3)</span><span class="pl-value" style="color:var(--success)">$1,350.00</span></div>
+        <div class="pl-row total"><span>Total Revenue</span><span style="color:var(--success)">$9,850.00</span></div>
+
+        <div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:1px;margin:20px 0 8px">EXPENSES</div>
+        <div class="pl-row"><span class="pl-label">Warehouse Rent</span><span class="pl-value" style="color:var(--danger)">-$1,793.00</span></div>
+        <div class="pl-row"><span class="pl-label">Truck / Transport</span><span class="pl-value" style="color:var(--danger)">-$450.00</span></div>
+        <div class="pl-row"><span class="pl-label">Interior Designer</span><span class="pl-value" style="color:var(--danger)">-$600.00</span></div>
+        <div class="pl-row"><span class="pl-label">Supplies</span><span class="pl-value" style="color:var(--danger)">-$93.50</span></div>
+        <div class="pl-row total"><span>Total Expenses</span><span style="color:var(--danger)">-$2,936.50</span></div>
+
+        <div class="profit-box">
+          <span class="profit-label">NET PROFIT</span>
+          <span class="profit-val" style="color:var(--success)">$6,913.50</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Monthly Comparison</div>
+        <div class="pl-row"><span class="pl-label">April 2026</span><span class="pl-value" style="color:var(--success)">$6,913.50</span></div>
+        <div class="pl-row"><span class="pl-label">March 2026</span><span class="pl-value" style="color:var(--success)">$9,577.00</span></div>
+        <div class="pl-row"><span class="pl-label">February 2026</span><span class="pl-value" style="color:var(--success)">$5,646.00</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <a class="nav-item active" onclick="showPage('pageDash')" id="navDash"><span class="nav-icon">📊</span>Dashboard</a>
+    <a class="nav-item" onclick="showPage('pageBookings')" id="navBookings"><span class="nav-icon">📋</span>Bookings</a>
+    <a class="nav-item" onclick="showPage('pageReceipt')" id="navReceipt"><span class="nav-icon">📷</span>Receipt</a>
+    <a class="nav-item" onclick="showPage('pageExpenses')" id="navExpenses"><span class="nav-icon">💸</span>Expenses</a>
+    <a class="nav-item" onclick="showPage('pageReports')" id="navReports"><span class="nav-icon">📈</span>Reports</a>
+  </nav>
+  <div class="toast" id="toast"></div>
+
+  <!-- ADD EXPENSE MODAL -->
+  <div class="modal-overlay" id="addExpModal">
+    <div class="modal-content">
+      <div class="modal-title">Add Expense</div>
+      <div class="form-group"><label class="form-label">Description *</label><input class="form-input" id="eDesc" placeholder="e.g. Truck hire"></div>
+      <div class="form-group"><label class="form-label">Category</label>
+        <select class="form-input" id="eCat"><option value="truck">Truck / Transport</option><option value="designer">Interior Designer</option><option value="supplies">Supplies</option><option value="photography">Photography</option><option value="rent">Warehouse Rent</option><option value="other">Other</option></select>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Amount *</label><input class="form-input" id="eAmt" type="number" step="0.01" placeholder="0.00" inputmode="decimal"></div>
+        <div class="form-group"><label class="form-label">Job #</label><input class="form-input" id="eJob" placeholder="MSS-2026-0001"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-gold" onclick="addExpense()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // NAV
+    function showPage(id){
+      document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
+      document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active')});
+      document.getElementById(id).classList.add('active');
+      var map={pageDash:'navDash',pageBookings:'navBookings',pageReceipt:'navReceipt',pageExpenses:'navExpenses',pageReports:'navReports'};
+      var nav=document.getElementById(map[id]);if(nav)nav.classList.add('active');
+      window.scrollTo(0,0);
+      if(id==='pageBookings')renderBookings();
+      if(id==='pageExpenses')renderExpenses();
+    }
+    function toast(msg,isError){var t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(isError?' error':'');setTimeout(function(){t.className='toast'},3000)}
+
+    // RECEIPT
+    function handleImage(input){
+      if(input.files&&input.files[0]){
+        var reader=new FileReader();
+        reader.onload=function(e){
+          var img=document.getElementById('receiptPreview');
+          img.src=e.target.result;img.style.display='block';
+          document.getElementById('receiptForm').style.display='block';
+          document.getElementById('rAmount').focus();
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+    function calcGst(){
+      var amt=parseFloat(document.getElementById('rAmount').value)||0;
+      document.getElementById('rGst').value=(amt*0.10).toFixed(2);
+    }
+    function saveReceipt(){
+      var amt=parseFloat(document.getElementById('rAmount').value);
+      if(!amt||amt<=0){toast('Enter an amount',true);return}
+      var gst=parseFloat(document.getElementById('rGst').value)||0;
+      var exp={
+        id:Date.now().toString(),
+        date:new Date().toISOString().slice(0,10),
+        description:document.getElementById('rDesc').value.trim()||'Receipt upload',
+        category:document.getElementById('rCategory').value,
+        amount:amt,gst:gst,total:Math.round((amt+gst)*100)/100,
+        jobNumber:document.getElementById('rJob').value.trim(),
+        hasReceipt:true
+      };
+      var expenses=JSON.parse(localStorage.getItem('mss_mobile_expenses')||'[]');
+      expenses.unshift(exp);
+      localStorage.setItem('mss_mobile_expenses',JSON.stringify(expenses));
+      toast('Receipt saved! $'+exp.total.toFixed(2));
+      document.getElementById('receiptPreview').style.display='none';
+      document.getElementById('receiptForm').style.display='none';
+      document.getElementById('cameraInput').value='';
+      document.getElementById('galleryInput').value='';
+    }
+
+    // BOOKINGS
+    var BOOKINGS=[
+      {job:'MSS-2026-0008',agent:'Test Agent',address:'123 Test St, Geelong',date:'15 May 2026',status:'pending',price:'$2,500'},
+      {job:'MSS-2026-0007',agent:'Sarah Mitchell',address:'42 Bellarine St, Newtown',date:'10 Apr 2026',status:'active',price:'$3,200'},
+      {job:'MSS-2026-0006',agent:'Tom Richards',address:'15 Ocean Blvd, Torquay',date:'5 Apr 2026',status:'active',price:'$2,800'},
+      {job:'PHOTO-2026-0001',agent:'Test Agent',address:'123 Test St, Geelong',date:'15 May 2026',status:'confirmed',price:'$449'},
+      {job:'MSS-2026-0005',agent:'Jane Cooper',address:'8 Surf Coast Hwy',date:'28 Mar 2026',status:'closed',price:'$2,100'},
+    ];
+    function renderBookings(filter){
+      var list=filter&&filter!=='all'?BOOKINGS.filter(function(b){return b.status===filter}):BOOKINGS;
+      var container=document.getElementById('bookingsList');
+      container.textContent='';
+      list.forEach(function(b){
+        var card=document.createElement('div');card.className='card';
+        var hdr=document.createElement('div');hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:8px';
+        var jn=document.createElement('span');jn.style.cssText='font-weight:700;font-size:15px';jn.textContent=b.job;
+        var badge=document.createElement('span');
+        var cls=b.status==='pending'?'badge-warning':b.status==='active'||b.status==='confirmed'?'badge-success':'badge-muted';
+        badge.className='badge '+cls;badge.textContent=b.status.charAt(0).toUpperCase()+b.status.slice(1);
+        hdr.appendChild(jn);hdr.appendChild(badge);card.appendChild(hdr);
+        var details=document.createElement('div');details.style.cssText='font-size:13px;color:var(--muted);line-height:1.6';
+        details.textContent=b.agent+' · '+b.address;
+        card.appendChild(details);
+        var foot=document.createElement('div');foot.style.cssText='display:flex;justify-content:space-between;margin-top:10px;font-size:13px';
+        var dt=document.createElement('span');dt.style.color='var(--muted)';dt.textContent=b.date;
+        var pr=document.createElement('span');pr.style.cssText='font-weight:700;color:var(--gold)';pr.textContent=b.price;
+        foot.appendChild(dt);foot.appendChild(pr);card.appendChild(foot);
+        container.appendChild(card);
+      });
+    }
+    function filterBookings(f){renderBookings(f)}
+
+    // EXPENSES
+    var SEED_EXPENSES=[
+      {id:'1',date:'2026-04-01',description:'Warehouse Rent',category:'rent',amount:1630,gst:163,total:1793,jobNumber:''},
+      {id:'2',date:'2026-04-05',description:'Truck hire — Bellarine St',category:'truck',amount:180,gst:18,total:198,jobNumber:'MSS-2026-0007'},
+      {id:'3',date:'2026-04-07',description:'Designer — Ocean Blvd',category:'designer',amount:350,gst:35,total:385,jobNumber:'MSS-2026-0006'},
+      {id:'4',date:'2026-04-10',description:'Cleaning supplies',category:'supplies',amount:85,gst:8.50,total:93.50,jobNumber:''},
+    ];
+    function getExpenses(){
+      var stored=JSON.parse(localStorage.getItem('mss_mobile_expenses')||'null');
+      return stored||SEED_EXPENSES;
+    }
+    function renderExpenses(){
+      var expenses=getExpenses();
+      var total=expenses.reduce(function(s,e){return s+e.total},0);
+      document.getElementById('expTotal').textContent='$'+total.toLocaleString('en-AU',{minimumFractionDigits:2});
+      document.getElementById('expCount').textContent=expenses.length;
+      var container=document.getElementById('expenseList');
+      container.textContent='';
+      var catColors={rent:'#2563EB',truck:'#D97706',designer:'#7C3AED',supplies:'#16A34A',photography:'#EC4899',software:'#6366F1',other:'#6B7280'};
+      var catLabels={rent:'Rent',truck:'Truck',designer:'Designer',supplies:'Supplies',photography:'Photo',software:'Software',other:'Other'};
+      expenses.forEach(function(e){
+        var row=document.createElement('div');row.className='card';row.style.padding='14px 18px';
+        var top=document.createElement('div');top.style.cssText='display:flex;justify-content:space-between;align-items:center';
+        var left=document.createElement('div');
+        var desc=document.createElement('div');desc.style.cssText='font-size:14px;font-weight:600';desc.textContent=e.description;
+        var meta=document.createElement('div');meta.style.cssText='display:flex;gap:8px;align-items:center;margin-top:4px';
+        var badge=document.createElement('span');badge.style.cssText='padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:'+(catColors[e.category]||'#6B7280')+'18;color:'+(catColors[e.category]||'#6B7280');
+        badge.textContent=catLabels[e.category]||e.category;
+        var dt=document.createElement('span');dt.style.cssText='font-size:12px;color:var(--muted)';dt.textContent=e.date;
+        meta.appendChild(badge);meta.appendChild(dt);
+        if(e.jobNumber){var jn=document.createElement('span');jn.style.cssText='font-size:12px;color:var(--gold);font-weight:600';jn.textContent=e.jobNumber;meta.appendChild(jn)}
+        if(e.hasReceipt){var rc=document.createElement('span');rc.style.cssText='font-size:11px';rc.textContent='📷';meta.appendChild(rc)}
+        left.appendChild(desc);left.appendChild(meta);
+        var right=document.createElement('div');right.style.textAlign='right';
+        var tot=document.createElement('div');tot.style.cssText='font-size:16px;font-weight:700';tot.textContent='$'+e.total.toFixed(2);
+        var gst=document.createElement('div');gst.style.cssText='font-size:11px;color:var(--muted)';gst.textContent='inc $'+e.gst.toFixed(2)+' GST';
+        right.appendChild(tot);right.appendChild(gst);
+        top.appendChild(left);top.appendChild(right);row.appendChild(top);
+        container.appendChild(row);
+      });
+    }
+    function showAddExpense(){document.getElementById('addExpModal').classList.add('show')}
+    function closeModal(){document.getElementById('addExpModal').classList.remove('show')}
+    function addExpense(){
+      var desc=document.getElementById('eDesc').value.trim();
+      var amt=parseFloat(document.getElementById('eAmt').value);
+      if(!desc||!amt||amt<=0){toast('Fill description and amount',true);return}
+      var gst=Math.round(amt*10)/100;
+      var exp={id:Date.now().toString(),date:new Date().toISOString().slice(0,10),description:desc,category:document.getElementById('eCat').value,amount:amt,gst:gst,total:Math.round((amt+gst)*100)/100,jobNumber:document.getElementById('eJob').value.trim()};
+      var expenses=getExpenses();expenses.unshift(exp);
+      localStorage.setItem('mss_mobile_expenses',JSON.stringify(expenses));
+      closeModal();toast('Expense added!');renderExpenses();
+      document.getElementById('eDesc').value='';document.getElementById('eAmt').value='';document.getElementById('eJob').value='';
+    }
+
+    // Init
+    renderBookings();
+  </script>
+</body>
+</html>

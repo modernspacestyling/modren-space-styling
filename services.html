@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Property staging services in Geelong VIC — vacant staging, partial staging, furniture rental and developer display suites. View our indicative pricing.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://www.modernspacestyling.com.au/services.html">
+    <meta property="og:title" content="Services & Pricing | Modern Space Styling Geelong">
+    <meta property="og:description" content="Property staging services in Geelong — vacant staging, partial staging, furniture rental. View indicative pricing.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.modernspacestyling.com.au/services.html">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=1200&q=80">
+    <meta property="og:site_name" content="Modern Space Styling">
+    <meta property="og:locale" content="en_AU">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Services & Pricing | Modern Space Styling Geelong">
+    <meta name="twitter:description" content="Property staging services in Geelong — vacant staging, partial staging, furniture rental.">
+    <meta name="twitter:image" content="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=1200&q=80">
+    <title>Services &amp; Pricing | Modern Space Styling Geelong</title>
+    <script type="application/ld+json">
+    [{"@context":"https://schema.org","@type":"Service","serviceType":"Property Staging","provider":{"@type":"LocalBusiness","name":"Modern Space Styling Pty Ltd","url":"https://www.modernspacestyling.com.au"},"areaServed":{"@type":"GeoCircle","geoMidpoint":{"@type":"GeoCoordinates","latitude":-38.1499,"longitude":144.3617},"geoRadius":"100000"},"description":"Premium property staging and furniture rental for real estate agents in Geelong, VIC.","offers":[{"@type":"Offer","name":"3 Bedroom Staging","price":"2000","priceCurrency":"AUD"},{"@type":"Offer","name":"4 Bedroom Staging","price":"2500","priceCurrency":"AUD"},{"@type":"Offer","name":"Partial Staging","price":"1800","priceCurrency":"AUD"}]},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://www.modernspacestyling.com.au/"},{"@type":"ListItem","position":2,"name":"Services & Pricing","item":"https://www.modernspacestyling.com.au/services.html"}]}]
+    </script>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://images.unsplash.com">
+    <style>
+        .price-card {
+            background: white;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+            transition: transform 0.25s, box-shadow 0.25s;
+        }
+
+        .price-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.14);
+        }
+
+        .price-card-header {
+            background: #111111;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .price-card-body {
+            padding: 2rem;
+        }
+
+        .price-card.featured .price-card-header {
+            background: linear-gradient(135deg, #111111 0%, #1a1a1a 100%);
+            border-bottom: 3px solid #B8963E;
+        }
+
+        .price-amount {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #B8963E;
+            line-height: 1.1;
+        }
+
+        .price-gst {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.45);
+            margin-top: 4px;
+        }
+
+        .price-includes {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .price-includes li {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 0.875rem;
+            color: #4A4A4A;
+        }
+
+        .price-includes li::before {
+            content: '✓';
+            color: #B8963E;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .faq-item {
+            border-bottom: 1px solid #E8DDD0;
+        }
+
+        .faq-q {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem 0;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .faq-a {
+            display: none;
+            padding-bottom: 1.25rem;
+            font-size: 0.875rem;
+            color: #6B7280;
+            line-height: 1.8;
+        }
+
+        .faq-item.open .faq-a {
+            display: block;
+        }
+
+        .faq-icon {
+            transition: transform 0.3s;
+            font-size: 1.2rem;
+            color: #B8963E;
+        }
+
+        .faq-item.open .faq-icon {
+            transform: rotate(45deg);
+        }
+
+        .service-detail {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+
+        .service-detail.reverse {
+            direction: rtl;
+        }
+
+        .service-detail.reverse>* {
+            direction: ltr;
+        }
+
+        @media (max-width:800px) {
+
+            .service-detail,
+            .service-detail.reverse {
+                grid-template-columns: 1fr;
+                direction: ltr;
+            }
+        }
+
+        .service-detail img {
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+            width: 100%;
+            height: 380px;
+            object-fit: cover;
+        }
+
+        .service-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            margin-top: 1.25rem;
+        }
+
+        .service-list li {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.875rem;
+        }
+
+        .service-list li::before {
+            content: '✓';
+            color: #B8963E;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="nav nav--solid" id="mainNav" aria-label="Main navigation">
+        <div class="nav-inner">
+            <a href="index.html" class="nav-logo"><span class="nav-logo-name">Modern Space Styling</span><span
+                    class="nav-logo-tagline">Property Staging · Geelong</span></a>
+            <ul class="nav-links">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="services.html" class="nav-link active">Services</a></li>
+                <li><a href="photography.html" class="nav-link">Photography</a></li>
+                <li><a href="gallery.html" class="nav-link">Gallery</a></li>
+                <li><a href="contact.html" class="nav-link">Contact</a></li>
+            </ul>
+            <a href="booking.html" class="btn btn-gold btn-sm hide-mobile nav-cta">Book a Staging</a>
+            <button class="nav-toggler" aria-label="Menu"><span></span><span></span><span></span></button>
+        </div>
+    </nav>
+    <div class="nav-mobile" id="mobileMenu">
+        <a href="index.html" class="nav-link">Home</a>
+        <a href="services.html" class="nav-link">Services &amp; Pricing</a>
+        <a href="photography.html" class="nav-link">Photography</a>
+        <a href="gallery.html" class="nav-link">Gallery</a>
+        <a href="contact.html" class="nav-link">Contact</a>
+        <a href="booking.html" class="btn btn-gold" style="text-align:center;display:block">Book Now</a>
+    </div>
+
+    <!-- PAGE HEADER -->
+    <div style="background:#111111;padding:calc(var(--nav-height) + 2.5rem) 0 2.5rem">
+        <div class="container">
+            <span class="eyebrow" style="color:#B8963E">What We Offer</span>
+            <h1 style="color:white;margin-top:0.5rem">Services &amp; Pricing</h1>
+            <p style="color:rgba(255,255,255,0.65);max-width:560px;margin-top:0.75rem">Premium property staging across
+                Geelong and the Surf Coast. Because first impressions are everything.</p>
+        </div>
+    </div>
+
+    <!-- PRICING TABLE -->
+    <section class="section" aria-labelledby="pricingHeading">
+        <div class="container">
+            <div class="section-header animate-on-scroll" style="text-align:center;margin-bottom:3rem">
+                <span class="eyebrow">Indicative Pricing</span>
+                <h2 id="pricingHeading" style="margin-top:0.5rem">From / Approx Rates</h2>
+                <div style="width:60px;height:2px;background:#B8963E;margin:1.25rem auto 0"></div>
+                <p style="max-width:600px;margin:1rem auto 0;color:#6B7280">All packages include 6 weeks staging from
+                    installation date. Prices are indicative and may vary.</p>
+            </div>
+
+            <div class="grid grid-4 animate-on-scroll" style="align-items:stretch">
+
+                <div class="price-card">
+                    <div class="price-card-header">
+                        <div
+                            style="font-size:0.72rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#B8963E;margin-bottom:0.75rem">
+                            3 Bedroom</div>
+                        <div style="font-size:0.85rem;color:rgba(255,255,255,0.55);margin-bottom:0.5rem">Full Staging
+                        </div>
+                        <div class="price-amount">from approx<br>$2,000</div>
+                        <div class="price-gst">+ GST · 6-week base period</div>
+                    </div>
+                    <div class="price-card-body">
+                        <ul class="price-includes">
+                            <li>Master &amp; 2 bedrooms</li>
+                            <li>Living area</li>
+                            <li>Dining area</li>
+                            <li>Artwork &amp; decor</li>
+                            <li>Professional installation</li>
+                            <li>SMS job updates</li>
+                        </ul>
+                        <a href="booking.html" class="btn btn-gold" style="width:100%;justify-content:center">Book
+                            Now</a>
+                    </div>
+                </div>
+
+                <div class="price-card featured" style="border:2px solid #B8963E">
+                    <div class="price-card-header" style="position:relative">
+                        <div
+                            style="position:absolute;top:-1px;left:50%;transform:translateX(-50%);background:#B8963E;color:black;font-size:0.65rem;font-weight:700;letter-spacing:0.1em;padding:4px 14px;border-radius:0 0 8px 8px">
+                            MOST POPULAR</div>
+                        <div
+                            style="font-size:0.72rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#B8963E;margin-bottom:0.75rem;padding-top:1rem">
+                            4 Bedroom</div>
+                        <div style="font-size:0.85rem;color:rgba(255,255,255,0.55);margin-bottom:0.5rem">Full Staging
+                        </div>
+                        <div class="price-amount">from approx<br>$2,500</div>
+                        <div class="price-gst">+ GST · 6-week base period</div>
+                    </div>
+                    <div class="price-card-body">
+                        <ul class="price-includes">
+                            <li>Master, 3 bedrooms</li>
+                            <li>Living area</li>
+                            <li>Dining area</li>
+                            <li>Artwork &amp; premium decor</li>
+                            <li>Professional installation</li>
+                            <li>SMS job updates</li>
+                        </ul>
+                        <a href="booking.html" class="btn btn-gold" style="width:100%;justify-content:center">Book
+                            Now</a>
+                    </div>
+                </div>
+
+                <div class="price-card">
+                    <div class="price-card-header">
+                        <div
+                            style="font-size:0.72rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#B8963E;margin-bottom:0.75rem">
+                            Partial Staging</div>
+                        <div style="font-size:0.85rem;color:rgba(255,255,255,0.55);margin-bottom:0.5rem">Key Rooms</div>
+                        <div class="price-amount">from approx<br>$1,800</div>
+                        <div class="price-gst">+ GST · 6-week base period</div>
+                    </div>
+                    <div class="price-card-body">
+                        <ul class="price-includes">
+                            <li>Master bedroom</li>
+                            <li>Main living area</li>
+                            <li>Dining area</li>
+                            <li>Decor &amp; artwork</li>
+                            <li>Ideal for occupied homes</li>
+                            <li>SMS job updates</li>
+                        </ul>
+                        <a href="booking.html" class="btn btn-gold" style="width:100%;justify-content:center">Enquire
+                            Now</a>
+                    </div>
+                </div>
+
+                <div class="price-card">
+                    <div class="price-card-header">
+                        <div
+                            style="font-size:0.72rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#B8963E;margin-bottom:0.75rem">
+                            Extensions</div>
+                        <div style="font-size:0.85rem;color:rgba(255,255,255,0.55);margin-bottom:0.5rem">After Base
+                            Period</div>
+                        <div class="price-amount">$200<br><span style="font-size:1rem">per week</span></div>
+                        <div class="price-gst">+ GST · weekly extension</div>
+                    </div>
+                    <div class="price-card-body">
+                        <ul class="price-includes">
+                            <li>1-week or 2-week options</li>
+                            <li>Request via Agent Portal</li>
+                            <li>Or SMS: EXTEND [JobNo] 1W</li>
+                            <li>Processed within 2 hours</li>
+                            <li>5-day advance reminder</li>
+                        </ul>
+                        <a href="portal/login.html" class="btn btn-gold" style="width:100%;justify-content:center">Agent
+                            Portal</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pricing disclaimer -->
+            <div class="animate-on-scroll"
+                style="background:#FFF9F0;border:1px solid rgba(200,162,74,0.3);border-radius:12px;padding:1.75rem 2rem;margin-top:2.5rem;text-align:center">
+                <p style="color:#6B7280;font-size:0.875rem;line-height:1.9;margin:0">
+                    Prices are indicative and may vary based on property layout, number of living areas, furniture
+                    requirements, and campaign needs.<br>
+                    <strong style="color:#B8963E">Long-term and repeat clients may be eligible for discounted
+                        packages.</strong><br>
+                    All prices exclude GST. A final quote will be confirmed at booking.
+                </p>
+            </div>
+
+            <!-- Travel surcharge -->
+            <div class="animate-on-scroll"
+                style="background:#111111;border-radius:12px;padding:1.5rem 2rem;margin-top:1.25rem;display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap">
+                <div style="font-size:2rem">📍</div>
+                <div>
+                    <div style="font-weight:700;color:white;margin-bottom:0.25rem">Service Area &amp; Travel Fee</div>
+                    <div style="font-size:0.875rem;color:rgba(255,255,255,0.65)">We service Geelong and suburbs within a
+                        100km radius at no additional travel cost. Properties <strong style="color:#B8963E">beyond
+                            100km</strong> will incur a <strong style="color:#B8963E">$50 travel surcharge</strong> (+
+                        GST) per visit.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SERVICES DETAIL -->
+    <section class="section section--mist" aria-labelledby="servicesDetailHeading">
+        <div class="container">
+            <div class="section-header animate-on-scroll" style="text-align:center;margin-bottom:3.5rem">
+                <span class="eyebrow">In Detail</span>
+                <h2 id="servicesDetailHeading" style="margin-top:0.5rem">Our Services</h2>
+                <div style="width:60px;height:2px;background:#B8963E;margin:1.25rem auto 0"></div>
+            </div>
+
+            <div class="service-detail animate-on-scroll" style="margin-bottom:5rem">
+                <img src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=800&q=80"
+                    alt="Full vacant home staging Geelong living room" loading="lazy">
+                <div>
+                    <span class="eyebrow">Most Popular</span>
+                    <h3 style="margin:0.5rem 0;font-size:1.6rem">Vacant Home Staging</h3>
+                    <div style="width:48px;height:2px;background:#B8963E;margin:1rem 0"></div>
+                    <p>Our signature service. We furnish every key room of your vacant listing with curated, on-trend
+                        furniture that helps buyers visualise the lifestyle — and drives results.</p>
+                    <ul class="service-list">
+                        <li>Full inventory supply and professional installation</li>
+                        <li>6-week standard staging period</li>
+                        <li>Bedroom, living, dining, and outdoor options</li>
+                        <li>Artwork and premium decor accessories included</li>
+                        <li>SMS updates at every stage</li>
+                        <li>Pickup arranged on sale or period end</li>
+                    </ul>
+                    <div style="margin-top:1.5rem;display:flex;gap:1rem;flex-wrap:wrap">
+                        <a href="booking.html" class="btn btn-gold">Book This Service</a>
+                        <a href="gallery.html" class="btn btn-secondary">View Gallery</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="service-detail reverse animate-on-scroll" style="margin-bottom:5rem">
+                <img src="https://images.unsplash.com/photo-1567016432779-094069958ea5?w=800&q=80"
+                    alt="Furniture rental Geelong" loading="lazy">
+                <div>
+                    <span class="eyebrow">Flexible Terms</span>
+                    <h3 style="margin:0.5rem 0;font-size:1.6rem">Furniture Rental</h3>
+                    <div style="width:48px;height:2px;background:#B8963E;margin:1rem 0"></div>
+                    <p>Need furniture for longer? Our flexible rental extends on a weekly basis — perfect for
+                        owner-occupiers, display suites, or extended sales campaigns.</p>
+                    <ul class="service-list">
+                        <li>1-week or 2-week extension options</li>
+                        <li>Request instantly via Agent Portal or SMS</li>
+                        <li>Premium maintained inventory</li>
+                        <li>$200 + GST per week after base period</li>
+                    </ul>
+                    <a href="portal/login.html" class="btn btn-gold" style="margin-top:1.5rem">Manage via Portal</a>
+                </div>
+            </div>
+
+            <div class="service-detail animate-on-scroll">
+                <img src="https://images.unsplash.com/photo-1616594039964-ae9021a400a0?w=800&q=80"
+                    alt="Partial home staging and developer display suites Geelong" loading="lazy">
+                <div>
+                    <span class="eyebrow">Strategic Styling</span>
+                    <h3 style="margin:0.5rem 0;font-size:1.6rem">Partial &amp; Developer Staging</h3>
+                    <div style="width:48px;height:2px;background:#B8963E;margin:1rem 0"></div>
+                    <p>Budget-conscious staging targeting the most impactful rooms. Also available for new builds,
+                        off-the-plan display suites, and multi-dwelling developments.</p>
+                    <ul class="service-list">
+                        <li>Focus on highest-impact rooms (master, living, dining)</li>
+                        <li>Works alongside existing furniture</li>
+                        <li>Display suite specialists for developers</li>
+                        <li>Multi-dwelling package pricing available</li>
+                    </ul>
+                    <a href="contact.html" class="btn btn-gold" style="margin-top:1.5rem">Get a Custom Quote</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SERVICE AREA -->
+    <section class="section" style="background:#111111" aria-labelledby="areaHeading">
+        <div class="container">
+            <div class="animate-on-scroll" style="text-align:center;margin-bottom:3rem">
+                <span class="eyebrow" style="color:#B8963E">Service Area</span>
+                <h2 id="areaHeading" style="color:white;margin-top:0.5rem">Geelong &amp; Surrounds</h2>
+                <div style="width:60px;height:2px;background:#B8963E;margin:1.25rem auto 0"></div>
+                <p
+                    style="color:rgba(255,255,255,0.6);margin-top:1rem;max-width:520px;margin-left:auto;margin-right:auto">
+                    Our team services a 100km radius from Geelong CBD. Properties beyond 100km incur a $50 travel
+                    surcharge per visit.</p>
+            </div>
+            <div class="grid grid-4 animate-on-scroll">
+                <div
+                    style="background:rgba(255,255,255,0.06);border:1px solid rgba(200,162,74,0.2);border-radius:12px;padding:1.5rem;text-align:center">
+                    <div style="font-size:1.5rem;margin-bottom:0.75rem">🏙</div>
+                    <strong style="color:white">Geelong CBD</strong><br><small style="color:rgba(255,255,255,0.45)">No
+                        surcharge</small>
+                </div>
+                <div
+                    style="background:rgba(255,255,255,0.06);border:1px solid rgba(200,162,74,0.2);border-radius:12px;padding:1.5rem;text-align:center">
+                    <div style="font-size:1.5rem;margin-bottom:0.75rem">🌊</div>
+                    <strong style="color:white">Surf Coast</strong><br><small
+                        style="color:rgba(255,255,255,0.45)">Torquay, Jan Juc, Anglesea</small>
+                </div>
+                <div
+                    style="background:rgba(255,255,255,0.06);border:1px solid rgba(200,162,74,0.2);border-radius:12px;padding:1.5rem;text-align:center">
+                    <div style="font-size:1.5rem;margin-bottom:0.75rem">🏖</div>
+                    <strong style="color:white">Bellarine Peninsula</strong><br><small
+                        style="color:rgba(255,255,255,0.45)">Ocean Grove, Barwon Heads</small>
+                </div>
+                <div
+                    style="background:rgba(200,162,74,0.12);border:1px solid rgba(200,162,74,0.35);border-radius:12px;padding:1.5rem;text-align:center">
+                    <div style="font-size:1.5rem;margin-bottom:0.75rem">📍</div>
+                    <strong style="color:#B8963E">Beyond 100km</strong><br><small
+                        style="color:rgba(255,255,255,0.45)">$50 travel surcharge applies</small>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section" aria-labelledby="faqHeading">
+        <div class="container" style="max-width:760px">
+            <div class="section-header animate-on-scroll" style="text-align:center;margin-bottom:3rem">
+                <span class="eyebrow">Common Questions</span>
+                <h2 id="faqHeading" style="margin-top:0.5rem">FAQ</h2>
+                <div style="width:60px;height:2px;background:#B8963E;margin:1.25rem auto 0"></div>
+            </div>
+            <div id="faqList">
+                <div class="faq-item">
+                    <div class="faq-q">How far in advance should I book? <span class="faq-icon">+</span></div>
+                    <div class="faq-a">We recommend at least 3–5 business days notice to ensure the right inventory is
+                        available. During peak Spring market periods, please book 1–2 weeks ahead to secure your
+                        preferred date.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q">What if the property doesn't sell within 6 weeks? <span class="faq-icon">+</span>
+                    </div>
+                    <div class="faq-a">No problem. You'll receive an SMS reminder 5 days before your staging period
+                        ends. Extend via your Agent Portal, or SMS us <code>EXTEND [JobNumber] 1W</code> or
+                        <code>EXTEND [JobNumber] 2W</code>. Extensions are $200 + GST per week.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q">Do I need to be on-site during installation? <span class="faq-icon">+</span>
+                    </div>
+                    <div class="faq-a">No. We use the secure lockbox code you provide at booking. Our team will send you
+                        SMS updates when they're on the way, when they've arrived, and when the job is completed.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q">Is the lockbox code kept secure? <span class="faq-icon">+</span></div>
+                    <div class="faq-a">Absolutely. All lockbox codes are encrypted using AES-256 military-grade
+                        encryption. Codes are only visible to authorised team members in our secure admin system and are
+                        never transmitted in plain text.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q">Can I stage an occupied property? <span class="faq-icon">+</span></div>
+                    <div class="faq-a">Yes. Our Partial Staging service is ideal for occupied properties. We focus on
+                        the key rooms that drive buyer decisions. An additional coordination surcharge may apply.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q">Do you offer discounts for regular clients? <span class="faq-icon">+</span></div>
+                    <div class="faq-a">Yes. Long-term and repeat clients are eligible for discounted packages. Contact
+                        us to discuss a preferred agent arrangement tailored to your agency's volume.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PHOTOGRAPHY SERVICES -->
+    <section class="section" aria-labelledby="photoServHeading">
+        <div class="container">
+            <div class="section-header animate-on-scroll" style="text-align:center;margin-bottom:3rem">
+                <span class="eyebrow">Real Estate Media</span>
+                <h2 id="photoServHeading" style="margin-top:0.5rem">Property Photography</h2>
+                <div style="width:60px;height:2px;background:#B8963E;margin:1.25rem auto 0"></div>
+                <p style="max-width:600px;margin:1rem auto 0;color:#6B7280">Professional photography, video, drone and floor plans for properties for sale and rent.</p>
+            </div>
+            <div class="grid grid-3 animate-on-scroll" style="align-items:stretch">
+                <div style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
+                    <div style="background:#111111;padding:1.75rem;text-align:center">
+                        <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#B8963E;margin-bottom:0.5rem">Essential</div>
+                        <div style="font-family:'Playfair Display',serif;font-size:2rem;color:#B8963E;font-weight:700">$349</div>
+                        <div style="font-size:0.78rem;color:rgba(255,255,255,0.45)">+ GST</div>
+                    </div>
+                    <div style="padding:1.5rem">
+                        <ul style="list-style:none;padding:0;display:flex;flex-direction:column;gap:0.5rem;font-size:0.85rem;color:#4A4A4A;margin-bottom:1.25rem">
+                            <li>&#10003; Up to 20 photos</li>
+                            <li>&#10003; Interior &amp; exterior</li>
+                            <li>&#10003; Professional editing</li>
+                            <li>&#10003; 24-hour delivery</li>
+                        </ul>
+                        <a href="photography-booking.html?package=essential" class="btn btn-gold" style="width:100%;justify-content:center">Book</a>
+                    </div>
+                </div>
+                <div style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);border:2px solid #B8963E">
+                    <div style="background:linear-gradient(135deg,#111111,#1a1a1a);padding:1.75rem;text-align:center;border-bottom:3px solid #B8963E;position:relative">
+                        <div style="position:absolute;top:-1px;left:50%;transform:translateX(-50%);background:#B8963E;color:black;font-size:0.6rem;font-weight:700;letter-spacing:0.1em;padding:3px 10px;border-radius:0 0 6px 6px">POPULAR</div>
+                        <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#B8963E;margin-bottom:0.5rem;padding-top:0.75rem">Premium</div>
+                        <div style="font-family:'Playfair Display',serif;font-size:2rem;color:#B8963E;font-weight:700">$449</div>
+                        <div style="font-size:0.78rem;color:rgba(255,255,255,0.45)">+ GST</div>
+                    </div>
+                    <div style="padding:1.5rem">
+                        <ul style="list-style:none;padding:0;display:flex;flex-direction:column;gap:0.5rem;font-size:0.85rem;color:#4A4A4A;margin-bottom:1.25rem">
+                            <li>&#10003; Up to 30 photos</li>
+                            <li>&#10003; 2-min video walkthrough</li>
+                            <li>&#10003; 2D floor plan</li>
+                            <li>&#10003; Professional editing</li>
+                            <li>&#10003; 24-hour delivery</li>
+                        </ul>
+                        <a href="photography-booking.html?package=premium" class="btn btn-gold" style="width:100%;justify-content:center">Book</a>
+                    </div>
+                </div>
+                <div style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
+                    <div style="background:#111111;padding:1.75rem;text-align:center">
+                        <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#B8963E;margin-bottom:0.5rem">Ultimate</div>
+                        <div style="font-family:'Playfair Display',serif;font-size:2rem;color:#B8963E;font-weight:700">$599</div>
+                        <div style="font-size:0.78rem;color:rgba(255,255,255,0.45)">+ GST</div>
+                    </div>
+                    <div style="padding:1.5rem">
+                        <ul style="list-style:none;padding:0;display:flex;flex-direction:column;gap:0.5rem;font-size:0.85rem;color:#4A4A4A;margin-bottom:1.25rem">
+                            <li>&#10003; Up to 40 photos</li>
+                            <li>&#10003; Cinematic video</li>
+                            <li>&#10003; Drone aerials</li>
+                            <li>&#10003; Floor plan + virtual tour</li>
+                            <li>&#10003; 24-hour delivery</li>
+                        </ul>
+                        <a href="photography-booking.html?package=ultimate" class="btn btn-gold" style="width:100%;justify-content:center">Book</a>
+                    </div>
+                </div>
+            </div>
+            <div style="text-align:center;margin-top:2rem">
+                <a href="photography.html" class="btn btn-secondary btn-lg">View Full Photography Details</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <div style="background:#111111;padding:4rem 0">
+        <div class="container" style="text-align:center">
+            <h2 style="color:white;margin-bottom:1rem">Ready to Stage Your Listing?</h2>
+            <p style="color:rgba(255,255,255,0.6);margin-bottom:2rem">Book online in minutes. Instant job number. SMS
+                confirmation within 2 hours.</p>
+            <a href="booking.html" class="btn btn-gold btn-lg">Book a Staging Now</a>
+        </div>
+    </div>
+
+    <footer style="background:#0A0A0A;color:rgba(255,255,255,0.55);padding:2rem 0" role="contentinfo">
+        <div class="container">
+            <div
+                style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;font-size:0.78rem">
+                <span>© 2026 Modern Space Styling Pty Ltd.</span><a href="index.html" style="color:#B8963E">← Back to
+                    Home</a></div>
+        </div>
+    </footer>
+
+    <div id="toast-container" class="toast-container"></div>
+    <script src="js/app.js"></script>
+    <script>
+        document.querySelectorAll('.faq-q').forEach(q => {
+            q.addEventListener('click', () => {
+                const item = q.parentElement;
+                const wasOpen = item.classList.contains('open');
+                document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+                if (!wasOpen) item.classList.add('open');
+            });
+        });
+    </script>
+</body>
+
+</html>

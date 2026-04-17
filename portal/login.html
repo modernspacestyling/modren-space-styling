@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Login | Modern Space Styling</title>
+    <link rel="stylesheet" href="../css/admin.css">
+</head>
+
+<body>
+    <div class="login-page">
+        <div class="login-card">
+            <div class="login-logo">
+                <div class="login-logo-name">Modern Space Styling</div>
+                <div class="login-logo-sub">Agent Portal</div>
+            </div>
+            <h2 class="login-title">Agent Sign In</h2>
+            <p class="login-sub">Access your jobs, track countdowns, and manage extensions.</p>
+            <div class="f-group"><label class="f-label">Email Address</label><input type="email" id="email"
+                    class="f-control" placeholder="you@agency.com.au"></div>
+            <div class="f-group"><label class="f-label">Password</label><input type="password" id="password"
+                    class="f-control" placeholder="Password"></div>
+            <div id="loginErr" style="color:#DC2626;font-size:0.8rem;margin-bottom:0.75rem;display:none"></div>
+            <div id="lockoutMsg" style="background:#FEE2E2;color:#991B1B;padding:0.75rem 1rem;border-radius:8px;font-size:0.82rem;margin-bottom:0.75rem;display:none"></div>
+            <button class="ab ab-accent" id="loginBtn"
+                style="width:100%;justify-content:center;padding:0.75rem;font-size:0.9rem;margin-bottom:1rem"
+                onclick="doLogin()">Sign In</button>
+            <div style="text-align:center;font-size:0.82rem;color:var(--text-muted)">
+                Don't have an account? <a href="../agent-registration.html"
+                    style="color:var(--accent);font-weight:600">Register here</a>
+            </div>
+            <hr class="divider">
+            <div style="text-align:center;font-size:0.78rem;color:var(--text-muted)">
+                Admin? <a href="../admin/login.html" style="color:var(--accent)">→ Admin Login</a>
+            </div>
+        </div>
+    </div>
+    <div id="toast-container" class="toast-container"></div>
+    <script src="../js/app.js"></script>
+    <script>
+        function checkLockout() {
+            const lock = LoginGuard.isLocked();
+            if (lock.locked) {
+                document.getElementById('lockoutMsg').style.display = 'block';
+                document.getElementById('lockoutMsg').textContent = 'Too many failed attempts. Locked for ' + lock.minutes + ' minute(s).';
+                document.getElementById('loginBtn').disabled = true;
+                document.getElementById('loginBtn').style.opacity = '0.5';
+                return true;
+            }
+            document.getElementById('lockoutMsg').style.display = 'none';
+            document.getElementById('loginBtn').disabled = false;
+            document.getElementById('loginBtn').style.opacity = '1';
+            return false;
+        }
+        async function doLogin() {
+            if (checkLockout()) return;
+            const email = document.getElementById('email').value.trim();
+            const pass = document.getElementById('password').value;
+            if (!email || !pass) { document.getElementById('loginErr').textContent = 'Please enter email and password.'; document.getElementById('loginErr').style.display = 'block'; return; }
+            await seedDatabase();
+            const errEl = document.getElementById('loginErr');
+            const agents = DB.get(KEYS.AGENTS);
+            const hash = await Crypto.hash(pass);
+            const agent = agents.find(a => a.email === email && a.password === hash);
+
+            if (!agent) {
+                const d = LoginGuard.recordFail();
+                const left = LoginGuard.attemptsLeft();
+                if (left > 0) { errEl.textContent = 'Invalid email or password. ' + left + ' attempt(s) remaining.'; errEl.style.display = 'block'; }
+                else { checkLockout(); }
+                return;
+            }
+            if (agent.status === 'pending') { errEl.textContent = 'Your account is pending approval.'; errEl.style.display = 'block'; return; }
+            if (agent.status === 'rejected') { errEl.textContent = 'Your account registration was not approved.'; errEl.style.display = 'block'; return; }
+
+            LoginGuard.reset();
+            Auth.login({ id: agent.id, name: agent.name, email: agent.email, role: 'agent', status: 'approved', agency: agent.agency });
+            window.location.href = 'dashboard.html';
+        }
+        document.addEventListener('DOMContentLoaded', checkLockout);
+        document.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+    </script>
+</body>
+
+</html>

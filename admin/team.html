@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Contacts | MSS Admin</title>
+    <link rel="stylesheet" href="../css/admin.css">
+</head>
+
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <div class="sidebar-logo-name">Modern Space Styling</div>
+                <div class="sidebar-logo-sub">Admin Panel</div>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Main</div>
+                <a class="sidebar-link" href="dashboard.html"><span class="sidebar-icon">📊</span> Dashboard</a>
+                <a class="sidebar-link" href="bookings.html"><span class="sidebar-icon">📋</span> Bookings</a>
+                <a class="sidebar-link" href="photo-bookings.html"><span class="sidebar-icon">📸</span> Photo Bookings</a>
+                <a class="sidebar-link" href="inventory.html"><span class="sidebar-icon">📦</span> Inventory</a>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Finance</div>
+                <a class="sidebar-link" href="invoices.html"><span class="sidebar-icon">🧾</span> Invoices</a>
+                <a class="sidebar-link" href="expenses.html"><span class="sidebar-icon">💸</span> Expenses</a>
+                <a class="sidebar-link" href="reports.html"><span class="sidebar-icon">📈</span> Reports</a>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Management</div>
+                <a class="sidebar-link" href="pricing.html"><span class="sidebar-icon">💰</span> Pricing</a>
+                <a class="sidebar-link" href="sms.html"><span class="sidebar-icon">💬</span> SMS Centre</a>
+                <a class="sidebar-link active" href="team.html"><span class="sidebar-icon">👥</span> Team Contacts</a>
+                <a class="sidebar-link" href="agents.html"><span class="sidebar-icon">🏢</span> Agents</a>
+                <a class="sidebar-link" href="logs.html"><span class="sidebar-icon">📝</span> Activity Log</a>
+            </div>
+            <div class="sidebar-footer">
+                <a class="sidebar-link" href="../index.html" style="padding:0"><span class="sidebar-icon">🏠</span> View
+                    Website</a>
+                <a class="sidebar-link" href="#" onclick="Auth.logout()"
+                    style="padding:0;margin-top:0.5rem;color:#F87171"><span class="sidebar-icon">🚪</span> Logout</a>
+            </div>
+        </aside>
+        <header class="topbar">
+            <div class="topbar-title">Team Contacts</div>
+            <div class="topbar-right">
+                <div class="topbar-user">
+                    <div class="user-avatar" id="userAvatar">A</div><span id="userName">Admin</span>
+                </div>
+            </div>
+        </header>
+        <main class="main-content">
+            <div style="max-width:780px">
+                <div
+                    style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:1rem;margin-bottom:1.25rem;font-size:0.825rem;color:#1D4ED8">
+                    <strong>🔐 Verified Numbers Only</strong><br>Only SMS received from phone numbers listed and enabled
+                    here will trigger automatic job status updates. All other inbound SMS are ignored.
+                </div>
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">Verified Team Members</span>
+                        <button class="ab ab-accent ab-sm" onclick="openAdd()">+ Add Member</button>
+                    </div>
+                    <div class="tbl-wrap">
+                        <table class="tbl">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Phone</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="teamTbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div id="teamModal"
+        style="position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:2000;display:none;align-items:center;justify-content:center;padding:1.5rem">
+        <div style="background:white;border-radius:12px;width:420px;max-width:95vw;padding:2rem;position:relative">
+            <button onclick="closeModal()"
+                style="position:absolute;top:1rem;right:1rem;font-size:1.3rem;cursor:pointer">×</button>
+            <h4 style="margin-bottom:1.5rem" id="modalTitle">Add Team Member</h4>
+            <input type="hidden" id="editId">
+            <div class="f-group"><label class="f-label">Full Name</label><input type="text" id="mName" class="f-control"
+                    placeholder="John Smith"></div>
+            <div class="f-group"><label class="f-label">Phone Number</label><input type="tel" id="mPhone"
+                    class="f-control" placeholder="+61400000001"></div>
+            <div class="f-group"><label class="f-label">Role</label>
+                <select id="mRole" class="f-control">
+                    <option value="installer">Installer</option>
+                    <option value="transport">Transport</option>
+                    <option value="supervisor">Supervisor</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <button class="ab ab-accent" style="width:100%;justify-content:center;margin-top:0.5rem"
+                onclick="saveMember()">Save</button>
+        </div>
+    </div>
+
+    <div id="toast-container" class="toast-container"></div>
+    <script src="../js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            await seedDatabase();
+            if (!Auth.requireAdmin()) return;
+            const u = Auth.current();
+            document.getElementById('userName').textContent = u.name;
+            document.getElementById('userAvatar').textContent = u.name.charAt(0);
+            render();
+        });
+
+        function render() {
+            const members = DB.get(KEYS.TEAM);
+            document.getElementById('teamTbody').innerHTML = members.map(m => `<tr>
+    <td><strong>${m.name}</strong></td>
+    <td style="font-family:monospace">${m.phone}</td>
+    <td><span class="tag">${m.role}</span></td>
+    <td><button class="ab ${m.active ? 'ab-success' : 'ab-outline'} ab-sm" onclick="toggleActive('${m.id}')">${m.active ? '✓ Active' : 'Inactive'}</button></td>
+    <td>
+      <button class="ab ab-outline ab-sm" onclick="openEdit('${m.id}')">✏ Edit</button>
+      <button class="ab ab-danger ab-sm" onclick="deleteMember('${m.id}')">🗑</button>
+    </td>
+  </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;padding:1.5rem;color:var(--text-muted)">No team members added yet</td></tr>';
+        }
+
+        function openAdd() {
+            document.getElementById('editId').value = ''; document.getElementById('mName').value = ''; document.getElementById('mPhone').value = ''; document.getElementById('mRole').value = 'installer';
+            document.getElementById('modalTitle').textContent = 'Add Team Member';
+            document.getElementById('teamModal').style.display = 'flex';
+        }
+
+        function openEdit(id) {
+            const m = DB.getOne(KEYS.TEAM, id);
+            if (!m) return;
+            document.getElementById('editId').value = id;
+            document.getElementById('mName').value = m.name;
+            document.getElementById('mPhone').value = m.phone;
+            document.getElementById('mRole').value = m.role;
+            document.getElementById('modalTitle').textContent = 'Edit: ' + m.name;
+            document.getElementById('teamModal').style.display = 'flex';
+        }
+
+        function closeModal() { document.getElementById('teamModal').style.display = 'none'; }
+
+        function saveMember() {
+            const id = document.getElementById('editId').value;
+            const name = document.getElementById('mName').value.trim();
+            const phone = document.getElementById('mPhone').value.trim();
+            const role = document.getElementById('mRole').value;
+            if (!name || !phone) { toast('Name and phone required', 'error'); return; }
+            if (id) { DB.update(KEYS.TEAM, id, { name, phone, role }); toast('Updated', 'success'); }
+            else { DB.insert(KEYS.TEAM, { name, phone, role, active: true }); toast('Member added', 'success'); }
+            logActivity(`Team member ${id ? 'updated' : 'added'}: ${name}`, Auth.current()?.name);
+            closeModal(); render();
+        }
+
+        function toggleActive(id) {
+            const m = DB.getOne(KEYS.TEAM, id);
+            if (!m) return;
+            DB.update(KEYS.TEAM, id, { active: !m.active });
+            logActivity(`Team member ${m.name} ${m.active ? 'deactivated' : 'activated'}`, Auth.current()?.name);
+            render();
+        }
+
+        function deleteMember(id) {
+            const m = DB.getOne(KEYS.TEAM, id);
+            if (!m || !confirm(`Remove ${m.name}?`)) return;
+            DB.delete(KEYS.TEAM, id); toast('Member removed', 'success'); render();
+        }
+    </script>
+</body>
+
+</html>

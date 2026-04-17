@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMS Centre | MSS Admin</title>
+    <link rel="stylesheet" href="../css/admin.css">
+</head>
+
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <div class="sidebar-logo-name">Modern Space Styling</div>
+                <div class="sidebar-logo-sub">Admin Panel</div>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Main</div>
+                <a class="sidebar-link" href="dashboard.html"><span class="sidebar-icon">📊</span> Dashboard</a>
+                <a class="sidebar-link" href="bookings.html"><span class="sidebar-icon">📋</span> Bookings</a>
+                <a class="sidebar-link" href="photo-bookings.html"><span class="sidebar-icon">📸</span> Photo Bookings</a>
+                <a class="sidebar-link" href="inventory.html"><span class="sidebar-icon">📦</span> Inventory</a>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Finance</div>
+                <a class="sidebar-link" href="invoices.html"><span class="sidebar-icon">🧾</span> Invoices</a>
+                <a class="sidebar-link" href="expenses.html"><span class="sidebar-icon">💸</span> Expenses</a>
+                <a class="sidebar-link" href="reports.html"><span class="sidebar-icon">📈</span> Reports</a>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Management</div>
+                <a class="sidebar-link" href="pricing.html"><span class="sidebar-icon">💰</span> Pricing</a>
+                <a class="sidebar-link active" href="sms.html"><span class="sidebar-icon">💬</span> SMS Centre</a>
+                <a class="sidebar-link" href="team.html"><span class="sidebar-icon">👥</span> Team Contacts</a>
+                <a class="sidebar-link" href="agents.html"><span class="sidebar-icon">🏢</span> Agents</a>
+                <a class="sidebar-link" href="logs.html"><span class="sidebar-icon">📝</span> Activity Log</a>
+            </div>
+            <div class="sidebar-footer">
+                <a class="sidebar-link" href="../index.html" style="padding:0"><span class="sidebar-icon">🏠</span> View
+                    Website</a>
+                <a class="sidebar-link" href="#" onclick="Auth.logout()"
+                    style="padding:0;margin-top:0.5rem;color:#F87171"><span class="sidebar-icon">🚪</span> Logout</a>
+            </div>
+        </aside>
+        <header class="topbar">
+            <div class="topbar-title">SMS Centre</div>
+            <div class="topbar-right">
+                <div class="topbar-user">
+                    <div class="user-avatar" id="userAvatar">A</div><span id="userName">Admin</span>
+                </div>
+            </div>
+        </header>
+        <main class="main-content">
+            <div class="grid-2a">
+
+                <!-- SMS Log -->
+                <div>
+                    <div class="panel">
+                        <div class="panel-header">
+                            <span class="panel-title">📲 SMS Log</span>
+                            <select class="f-control" id="smsFilter" style="width:140px" onchange="renderLog()">
+                                <option value="">All</option>
+                                <option value="inbound">Inbound</option>
+                                <option value="outbound">Outbound</option>
+                            </select>
+                        </div>
+                        <div class="panel-body"
+                            style="max-height:500px;overflow-y:auto;display:flex;flex-direction:column;gap:0.5rem"
+                            id="smsLogList">
+                            <div class="empty-state">
+                                <div class="icon">💬</div>
+                                <p>No SMS messages yet</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Simulate Inbound SMS -->
+                    <div class="panel" style="margin-top:1.25rem">
+                        <div class="panel-header"><span class="panel-title">🧪 Test Inbound SMS</span></div>
+                        <div class="panel-body">
+                            <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:1rem">Simulate a team SMS
+                                reply. Use a verified team number.</p>
+                            <div class="f-group"><label class="f-label">From Number (must be in Team
+                                    Contacts)</label><input type="tel" id="testFrom" class="f-control"
+                                    placeholder="+61400000001"></div>
+                            <div class="f-group"><label class="f-label">Message Body</label>
+                                <select class="f-control" id="testMsg" onchange="fillTestMsg()">
+                                    <option value="">Select command...</option>
+                                    <option value="CONFIRMED MSS-2026-0001">CONFIRMED MSS-2026-0001</option>
+                                    <option value="ON THE WAY MSS-2026-0001">ON THE WAY MSS-2026-0001</option>
+                                    <option value="ARRIVED MSS-2026-0001">ARRIVED MSS-2026-0001</option>
+                                    <option value="COMPLETED MSS-2026-0001">COMPLETED MSS-2026-0001</option>
+                                    <option value="PICKEDUP MSS-2026-0001">PICKEDUP MSS-2026-0001</option>
+                                    <option value="EXTEND MSS-2026-0001 1W">EXTEND MSS-2026-0001 1W</option>
+                                    <option value="EXTEND MSS-2026-0001 2W">EXTEND MSS-2026-0001 2W</option>
+                                    <option value="custom">Custom message...</option>
+                                </select>
+                                <input type="text" id="testMsgCustom" class="f-control" style="margin-top:0.5rem"
+                                    placeholder="Or type custom message...">
+                            </div>
+                            <button class="ab ab-accent" style="width:100%;justify-content:center"
+                                onclick="testSms()">Send Test</button>
+                            <div id="testResult"
+                                style="margin-top:0.75rem;font-size:0.82rem;padding:0.75rem;border-radius:6px;display:none">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Template Editor -->
+                <div>
+                    <div class="panel">
+                        <div class="panel-header"><span class="panel-title">✏ SMS Templates</span></div>
+                        <div class="panel-body">
+                            <div class="f-group"><label class="f-label">Select Template</label>
+                                <select class="f-control" id="tplSelect" onchange="loadTemplate()"></select>
+                            </div>
+                            <div class="f-group"><label class="f-label">Message Body</label>
+                                <textarea class="f-control" id="tplBody" rows="5"></textarea>
+                            </div>
+                            <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.75rem">
+                                Variables: <code>{agentName}</code> <code>{jobNumber}</code> <code>{address}</code>
+                                <code>{date}</code> <code>{time}</code> <code>{endDate}</code>
+                            </p>
+                            <button class="ab ab-accent" style="width:100%;justify-content:center"
+                                onclick="saveTemplate()">Save Template</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <div id="toast-container" class="toast-container"></div>
+    <script src="../js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            await seedDatabase();
+            if (!Auth.requireAdmin()) return;
+            const u = Auth.current();
+            document.getElementById('userName').textContent = u.name;
+            document.getElementById('userAvatar').textContent = u.name.charAt(0);
+            renderLog();
+            renderTemplates();
+        });
+
+        function renderLog() {
+            const filter = document.getElementById('smsFilter').value;
+            let logs = DB.get(KEYS.SMS_LOG).filter(s => !filter || s.direction === filter);
+            logs = logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            const list = document.getElementById('smsLogList');
+            if (!logs.length) { list.innerHTML = '<div class="empty-state"><div class="icon">💬</div><p>No messages yet</p></div>'; return; }
+            list.innerHTML = logs.slice(0, 50).map(s => `
+    <div class="sms-bubble ${s.direction === 'inbound' ? 'sms-in' : 'sms-out'}" style="max-width:100%">
+      <div style="display:flex;justify-content:space-between;opacity:0.65;font-size:0.7rem;margin-bottom:4px">
+        <span>${s.direction === 'inbound' ? '⬇ FROM: ' + s.from : '⬆ TO: ' + s.to}</span>
+        <span>${new Date(s.timestamp).toLocaleString('en-AU')}</span>
+      </div>
+      ${s.jobNumber ? `<span class="tag" style="margin-bottom:4px;display:inline-block">${s.jobNumber}</span><br>` : ''}
+      <div>${s.body}</div>
+    </div>`).join('');
+        }
+
+        function fillTestMsg() {
+            const v = document.getElementById('testMsg').value;
+            if (v && v !== 'custom') document.getElementById('testMsgCustom').value = v;
+        }
+
+        function testSms() {
+            const from = document.getElementById('testFrom').value.trim() || '+61400000001';
+            const body = document.getElementById('testMsgCustom').value.trim() || document.getElementById('testMsg').value;
+            if (!body) { toast('Enter a message', 'error'); return; }
+            const result = SMS.processInbound(body, from);
+            const div = document.getElementById('testResult');
+            div.style.display = 'block';
+            div.style.background = result.success ? '#DCFCE7' : '#FEE2E2';
+            div.style.color = result.success ? '#166534' : '#991B1B';
+            div.textContent = (result.success ? '✓ ' : '✕ ') + result.message;
+            renderLog();
+        }
+
+        function renderTemplates() {
+            const templates = DB.get(KEYS.TEMPLATES);
+            const sel = document.getElementById('tplSelect');
+            sel.innerHTML = templates.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+            loadTemplate();
+        }
+
+        function loadTemplate() {
+            const id = document.getElementById('tplSelect').value;
+            const t = DB.getOne(KEYS.TEMPLATES, id);
+            if (t) document.getElementById('tplBody').value = t.body;
+        }
+
+        function saveTemplate() {
+            const id = document.getElementById('tplSelect').value;
+            const body = document.getElementById('tplBody').value.trim();
+            if (!body) { toast('Template body is empty', 'error'); return; }
+            DB.update(KEYS.TEMPLATES, id, { body });
+            logActivity('SMS template updated', Auth.current()?.name);
+            toast('Template saved', 'success');
+        }
+    </script>
+</body>
+
+</html>

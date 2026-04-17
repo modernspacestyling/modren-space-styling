@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Jobs | MSS Agent Portal</title>
+    <link rel="stylesheet" href="../css/admin.css">
+    <style>
+        .job-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--border);
+            transition: box-shadow 0.2s;
+        }
+
+        .job-card:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .job-card.active {
+            border-left-color: var(--success);
+        }
+
+        .job-card.confirmed {
+            border-left-color: var(--info);
+        }
+
+        .job-card.pickup_ready {
+            border-left-color: var(--warning);
+        }
+
+        .job-card.closed {
+            border-left-color: var(--border);
+            opacity: 0.7;
+        }
+
+        .job-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .job-num {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--accent);
+        }
+
+        .job-addr {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .job-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 0.75rem;
+        }
+
+        .job-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-layout">
+        <!-- Portal Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <div class="sidebar-logo-name">Modern Space Styling</div>
+                <div class="sidebar-logo-sub">Agent Portal</div>
+            </div>
+            <div class="sidebar-section">
+                <a class="sidebar-link active" href="dashboard.html"><span class="sidebar-icon">📋</span> My Active
+                    Jobs</a>
+                <a class="sidebar-link" href="history.html"><span class="sidebar-icon">📂</span> Job History</a>
+                <a class="sidebar-link" href="../booking.html" target="_blank"><span class="sidebar-icon">➕</span> Book
+                    New Staging</a>
+            </div>
+            <div class="sidebar-footer">
+                <a class="sidebar-link" href="../index.html" style="padding:0"><span class="sidebar-icon">🌐</span> View
+                    Website</a>
+                <a class="sidebar-link" href="#" onclick="Auth.logout()"
+                    style="padding:0;margin-top:0.5rem;color:#F87171"><span class="sidebar-icon">🚪</span> Logout</a>
+            </div>
+        </aside>
+
+        <header class="topbar">
+            <div class="topbar-title">My Jobs</div>
+            <div class="topbar-right">
+                <a href="../booking.html" class="ab ab-accent ab-sm" target="_blank">+ Book Staging</a>
+                <div class="topbar-user">
+                    <div class="user-avatar" id="userAvatar">A</div><span id="userName">Agent</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <!-- KPIs -->
+            <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:1.5rem" id="agentKpi"></div>
+
+            <!-- Active Jobs -->
+            <h4
+                style="margin-bottom:1rem;font-size:0.875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">
+                Active Stagings</h4>
+            <div id="activeJobs">
+                <div class="empty-state">
+                    <div class="icon">🏠</div>
+                    <p>No active jobs yet.<br><a href="../booking.html" style="color:var(--accent)">Book your first
+                            staging →</a></p>
+                </div>
+            </div>
+
+            <!-- Pending -->
+            <h4
+                style="margin:1.5rem 0 1rem;font-size:0.875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">
+                Pending / Confirmed</h4>
+            <div id="pendingJobs">
+                <div class="empty-state">
+                    <div class="icon">⏳</div>
+                    <p>No pending bookings.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Extension Modal -->
+    <div id="extModal"
+        style="position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:2000;display:none;align-items:center;justify-content:center;padding:1.5rem">
+        <div style="background:white;border-radius:12px;width:420px;max-width:95vw;padding:2rem;position:relative">
+            <button onclick="document.getElementById('extModal').style.display='none'"
+                style="position:absolute;top:1rem;right:1rem;font-size:1.3rem;cursor:pointer">×</button>
+            <h4 style="margin-bottom:1rem">Request Extension</h4>
+            <p style="font-size:0.875rem;color:var(--text-muted);margin-bottom:1.5rem">Job: <strong
+                    id="extJobNum"></strong></p>
+            <div class="f-group"><label class="f-label">Extension Period</label>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+                    <button class="ab ab-outline" id="ext1w" onclick="confirmExtension(1)"
+                        style="justify-content:center;padding:1rem">📅 +1 Week</button>
+                    <button class="ab ab-outline" id="ext2w" onclick="confirmExtension(2)"
+                        style="justify-content:center;padding:1rem">📅 +2 Weeks</button>
+                </div>
+            </div>
+            <p style="font-size:0.75rem;color:var(--text-muted);margin-top:1rem">Extension requests are processed
+                immediately and admin is notified via SMS.</p>
+        </div>
+    </div>
+
+    <div id="toast-container" class="toast-container"></div>
+    <script src="../js/app.js"></script>
+    <script>
+        let currentExtJobId = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await seedDatabase();
+            if (!Auth.requireAgent()) return;
+            const u = Auth.current();
+            document.getElementById('userName').textContent = u.name;
+            document.getElementById('userAvatar').textContent = u.name.charAt(0);
+            render();
+        });
+
+        function render() {
+            const u = Auth.current();
+            const myJobs = DB.query(KEYS.BOOKINGS, b => b.agentEmail === u.email);
+            const active = myJobs.filter(b => b.status === 'active');
+            const pending = myJobs.filter(b => ['pending', 'confirmed', 'on_the_way', 'arrived'].includes(b.status));
+            const closed = myJobs.filter(b => ['closed', 'pickup_ready'].includes(b.status));
+
+            // KPIs
+            document.getElementById('agentKpi').innerHTML = `
+    <div class="kpi-card success"><div class="kpi-label">Active Stagings</div><div class="kpi-value">${active.length}</div></div>
+    <div class="kpi-card info"><div class="kpi-label">Pending / Booked</div><div class="kpi-value">${pending.length}</div></div>
+    <div class="kpi-card"><div class="kpi-label">Completed</div><div class="kpi-value">${closed.length}</div></div>`;
+
+            // Active
+            if (active.length) {
+                document.getElementById('activeJobs').innerHTML = active.map(b => renderJobCard(b, true)).join('');
+            } else {
+                document.getElementById('activeJobs').innerHTML = `<div class="empty-state"><div class="icon">🏠</div><p>No active stagings.<br><a href="../booking.html" style="color:var(--accent)">Book now →</a></p></div>`;
+            }
+
+            // Pending
+            if (pending.length) {
+                document.getElementById('pendingJobs').innerHTML = pending.map(b => renderJobCard(b, false)).join('');
+            } else {
+                document.getElementById('pendingJobs').innerHTML = `<div class="empty-state"><div class="icon">⏳</div><p>No pending bookings.</p></div>`;
+            }
+        }
+
+        function renderJobCard(b, showCountdown) {
+            const statusLabels = { pending: 'Pending Review', confirmed: 'Confirmed', on_the_way: 'Team On The Way', arrived: 'Team Arrived', active: 'Staging Active', pickup_ready: 'Ready for Pickup', closed: 'Closed' };
+            const statusBadges = { pending: 'b-pending', confirmed: 'b-confirmed', on_the_way: 'b-way', arrived: 'b-arrived', active: 'b-active', pickup_ready: 'b-pickup', closed: 'b-closed' };
+            let countdown = '';
+            if (showCountdown && b.endDate) {
+                const { days, pct, colorClass } = DateUtils.countdown(b.endDate);
+                const cdColor = colorClass === 'green' ? 'var(--success)' : colorClass === 'amber' ? 'var(--warning)' : 'var(--danger)';
+                countdown = `
+      <div style="margin-top:1rem">
+        <div style="display:flex;justify-content:space-between;font-size:0.78rem;font-weight:600;margin-bottom:4px">
+          <span style="color:${cdColor}">${days > 0 ? days + ' days remaining' : days === 0 ? 'Ends today!' : 'Overdue'}</span>
+          <span style="color:var(--text-muted)">Ends ${DateUtils.format(b.endDate)}</span>
+        </div>
+        <div class="cd-bar"><div class="cd-fill ${colorClass.charAt(0)}" style="width:${pct}%"></div></div>
+      </div>
+      ${days <= 14 ? `<button class="ab ab-accent ab-sm" style="margin-top:0.75rem" onclick="openExtension('${b.id}','${b.jobNumber}')">🔄 Request Extension</button>` : ''}`;
+            }
+            return `<div class="job-card ${b.status}">
+    <div class="job-header">
+      <div>
+        <div class="job-num">${b.jobNumber}</div>
+        <div class="job-addr">${b.address}</div>
+      </div>
+      <span class="b ${statusBadges[b.status] || 'b-pending'}">${statusLabels[b.status] || b.status}</span>
+    </div>
+    <div class="job-meta">
+      <span>🗓 ${DateUtils.format(b.installDate)}</span>
+      <span>🛏 ${b.bedrooms} bed</span>
+      <span>🚿 ${b.bathrooms} bath</span>
+      <span>💰 ${Pricing.format(b.estimatedPrice)}</span>
+      ${b.vacant ? '<span>🏠 Vacant</span>' : '<span style="color:var(--warning)">⚠ Occupied</span>'}
+    </div>
+    ${countdown}
+  </div>`;
+        }
+
+        function openExtension(jobId, jobNum) {
+            currentExtJobId = jobId;
+            document.getElementById('extJobNum').textContent = jobNum;
+            document.getElementById('extModal').style.display = 'flex';
+        }
+
+        function confirmExtension(weeks) {
+            if (!currentExtJobId) return;
+            const b = DB.getOne(KEYS.BOOKINGS, currentExtJobId);
+            if (!b) return;
+            const smsBody = `EXTEND ${b.jobNumber} ${weeks}W`;
+            const result = SMS.processInbound(smsBody, DB.get(KEYS.TEAM)[0]?.phone || '+61400000001');
+            // Force it through directly for agent portal request
+            const newEnd = DateUtils.addDays(b.endDate, weeks * 7);
+            DB.update(KEYS.BOOKINGS, currentExtJobId, { endDate: newEnd });
+            logActivity(`Agent requested ${weeks}-week extension for ${b.jobNumber}`, Auth.current()?.name);
+            SMS.log('outbound', 'admin', 'Agent Portal', `Agent requested extension for ${b.jobNumber}: ${weeks} week(s)`, b.jobNumber);
+            toast(`Extension confirmed! New end date: ${DateUtils.format(newEnd)}`, 'success');
+            document.getElementById('extModal').style.display = 'none';
+            render();
+        }
+    </script>
+</body>
+
+</html>

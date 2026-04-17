@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#1C1C1C">
+  <title>Modern Space Styling</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#FAFAF7;color:#1C1C1C;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+    :root{--gold:#B8963E;--charcoal:#1C1C1C;--cream:#FAFAF7;--white:#FFF;--border:#E8E8EE;--muted:#6B7280;--success:#16A34A;--danger:#DC2626}
+    .nav{position:fixed;bottom:0;left:0;right:0;background:#FFF;border-top:1px solid var(--border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+    .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 0;color:var(--muted);font-size:10px;font-weight:600;text-decoration:none;transition:color .2s}
+    .nav-item.active{color:var(--gold)}
+    .nav-icon{font-size:22px;margin-bottom:2px}
+    .page{display:none;padding:0 16px 90px;min-height:100vh}
+    .page.active{display:block}
+    .header{background:var(--charcoal);margin:-0px -16px 0;padding:52px 20px 20px;color:#FFF}
+    .header-brand{font-size:11px;color:var(--gold);letter-spacing:3px;text-transform:uppercase;margin-bottom:4px}
+    .header-title{font-size:24px;font-weight:700}
+    .header-sub{font-size:13px;color:rgba(255,255,255,.5);margin-top:4px}
+    .card{background:#FFF;border-radius:14px;padding:18px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+    .hero{background:linear-gradient(135deg,#1C1C1C,#2A2A2A);border-radius:16px;padding:24px;margin:16px 0;color:#FFF}
+    .hero h2{font-size:20px;font-weight:700;margin-bottom:8px}
+    .hero p{font-size:13px;color:rgba(255,255,255,.6);line-height:1.5}
+    .hero-btn{display:inline-block;background:var(--gold);color:var(--charcoal);padding:12px 24px;border-radius:10px;font-weight:700;font-size:14px;text-decoration:none;margin-top:14px;border:none;font-family:inherit;cursor:pointer}
+    .actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+    .action-card{background:#FFF;border-radius:14px;padding:20px 16px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.06);cursor:pointer;border:none;width:100%;font-family:inherit}
+    .action-card:active{transform:scale(.97)}
+    .action-icon{font-size:32px;margin-bottom:8px}
+    .action-label{font-size:13px;font-weight:700;color:var(--charcoal)}
+    .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
+    .stat{background:#FFF;border-radius:12px;padding:16px;text-align:center;border-left:3px solid var(--gold)}
+    .stat-value{font-size:22px;font-weight:800;color:var(--gold)}
+    .stat-label{font-size:11px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
+    .form-group{margin-bottom:16px}
+    .form-label{display:block;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+    .form-input{width:100%;padding:14px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;font-family:inherit;background:#FFF;color:var(--charcoal);-webkit-appearance:none;appearance:none}
+    .form-input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(184,150,62,.12)}
+    select.form-input{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%236B7280' fill='none' stroke-width='2'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .btn{width:100%;padding:16px;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+    .btn-gold{background:var(--gold);color:var(--charcoal)}
+    .btn-gold:active{opacity:.9}
+    .btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--charcoal)}
+    .success-screen{text-align:center;padding:40px 20px}
+    .success-icon{font-size:64px;margin-bottom:16px}
+    .success-title{font-size:22px;font-weight:700;margin-bottom:8px}
+    .success-job{font-size:28px;font-weight:800;color:var(--gold);margin:12px 0}
+    .success-text{font-size:14px;color:var(--muted);line-height:1.6}
+    .track-input-row{display:flex;gap:10px}
+    .track-input-row .form-input{flex:1}
+    .track-btn{background:var(--gold);border:none;border-radius:10px;padding:14px 20px;font-weight:700;color:var(--charcoal);font-size:14px;font-family:inherit}
+    .timeline{margin-top:20px}
+    .step{display:flex;margin-bottom:0}
+    .step-left{display:flex;flex-direction:column;align-items:center;width:32px;flex-shrink:0}
+    .step-dot{width:28px;height:28px;border-radius:14px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;background:#F9FAFB}
+    .step-dot.done{background:#DCFCE7;border-color:var(--success);color:var(--success)}
+    .step-dot.current{background:var(--gold);border-color:var(--gold);color:#FFF}
+    .step-line{width:2px;flex:1;min-height:16px;background:var(--border);margin:2px auto}
+    .step-line.done{background:var(--success)}
+    .step-text{margin-left:12px;padding-bottom:18px}
+    .step-name{font-size:14px;font-weight:500;color:#9CA3AF}
+    .step-name.done{color:var(--charcoal)}
+    .step-name.current{color:var(--gold);font-weight:700}
+    .step-badge{font-size:10px;color:var(--gold);font-weight:600}
+    .gallery-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+    .gallery-img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:12px;background:#E5E7EB}
+    .contact-card{background:var(--charcoal);border-radius:14px;padding:20px;margin:16px 0;color:#FFF}
+    .contact-card a{color:var(--gold);text-decoration:none;font-weight:600}
+    .contact-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:14px;color:rgba(255,255,255,.7)}
+    .toast{position:fixed;top:60px;left:16px;right:16px;background:var(--success);color:#FFF;padding:14px 18px;border-radius:12px;font-weight:600;font-size:14px;z-index:200;transform:translateY(-120px);transition:transform .3s;text-align:center}
+    .toast.show{transform:translateY(0)}
+    .toast.error{background:var(--danger)}
+  </style>
+</head>
+<body>
+
+  <!-- HOME -->
+  <div class="page active" id="pageHome">
+    <div class="header">
+      <div class="header-brand">Modern Space Styling</div>
+      <div class="header-title">Welcome</div>
+      <div class="header-sub">Premium Property Staging · Geelong</div>
+    </div>
+    <div class="hero">
+      <h2>Transform Your Listing</h2>
+      <p>Geelong's leading staging & photography service. Book online, track your job, get results.</p>
+      <button class="hero-btn" onclick="showPage('pageBookStaging')">Book a Staging</button>
+    </div>
+    <div class="actions">
+      <button class="action-card" onclick="showPage('pageBookStaging')"><div class="action-icon">🏠</div><div class="action-label">Book Staging</div></button>
+      <button class="action-card" onclick="showPage('pageBookPhoto')"><div class="action-icon">📸</div><div class="action-label">Photography</div></button>
+      <button class="action-card" onclick="showPage('pageTrack')"><div class="action-icon">📍</div><div class="action-label">Track Job</div></button>
+      <button class="action-card" onclick="showPage('pageGallery')"><div class="action-icon">🖼</div><div class="action-label">Gallery</div></button>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-value">250+</div><div class="stat-label">Homes Staged</div></div>
+      <div class="stat"><div class="stat-value">98%</div><div class="stat-label">Sold in 4 Weeks</div></div>
+    </div>
+    <div class="contact-card">
+      <div class="contact-row">📞 <a href="tel:+61415580791">0415 580 791</a></div>
+      <div class="contact-row">✉ <a href="mailto:modrenspacestyling@gmail.com">modrenspacestyling@gmail.com</a></div>
+      <div class="contact-row">📍 Geelong, VIC 3220 · 100km radius</div>
+    </div>
+  </div>
+
+  <!-- BOOK STAGING -->
+  <div class="page" id="pageBookStaging">
+    <div class="header"><div class="header-brand">Modern Space Styling</div><div class="header-title">Book Staging</div><div class="header-sub">Fill in your details</div></div>
+    <div id="stagingForm" style="margin-top:20px">
+      <div class="form-group"><label class="form-label">Agent Name *</label><input class="form-input" id="sName" placeholder="Your full name"></div>
+      <div class="form-group"><label class="form-label">Phone *</label><input class="form-input" id="sPhone" type="tel" placeholder="0400 000 000"></div>
+      <div class="form-group"><label class="form-label">Email *</label><input class="form-input" id="sEmail" type="email" placeholder="agent@email.com"></div>
+      <div class="form-group"><label class="form-label">Agency</label><input class="form-input" id="sAgency" placeholder="Real estate agency"></div>
+      <div class="form-group"><label class="form-label">Property Address *</label><input class="form-input" id="sAddress" placeholder="Full property address"></div>
+      <div class="form-group"><label class="form-label">Install Date *</label><input class="form-input" id="sDate" type="date"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Bedrooms *</label><input class="form-input" id="sBeds" type="number" value="3" min="0"></div>
+        <div class="form-group"><label class="form-label">Bathrooms</label><input class="form-input" id="sBaths" type="number" value="2" min="0"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Living Areas</label><input class="form-input" id="sLiving" type="number" value="1" min="0"></div>
+        <div class="form-group"><label class="form-label">Dining Areas</label><input class="form-input" id="sDining" type="number" value="1" min="0"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Notes</label><textarea class="form-input" id="sNotes" rows="3" placeholder="Special requirements..."></textarea></div>
+      <button class="btn btn-gold" onclick="submitStaging()">Submit Booking Request</button>
+    </div>
+    <div id="stagingSuccess" class="success-screen" style="display:none">
+      <div class="success-icon">✅</div>
+      <div class="success-title">Booking Received!</div>
+      <div class="success-job" id="stagingJobNum"></div>
+      <div class="success-text">SMS confirmation coming within 2 business hours.</div>
+      <button class="btn btn-outline" style="margin-top:24px" onclick="resetStaging()">Book Another</button>
+    </div>
+  </div>
+
+  <!-- BOOK PHOTO -->
+  <div class="page" id="pageBookPhoto">
+    <div class="header"><div class="header-brand">Modern Space Styling</div><div class="header-title">Photography</div><div class="header-sub">Professional property photography</div></div>
+    <div id="photoForm" style="margin-top:20px">
+      <div class="form-group"><label class="form-label">Your Name *</label><input class="form-input" id="pName" placeholder="Full name"></div>
+      <div class="form-group"><label class="form-label">Phone *</label><input class="form-input" id="pPhone" type="tel" placeholder="0400 000 000"></div>
+      <div class="form-group"><label class="form-label">Email *</label><input class="form-input" id="pEmail" type="email" placeholder="email@example.com"></div>
+      <div class="form-group"><label class="form-label">Agency</label><input class="form-input" id="pAgency" placeholder="Agency name"></div>
+      <div class="form-group"><label class="form-label">Property Address *</label><input class="form-input" id="pAddress" placeholder="Full address"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Property Type</label><select class="form-input" id="pType"><option value="sale">For Sale</option><option value="rent">For Rent</option></select></div>
+        <div class="form-group"><label class="form-label">Preferred Date *</label><input class="form-input" id="pDate" type="date"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Package *</label><select class="form-input" id="pPackage"><option value="essential">Essential — $349</option><option value="premium" selected>Premium — $449</option><option value="ultimate">Ultimate — $599</option></select></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Bedrooms</label><input class="form-input" id="pBeds" type="number" value="3" min="0"></div>
+        <div class="form-group"><label class="form-label">Bathrooms</label><input class="form-input" id="pBaths" type="number" value="2" min="0"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Notes</label><textarea class="form-input" id="pNotes" rows="3" placeholder="Special requirements..."></textarea></div>
+      <button class="btn btn-gold" onclick="submitPhoto()">Submit Booking</button>
+    </div>
+    <div id="photoSuccess" class="success-screen" style="display:none">
+      <div class="success-icon">📸</div>
+      <div class="success-title">Photo Booking Received!</div>
+      <div class="success-job" id="photoJobNum"></div>
+      <div class="success-text">SMS confirmation coming shortly.</div>
+      <button class="btn btn-outline" style="margin-top:24px" onclick="resetPhoto()">Book Another</button>
+    </div>
+  </div>
+
+  <!-- TRACK -->
+  <div class="page" id="pageTrack">
+    <div class="header"><div class="header-brand">Modern Space Styling</div><div class="header-title">Track Booking</div><div class="header-sub">Enter your job number</div></div>
+    <div style="margin-top:20px">
+      <div class="track-input-row">
+        <input class="form-input" id="trackInput" placeholder="MSS-2026-0001" style="text-transform:uppercase;font-weight:700;letter-spacing:1px">
+        <button class="track-btn" onclick="trackJob()">Track</button>
+      </div>
+    </div>
+    <div id="trackResult" style="display:none;margin-top:20px"></div>
+    <div id="trackInfo" class="card" style="margin-top:20px;border-left:3px solid var(--gold)">
+      <div style="font-weight:700;margin-bottom:6px">Where's my job number?</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.6">It was sent via SMS when you booked. Looks like MSS-2026-0001 or PHOTO-2026-0001.</div>
+    </div>
+  </div>
+
+  <!-- GALLERY -->
+  <div class="page" id="pageGallery">
+    <div class="header"><div class="header-brand">Modern Space Styling</div><div class="header-title">Portfolio</div><div class="header-sub">Recent staging projects</div></div>
+    <div class="gallery-grid">
+      <img class="gallery-img" src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=400&q=80" alt="Living Room" loading="lazy">
+      <img class="gallery-img" src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&q=80" alt="Bedroom" loading="lazy">
+      <img class="gallery-img" src="https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=400&q=80" alt="Dining" loading="lazy">
+      <img class="gallery-img" src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400&q=80" alt="Kitchen" loading="lazy">
+      <img class="gallery-img" src="https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=400&q=80" alt="Suite" loading="lazy">
+      <img class="gallery-img" src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=400&q=80" alt="Lounge" loading="lazy">
+      <img class="gallery-img" src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&q=80" alt="Modern" loading="lazy">
+      <img class="gallery-img" src="https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=400&q=80" alt="Outdoor" loading="lazy">
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <a class="nav-item active" onclick="showPage('pageHome')" id="navHome"><span class="nav-icon">🏠</span>Home</a>
+    <a class="nav-item" onclick="showPage('pageBookStaging')" id="navBook"><span class="nav-icon">📋</span>Book</a>
+    <a class="nav-item" onclick="showPage('pageBookPhoto')" id="navPhoto"><span class="nav-icon">📸</span>Photo</a>
+    <a class="nav-item" onclick="showPage('pageTrack')" id="navTrack"><span class="nav-icon">📍</span>Track</a>
+    <a class="nav-item" onclick="showPage('pageGallery')" id="navGallery"><span class="nav-icon">🖼</span>Gallery</a>
+  </nav>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const API = 'https://modren-space-styling.vercel.app/api';
+    function showPage(id) {
+      document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
+      document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active')});
+      document.getElementById(id).classList.add('active');
+      var map={pageHome:'navHome',pageBookStaging:'navBook',pageBookPhoto:'navPhoto',pageTrack:'navTrack',pageGallery:'navGallery'};
+      var nav=document.getElementById(map[id]);
+      if(nav)nav.classList.add('active');
+      window.scrollTo(0,0);
+    }
+    function toast(msg,isError){
+      var t=document.getElementById('toast');
+      t.textContent=msg;
+      t.className='toast show'+(isError?' error':'');
+      setTimeout(function(){t.className='toast'},3000);
+    }
+    async function submitStaging(){
+      var body={agentName:document.getElementById('sName').value.trim(),agentPhone:document.getElementById('sPhone').value.trim(),agentEmail:document.getElementById('sEmail').value.trim(),agency:document.getElementById('sAgency').value.trim(),address:document.getElementById('sAddress').value.trim(),installDate:document.getElementById('sDate').value,bedrooms:parseInt(document.getElementById('sBeds').value)||0,bathrooms:parseInt(document.getElementById('sBaths').value)||0,livingAreas:parseInt(document.getElementById('sLiving').value)||0,diningAreas:parseInt(document.getElementById('sDining').value)||0,vacant:true,notes:document.getElementById('sNotes').value.trim()};
+      if(!body.agentName||!body.agentPhone||!body.agentEmail||!body.address||!body.installDate){toast('Please fill all required fields',true);return}
+      try{
+        var res=await fetch(API+'/create-booking',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+        var data=await res.json();
+        if(data.success){document.getElementById('stagingJobNum').textContent=data.jobNumber;document.getElementById('stagingForm').style.display='none';document.getElementById('stagingSuccess').style.display='block';toast('Booking submitted!')}
+        else{toast(data.error||'Failed',true)}
+      }catch(e){toast('Network error',true)}
+    }
+    function resetStaging(){document.getElementById('stagingForm').style.display='block';document.getElementById('stagingSuccess').style.display='none'}
+    async function submitPhoto(){
+      var body={clientName:document.getElementById('pName').value.trim(),clientPhone:document.getElementById('pPhone').value.trim(),clientEmail:document.getElementById('pEmail').value.trim(),agency:document.getElementById('pAgency').value.trim(),address:document.getElementById('pAddress').value.trim(),propertyType:document.getElementById('pType').value,preferredDate:document.getElementById('pDate').value,package:document.getElementById('pPackage').value,bedrooms:parseInt(document.getElementById('pBeds').value)||0,bathrooms:parseInt(document.getElementById('pBaths').value)||0,addons:[],notes:document.getElementById('pNotes').value.trim()};
+      if(!body.clientName||!body.clientPhone||!body.clientEmail||!body.address||!body.preferredDate){toast('Please fill all required fields',true);return}
+      try{
+        var res=await fetch(API+'/create-photo-booking',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+        var data=await res.json();
+        if(data.success){document.getElementById('photoJobNum').textContent=data.jobNumber+' — $'+data.estimatedPrice;document.getElementById('photoForm').style.display='none';document.getElementById('photoSuccess').style.display='block';toast('Photo booking submitted!')}
+        else{toast(data.error||'Failed',true)}
+      }catch(e){toast('Network error',true)}
+    }
+    function resetPhoto(){document.getElementById('photoForm').style.display='block';document.getElementById('photoSuccess').style.display='none'}
+    function trackJob(){
+      var job=document.getElementById('trackInput').value.trim().toUpperCase();
+      if(!job){toast('Enter a job number',true);return}
+      var steps=['Pending','Confirmed','On The Way','Arrived','Active','Pickup Ready','Closed'];
+      var cur=1;
+      var container=document.getElementById('trackResult');
+      container.style.display='block';
+      document.getElementById('trackInfo').style.display='none';
+      // Build timeline with DOM
+      container.textContent='';
+      var card=document.createElement('div');card.className='card';
+      var hdr=document.createElement('div');hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:16px';
+      var jn=document.createElement('span');jn.style.cssText='font-size:18px;font-weight:700';jn.textContent=job;
+      var badge=document.createElement('span');badge.style.cssText='background:#DBEAFE;color:#2563EB;padding:4px 12px;border-radius:8px;font-size:12px;font-weight:700';badge.textContent=steps[cur];
+      hdr.appendChild(jn);hdr.appendChild(badge);card.appendChild(hdr);
+      var tl=document.createElement('div');tl.className='timeline';
+      steps.forEach(function(s,i){
+        var done=i<=cur,current=i===cur;
+        var row=document.createElement('div');row.className='step';
+        var left=document.createElement('div');left.className='step-left';
+        var dot=document.createElement('div');dot.className='step-dot'+(current?' current':done?' done':'');dot.textContent=done?'✓':String(i+1);
+        left.appendChild(dot);
+        if(i<steps.length-1){var line=document.createElement('div');line.className='step-line'+(done?' done':'');left.appendChild(line)}
+        var txt=document.createElement('div');txt.className='step-text';
+        var name=document.createElement('div');name.className='step-name'+(current?' current':done?' done':'');name.textContent=s;
+        txt.appendChild(name);
+        if(current){var b=document.createElement('div');b.className='step-badge';b.textContent='Current Status';txt.appendChild(b)}
+        row.appendChild(left);row.appendChild(txt);tl.appendChild(row);
+      });
+      card.appendChild(tl);container.appendChild(card);
+    }
+  </script>
+</body>
+</html>
