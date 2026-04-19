@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forgot Password | Modern Space Styling</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+  <div class="login-page">
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="login-logo-name">Modern Space Styling</div>
+        <div class="login-logo-sub">Admin Portal</div>
+      </div>
+      <h2 class="login-title">Forgot password?</h2>
+      <p class="login-sub">Enter your email and we'll send you a reset link.</p>
+
+      <div class="f-group">
+        <label class="f-label" for="email">Email Address</label>
+        <input type="email" id="email" class="f-control" placeholder="you@example.com" autocomplete="email">
+      </div>
+
+      <div id="msg" role="alert" style="font-size:0.82rem;margin-bottom:0.75rem;display:none;padding:0.6rem 0.85rem;border-radius:8px"></div>
+
+      <button class="ab ab-primary w-full" id="sendBtn" type="button"
+        style="width:100%;justify-content:center;padding:0.75rem;font-size:0.9rem">Send reset link</button>
+
+      <div style="text-align:center;margin-top:1rem;font-size:0.82rem">
+        <a href="login.html" style="color:var(--accent);font-weight:600;text-decoration:none">← Back to login</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="supabase.min.js"></script>
+  <script src="auth-supabase.js"></script>
+  <script>
+    const emailEl = document.getElementById('email');
+    const msgEl = document.getElementById('msg');
+    const btn = document.getElementById('sendBtn');
+
+    function show(type, text) {
+      msgEl.textContent = text;
+      msgEl.style.display = 'block';
+      if (type === 'success') {
+        msgEl.style.background = '#D1FAE5';
+        msgEl.style.color = '#065F46';
+        msgEl.style.border = '1px solid #6EE7B7';
+      } else {
+        msgEl.style.background = '#FEE2E2';
+        msgEl.style.color = '#991B1B';
+        msgEl.style.border = '1px solid #FCA5A5';
+      }
+    }
+
+    async function doReset() {
+      msgEl.style.display = 'none';
+      const email = emailEl.value.trim();
+      if (!email) { show('error', 'Please enter your email.'); return; }
+      btn.disabled = true; btn.style.opacity = '0.6'; btn.textContent = 'Sending…';
+      try {
+        await MSSAuth.resetPassword(email);
+        show('success', 'Check your email for the reset link. It may take a minute.');
+        emailEl.value = '';
+      } catch (e) {
+        show('error', (e && e.message) || 'Could not send reset email. Please try again.');
+      } finally {
+        btn.disabled = false; btn.style.opacity = '1'; btn.textContent = 'Send reset link';
+      }
+    }
+
+    btn.addEventListener('click', doReset);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Enter') doReset(); });
+  </script>
+</body>
+</html>

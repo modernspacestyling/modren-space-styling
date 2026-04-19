@@ -39,3 +39,9 @@ mobile/web-build/
 # Temp
 tmp/
 temp/
+
+# Generated artifacts (local-only)
+.env.production
+.env.*
+*.pdf
+previews/

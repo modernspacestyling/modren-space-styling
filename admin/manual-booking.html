@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manual Booking | MSS Admin</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../css/admin.css">
+<style>
+  .mb-form { max-width: 820px; }
+  .mb-section-title { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 600; color: var(--ink, #1a1410); margin-bottom: 0.5rem; }
+  .mb-hint { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.25rem; }
+  .mb-price-box { background: #F0FDF4; border: 1.5px solid #86EFAC; border-radius: 10px; padding: 1.25rem; margin-top: 0.5rem; }
+  .mb-price-box .f-label { color: #166534; font-weight: 700; font-size: 0.9rem; letter-spacing: .02em; text-transform: none; margin-bottom: 0.6rem; }
+  .mb-price-input-wrap { position: relative; max-width: 280px; }
+  .mb-dollar { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-weight: 700; color: #374151; font-size: 1.15rem; }
+  .mb-price-input { padding: 0.85rem 0.85rem 0.85rem 2rem !important; font-size: 1.25rem !important; font-weight: 700; border: 2px solid #86EFAC !important; border-radius: 8px; width: 100%; outline: none; }
+  .mb-price-input:focus { border-color: #22C55E !important; box-shadow: 0 0 0 3px rgba(34,197,94,0.15); }
+  .mb-gst-preview { margin-top: 0.75rem; font-size: 0.85rem; color: #374151; min-height: 1.25em; }
+  .mb-checkbox-row { display: flex; align-items: center; gap: 0.6rem; padding: 0.75rem 0; }
+  .mb-checkbox-row input[type=checkbox] { width: 18px; height: 18px; cursor: pointer; }
+  .mb-actions { margin-top: 1.75rem; display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+  .mb-status-msg { display: none; padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.85rem; margin-top: 1rem; }
+  .mb-status-msg.ok { background: #D1FAE5; color: #065F46; border: 1px solid #6EE7B7; display: block; }
+  .mb-status-msg.err { background: #FEE2E2; color: #991B1B; border: 1px solid #FCA5A5; display: block; }
+</style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-name">Modern Space Styling</div>
+      <div class="sidebar-logo-sub">Admin Panel</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Main</div>
+      <a class="sidebar-link" href="dashboard.html"><span class="sidebar-icon">📊</span> Dashboard</a>
+      <a class="sidebar-link" href="bookings.html"><span class="sidebar-icon">📋</span> Bookings</a>
+      <a class="sidebar-link active" href="manual-booking.html"><span class="sidebar-icon">✍️</span> Manual Booking</a>
+      <a class="sidebar-link" href="photo-bookings.html"><span class="sidebar-icon">📸</span> Photo Bookings</a>
+      <a class="sidebar-link" href="inventory.html"><span class="sidebar-icon">📦</span> Inventory</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Finance</div>
+      <a class="sidebar-link" href="invoices.html"><span class="sidebar-icon">🧾</span> Invoices</a>
+      <a class="sidebar-link" href="expenses.html"><span class="sidebar-icon">💸</span> Expenses</a>
+      <a class="sidebar-link" href="reports.html"><span class="sidebar-icon">📈</span> Reports</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Management</div>
+      <a class="sidebar-link" href="pricing.html"><span class="sidebar-icon">💰</span> Pricing</a>
+      <a class="sidebar-link" href="sms.html"><span class="sidebar-icon">💬</span> SMS Centre</a>
+      <a class="sidebar-link" href="team.html"><span class="sidebar-icon">👥</span> Team Contacts</a>
+      <a class="sidebar-link" href="agents.html"><span class="sidebar-icon">🏢</span> Agents</a>
+      <a class="sidebar-link" href="logs.html"><span class="sidebar-icon">📝</span> Activity Log</a>
+    </div>
+    <div class="sidebar-footer">
+      <a class="sidebar-link" href="../index.html" style="padding:0"><span class="sidebar-icon">🏠</span> View Website</a>
+      <a class="sidebar-link" href="#" id="logoutLink" style="padding:0;margin-top:0.5rem;color:#F87171"><span class="sidebar-icon">🚪</span> Logout</a>
+    </div>
+  </aside>
+
+  <header class="topbar">
+    <div class="topbar-title">Manual Booking</div>
+    <div class="topbar-right">
+      <div class="topbar-user">
+        <div class="user-avatar" id="userAvatar">A</div><span id="userName">Admin</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="panel mb-form">
+      <h3 style="margin-bottom:0.35rem">Add a booking manually</h3>
+      <p class="mb-hint">Use this for jobs already done or confirmed outside the website. Set the exact price you charged. No SMS or invoice email is sent automatically.</p>
+
+      <!-- Agent / Client -->
+      <div class="mb-section-title">Agent Details</div>
+      <div class="f-row">
+        <div class="f-group">
+          <label class="f-label" for="agentName">Full Name *</label>
+          <input id="agentName" class="f-control" type="text" placeholder="Jane Smith">
+        </div>
+        <div class="f-group">
+          <label class="f-label" for="agentPhone">Mobile *</label>
+          <input id="agentPhone" class="f-control" type="tel" placeholder="+61 4xx xxx xxx">
+        </div>
+      </div>
+      <div class="f-row">
+        <div class="f-group">
+          <label class="f-label" for="agentEmail">Email</label>
+          <input id="agentEmail" class="f-control" type="email" placeholder="jane@agency.com.au">
+        </div>
+        <div class="f-group">
+          <label class="f-label" for="agency">Agency</label>
+          <input id="agency" class="f-control" type="text" placeholder="Agency name">
+        </div>
+      </div>
+
+      <!-- Property -->
+      <div class="mb-section-title" style="margin-top:1.25rem">Property Details</div>
+      <div class="f-group">
+        <label class="f-label" for="address">Address *</label>
+        <input id="address" class="f-control" type="text" placeholder="42 Bellarine St, Newtown VIC 3220">
+      </div>
+      <div class="f-row">
+        <div class="f-group">
+          <label class="f-label" for="installDate">Install Date *</label>
+          <input id="installDate" class="f-control" type="date">
+        </div>
+        <div class="f-group">
+          <label class="f-label" for="installTime">Install Time</label>
+          <input id="installTime" class="f-control" type="time" value="09:00">
+        </div>
+      </div>
+      <div class="f-row">
+        <div class="f-group">
+          <label class="f-label" for="bedrooms">Bedrooms *</label>
+          <input id="bedrooms" class="f-control" type="number" min="0" max="10" value="3">
+        </div>
+        <div class="f-group">
+          <label class="f-label" for="bathrooms">Bathrooms</label>
+          <input id="bathrooms" class="f-control" type="number" min="0" max="10" value="2">
+        </div>
+        <div class="f-group">
+          <label class="f-label" for="livingAreas">Living Areas</label>
+          <input id="livingAreas" class="f-control" type="number" min="0" max="10" value="1">
+        </div>
+        <div class="f-group">
+          <label class="f-label" for="diningAreas">Dining Areas</label>
+          <input id="diningAreas" class="f-control" type="number" min="0" max="10" value="1">
+        </div>
+      </div>
+      <div class="f-row">
+        <div class="mb-checkbox-row">
+          <input type="checkbox" id="garage"> <label for="garage">Garage</label>
+        </div>
+        <div class="mb-checkbox-row">
+          <input type="checkbox" id="vacant" checked> <label for="vacant">Vacant property</label>
+        </div>
+      </div>
+
+      <!-- Manual Price -->
+      <div class="mb-section-title" style="margin-top:1.25rem">Price</div>
+      <div class="mb-price-box">
+        <div class="f-label">💰 Total Charged (inc GST) *</div>
+        <div class="mb-price-input-wrap">
+          <span class="mb-dollar">$</span>
+          <input id="finalPrice" class="mb-price-input" type="number" step="0.01" min="0" placeholder="e.g. 2700" oninput="updateGst()">
+        </div>
+        <div class="mb-gst-preview" id="gstPreview">Enter price to see GST breakdown</div>
+      </div>
+
+      <!-- Status + Notes -->
+      <div class="f-row" style="margin-top:1.25rem">
+        <div class="f-group">
+          <label class="f-label" for="status">Status</label>
+          <select id="status" class="f-control">
+            <option value="closed">Closed (completed)</option>
+            <option value="active">Active (installed)</option>
+            <option value="confirmed">Confirmed (upcoming)</option>
+            <option value="pending">Pending</option>
+          </select>
+        </div>
+        <div class="f-group">
+          <label class="f-label" for="lockbox">Lockbox Code (optional)</label>
+          <input id="lockbox" class="f-control" type="text" placeholder="e.g. 4827">
+        </div>
+      </div>
+      <div class="f-group">
+        <label class="f-label" for="notes">Notes</label>
+        <textarea id="notes" class="f-control" rows="3" placeholder="Any relevant notes about this job (internal only)"></textarea>
+      </div>
+
+      <div class="mb-actions">
+        <button class="ab ab-primary" id="saveBtn" type="button" style="padding:0.75rem 1.5rem;font-size:0.95rem">Save Booking</button>
+        <button class="ab ab-outline" id="resetBtn" type="button" style="padding:0.75rem 1.25rem;font-size:0.9rem">Reset Form</button>
+      </div>
+      <div class="mb-status-msg" id="statusMsg"></div>
+    </div>
+  </main>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="supabase.min.js"></script>
+<script src="auth-supabase.js"></script>
+<script>
+  function updateGst() {
+    const v = parseFloat(document.getElementById('finalPrice').value);
+    const el = document.getElementById('gstPreview');
+    if (!v || v <= 0) { el.textContent = 'Enter price to see GST breakdown'; return; }
+    const gst = v / 11;
+    const ex  = v - gst;
+    el.textContent = 'Total: $' + v.toLocaleString('en-AU',{minimumFractionDigits:2}) + '  |  GST: $' + gst.toFixed(2) + '  |  Ex-GST: $' + ex.toFixed(2);
+  }
+
+  const $ = (id) => document.getElementById(id);
+  function setStatus(type, text) {
+    const m = $('statusMsg');
+    m.className = 'mb-status-msg ' + (type === 'ok' ? 'ok' : 'err');
+    m.textContent = text;
+  }
+
+  async function saveBooking() {
+    // Validate
+    const payload = {
+      agentName:   $('agentName').value.trim(),
+      agentPhone:  $('agentPhone').value.trim(),
+      agentEmail:  $('agentEmail').value.trim(),
+      agency:      $('agency').value.trim(),
+      address:     $('address').value.trim(),
+      installDate: $('installDate').value,
+      installTime: $('installTime').value || '09:00',
+      bedrooms:    parseInt($('bedrooms').value, 10) || 0,
+      bathrooms:   parseInt($('bathrooms').value, 10) || 0,
+      livingAreas: parseInt($('livingAreas').value, 10) || 0,
+      diningAreas: parseInt($('diningAreas').value, 10) || 0,
+      garage:      $('garage').checked,
+      vacant:      $('vacant').checked,
+      lockbox:     $('lockbox').value.trim(),
+      notes:       $('notes').value.trim(),
+      status:      $('status').value,
+      finalPrice:  parseFloat($('finalPrice').value) || 0
+    };
+
+    if (!payload.agentName) { setStatus('err', 'Agent name is required.'); return; }
+    if (!payload.agentPhone) { setStatus('err', 'Phone is required.'); return; }
+    if (!payload.address) { setStatus('err', 'Address is required.'); return; }
+    if (!payload.installDate) { setStatus('err', 'Install date is required.'); return; }
+    if (!payload.finalPrice || payload.finalPrice <= 0) { setStatus('err', 'Total price (inc GST) is required.'); return; }
+
+    const btn = $('saveBtn');
+    btn.disabled = true; btn.style.opacity = '0.6'; btn.textContent = 'Saving…';
+    setStatus('ok', 'Saving…');
+
+    try {
+      const session = await MSSAuth.getSession();
+      if (!session) throw new Error('Not signed in. Please refresh and log in.');
+
+      const res = await fetch('/api/admin-create-booking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + session.access_token
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to save booking');
+      setStatus('ok', '✅ Booking saved: ' + data.jobNumber + ' — $' + payload.finalPrice.toLocaleString('en-AU',{minimumFractionDigits:2}) + ' inc GST. Redirecting to bookings list…');
+      setTimeout(() => { window.location.href = 'bookings.html'; }, 1800);
+    } catch (e) {
+      setStatus('err', e.message || 'Unexpected error');
+      btn.disabled = false; btn.style.opacity = '1'; btn.textContent = 'Save Booking';
+    }
+  }
+
+  function resetForm() {
+    ['agentName','agentPhone','agentEmail','agency','address','installDate','installTime','lockbox','notes','finalPrice'].forEach(id => $(id).value = '');
+    $('bedrooms').value = 3; $('bathrooms').value = 2; $('livingAreas').value = 1; $('diningAreas').value = 1;
+    $('installTime').value = '09:00';
+    $('garage').checked = false; $('vacant').checked = true;
+    $('status').value = 'closed';
+    $('gstPreview').textContent = 'Enter price to see GST breakdown';
+    $('statusMsg').className = 'mb-status-msg';
+    $('statusMsg').textContent = '';
+  }
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    const user = await MSSAuth.requireAdmin('login.html');
+    if (!user) return;
+    // Default install date: today
+    const today = new Date().toISOString().slice(0,10);
+    $('installDate').value = today;
+
+    $('saveBtn').addEventListener('click', saveBooking);
+    $('resetBtn').addEventListener('click', resetForm);
+  });
+</script>
+</body>
+</html>

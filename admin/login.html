@@ -1,81 +1,102 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login | Modern Space Styling</title>
-    <link rel="stylesheet" href="../css/admin.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Login | Modern Space Styling</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../css/admin.css">
 </head>
-
 <body>
-    <div class="login-page">
-        <div class="login-card">
-            <div class="login-logo">
-                <div class="login-logo-name">Modern Space Styling</div>
-                <div class="login-logo-sub">Admin Portal</div>
-            </div>
-            <h2 class="login-title">Welcome back</h2>
-            <p class="login-sub">Sign in to the admin dashboard</p>
-            <div class="f-group"><label class="f-label">Email Address</label><input type="email" id="email"
-                    class="f-control" placeholder="admin@modernspacestyling.com.au"></div>
-            <div class="f-group"><label class="f-label">Password</label><input type="password" id="password"
-                    class="f-control" placeholder="Password"></div>
-            <div id="loginErr" style="color:#DC2626;font-size:0.8rem;margin-bottom:0.75rem;display:none"></div>
-            <div id="lockoutMsg" style="background:#FEE2E2;color:#991B1B;padding:0.75rem 1rem;border-radius:8px;font-size:0.82rem;margin-bottom:0.75rem;display:none"></div>
-            <button class="ab ab-primary w-full" id="loginBtn"
-                style="width:100%;justify-content:center;padding:0.75rem;font-size:0.9rem" onclick="doLogin()">Sign
-                In</button>
-            <hr class="divider">
-            <p style="text-align:center;font-size:0.78rem;color:var(--text-muted)">Are you an agent? <a
-                    href="login.html" style="color:var(--accent);font-weight:600">Agent Login →</a></p>
-        </div>
-    </div>
-    <div id="toast-container" class="toast-container"></div>
-    <script src="../js/app.js"></script>
-    <script>
-        function checkLockout() {
-            const lock = LoginGuard.isLocked();
-            if (lock.locked) {
-                document.getElementById('lockoutMsg').style.display = 'block';
-                document.getElementById('lockoutMsg').textContent = 'Too many failed attempts. Account locked for ' + lock.minutes + ' minute(s). Please try again later.';
-                document.getElementById('loginBtn').disabled = true;
-                document.getElementById('loginBtn').style.opacity = '0.5';
-                return true;
-            }
-            document.getElementById('lockoutMsg').style.display = 'none';
-            document.getElementById('loginBtn').disabled = false;
-            document.getElementById('loginBtn').style.opacity = '1';
-            return false;
-        }
-        async function doLogin() {
-            if (checkLockout()) return;
-            const email = document.getElementById('email').value.trim();
-            const pass = document.getElementById('password').value;
-            if (!email || !pass) { document.getElementById('loginErr').textContent = 'Please enter email and password.'; document.getElementById('loginErr').style.display = 'block'; return; }
-            await seedDatabase();
-            const users = DB.get(KEYS.USERS);
-            const hash = await Crypto.hash(pass);
-            const user = users.find(u => u.email === email && u.password === hash && (u.role === 'admin' || u.role === 'staff'));
-            if (!user) {
-                const d = LoginGuard.recordFail();
-                const left = LoginGuard.attemptsLeft();
-                if (left > 0) {
-                    document.getElementById('loginErr').textContent = 'Invalid email or password. ' + left + ' attempt(s) remaining.';
-                    document.getElementById('loginErr').style.display = 'block';
-                } else {
-                    checkLockout();
-                }
-                logActivity('Failed admin login attempt for ' + email);
-                return;
-            }
-            LoginGuard.reset();
-            Auth.login(user);
-            window.location.href = 'dashboard.html';
-        }
-        document.addEventListener('DOMContentLoaded', checkLockout);
-        document.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
-    </script>
-</body>
+  <div class="login-page">
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="login-logo-name">Modern Space Styling</div>
+        <div class="login-logo-sub">Admin Portal</div>
+      </div>
+      <h2 class="login-title">Welcome back</h2>
+      <p class="login-sub">Sign in to the admin dashboard</p>
 
+      <div class="f-group">
+        <label class="f-label" for="email">Email Address</label>
+        <input type="email" id="email" class="f-control" placeholder="you@example.com" autocomplete="username">
+      </div>
+      <div class="f-group">
+        <label class="f-label" for="password">Password</label>
+        <input type="password" id="password" class="f-control" placeholder="Password" autocomplete="current-password">
+      </div>
+
+      <div id="loginErr" role="alert" style="color:#DC2626;font-size:0.8rem;margin-bottom:0.75rem;display:none"></div>
+
+      <button class="ab ab-primary w-full" id="loginBtn" type="button"
+        style="width:100%;justify-content:center;padding:0.75rem;font-size:0.9rem">Sign In</button>
+
+      <div style="text-align:center;margin-top:1rem;font-size:0.82rem">
+        <a href="forgot.html" style="color:var(--accent);font-weight:600;text-decoration:none">Forgot password?</a>
+      </div>
+
+      <hr class="divider">
+      <p style="text-align:center;font-size:0.75rem;color:var(--text-muted);line-height:1.5">
+        Secure login powered by Supabase.<br>
+        Works on any device with the same email + password.
+      </p>
+    </div>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+
+  <script src="supabase.min.js"></script>
+  <script src="auth-supabase.js"></script>
+  <script>
+    const emailEl = document.getElementById('email');
+    const passEl  = document.getElementById('password');
+    const errEl   = document.getElementById('loginErr');
+    const btn     = document.getElementById('loginBtn');
+
+    function showErr(msg) {
+      errEl.textContent = msg;
+      errEl.style.display = 'block';
+    }
+    function clearErr() {
+      errEl.style.display = 'none';
+      errEl.textContent = '';
+    }
+    function setLoading(loading) {
+      btn.disabled = loading;
+      btn.style.opacity = loading ? '0.6' : '1';
+      btn.textContent = loading ? 'Signing in…' : 'Sign In';
+    }
+
+    async function doLogin() {
+      clearErr();
+      const email = emailEl.value.trim();
+      const pass  = passEl.value;
+      if (!email || !pass) { showErr('Please enter email and password.'); return; }
+      setLoading(true);
+      try {
+        await MSSAuth.signIn(email, pass);
+        window.location.href = 'dashboard.html';
+      } catch (e) {
+        const msg = (e && e.message) ? e.message : 'Login failed. Please try again.';
+        showErr(msg.includes('Invalid login') ? 'Invalid email or password.' : msg);
+        setLoading(false);
+      }
+    }
+
+    btn.addEventListener('click', doLogin);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
+
+    // If already signed in, skip login
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const session = await MSSAuth.getSession();
+        if (session && session.user) {
+          await MSSAuth.syncLegacySession(session.user);
+          window.location.href = 'dashboard.html';
+        }
+      } catch (e) { /* ignore, show login */ }
+    });
+  </script>
+</body>
 </html>

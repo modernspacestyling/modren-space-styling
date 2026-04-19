@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Account | MSS Admin</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-name">Modern Space Styling</div>
+        <div class="sidebar-logo-sub">Admin Panel</div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Main</div>
+        <a class="sidebar-link" href="dashboard.html"><span class="sidebar-icon">📊</span> Dashboard</a>
+        <a class="sidebar-link" href="bookings.html"><span class="sidebar-icon">📋</span> Bookings</a>
+        <a class="sidebar-link" href="photo-bookings.html"><span class="sidebar-icon">📸</span> Photo Bookings</a>
+        <a class="sidebar-link" href="inventory.html"><span class="sidebar-icon">📦</span> Inventory</a>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Finance</div>
+        <a class="sidebar-link" href="invoices.html"><span class="sidebar-icon">🧾</span> Invoices</a>
+        <a class="sidebar-link" href="expenses.html"><span class="sidebar-icon">💸</span> Expenses</a>
+        <a class="sidebar-link" href="reports.html"><span class="sidebar-icon">📈</span> Reports</a>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Management</div>
+        <a class="sidebar-link" href="pricing.html"><span class="sidebar-icon">💰</span> Pricing</a>
+        <a class="sidebar-link" href="sms.html"><span class="sidebar-icon">💬</span> SMS Centre</a>
+        <a class="sidebar-link" href="team.html"><span class="sidebar-icon">👥</span> Team Contacts</a>
+        <a class="sidebar-link" href="agents.html"><span class="sidebar-icon">🏢</span> Agents</a>
+        <a class="sidebar-link" href="logs.html"><span class="sidebar-icon">📝</span> Activity Log</a>
+        <a class="sidebar-link active" href="profile.html"><span class="sidebar-icon">👤</span> My Account</a>
+      </div>
+      <div class="sidebar-footer">
+        <a class="sidebar-link" href="../index.html" style="padding:0"><span class="sidebar-icon">🏠</span> View Website</a>
+        <a class="sidebar-link" href="#" id="logoutLink" style="padding:0;margin-top:0.5rem;color:#F87171"><span class="sidebar-icon">🚪</span> Logout</a>
+      </div>
+    </aside>
+
+    <header class="topbar">
+      <div class="topbar-title">My Account</div>
+      <div class="topbar-right">
+        <div class="topbar-user">
+          <div class="user-avatar" id="userAvatar">A</div><span id="userName">Admin</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <div class="panel" style="max-width:560px">
+        <h3 style="margin-bottom:.25rem">Account Details</h3>
+        <p style="color:var(--text-muted);font-size:.85rem;margin-bottom:1.25rem">Your login email and role.</p>
+        <div class="f-row">
+          <div><div class="f-label">Email</div><div id="accEmail" style="font-weight:500">—</div></div>
+          <div><div class="f-label">Role</div><div style="font-weight:500">admin</div></div>
+        </div>
+        <div style="margin-top:1rem;font-size:.8rem;color:var(--text-muted)">Last sign-in: <span id="accLastSignIn">—</span></div>
+      </div>
+
+      <div class="panel" style="max-width:560px;margin-top:1.5rem">
+        <h3 style="margin-bottom:.25rem">Change Password</h3>
+        <p style="color:var(--text-muted);font-size:.85rem;margin-bottom:1.25rem">Use a strong password you don't use elsewhere.</p>
+
+        <div class="f-group">
+          <label class="f-label" for="pw1">New Password</label>
+          <input type="password" id="pw1" class="f-control" placeholder="At least 8 characters" autocomplete="new-password">
+        </div>
+        <div class="f-group">
+          <label class="f-label" for="pw2">Confirm New Password</label>
+          <input type="password" id="pw2" class="f-control" placeholder="Repeat new password" autocomplete="new-password">
+        </div>
+
+        <div id="msg" role="alert" style="font-size:0.82rem;margin:0.5rem 0 0.75rem;display:none;padding:0.6rem 0.85rem;border-radius:8px"></div>
+
+        <button class="ab ab-primary" id="saveBtn" type="button"
+          style="padding:0.65rem 1.25rem;font-size:0.9rem">Update Password</button>
+      </div>
+    </main>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+
+  <script src="supabase.min.js"></script>
+  <script src="auth-supabase.js"></script>
+  <script>
+    const pw1 = document.getElementById('pw1');
+    const pw2 = document.getElementById('pw2');
+    const msgEl = document.getElementById('msg');
+    const btn = document.getElementById('saveBtn');
+
+    function show(type, text) {
+      msgEl.textContent = text;
+      msgEl.style.display = 'block';
+      if (type === 'success') { msgEl.style.background='#D1FAE5'; msgEl.style.color='#065F46'; msgEl.style.border='1px solid #6EE7B7'; }
+      else { msgEl.style.background='#FEE2E2'; msgEl.style.color='#991B1B'; msgEl.style.border='1px solid #FCA5A5'; }
+    }
+
+    async function updatePw() {
+      msgEl.style.display = 'none';
+      const a = pw1.value, b = pw2.value;
+      if (!a || !b) { show('error', 'Please enter and confirm your new password.'); return; }
+      if (a.length < 8) { show('error', 'Password must be at least 8 characters.'); return; }
+      if (a !== b) { show('error', 'Passwords do not match.'); return; }
+      btn.disabled = true; btn.style.opacity = '0.6'; btn.textContent = 'Updating…';
+      try {
+        await MSSAuth.updatePassword(a);
+        show('success', 'Password updated. Keep it safe.');
+        pw1.value = ''; pw2.value = '';
+      } catch (e) {
+        show('error', (e && e.message) || 'Could not update password. Please sign out and log in again.');
+      } finally {
+        btn.disabled = false; btn.style.opacity = '1'; btn.textContent = 'Update Password';
+      }
+    }
+
+    btn.addEventListener('click', updatePw);
+
+    document.getElementById('logoutLink').addEventListener('click', async (e) => {
+      e.preventDefault();
+      await MSSAuth.signOut();
+      window.location.href = 'login.html';
+    });
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await MSSAuth.requireAdmin('login.html');
+      if (!user) return;
+      const name = (user.email || '').split('@')[0];
+      document.getElementById('userName').textContent = name;
+      document.getElementById('userAvatar').textContent = name.charAt(0).toUpperCase();
+      document.getElementById('accEmail').textContent = user.email;
+      if (user.last_sign_in_at) {
+        document.getElementById('accLastSignIn').textContent = new Date(user.last_sign_in_at).toLocaleString('en-AU');
+      }
+    });
+  </script>
+</body>
+</html>

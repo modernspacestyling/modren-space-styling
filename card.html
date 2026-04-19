@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Digital Business Card | Modern Space Styling</title>
+<meta name="description" content="Modern Space Styling — Property Staging &amp; Photography, Geelong VIC.">
+<meta name="theme-color" content="#FAF7F1">
+<meta property="og:title" content="Modern Space Styling — Digital Card">
+<meta property="og:description" content="Tap to save contact or book property staging.">
+<meta property="og:type" content="profile">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap">
+<style>
+  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; color-adjust:exact !important; }
+  :root {
+    --gold:#B8963E; --gold-light:#D4B565; --gold-dark:#8B7030;
+    --ink:#1a1410; --text:#2B2520; --muted:#6B5F4A;
+    --paper:#FAF7F1; --paper-2:#F2EDE1; --line:#E5DDC9;
+  }
+  html, body { min-height:100dvh; -webkit-font-smoothing:antialiased; }
+  body {
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+    background:#1a1410;
+    color:var(--text);
+    line-height:1.5;
+    display:flex; align-items:center; justify-content:center;
+    padding:1.25rem;
+    padding-top:env(safe-area-inset-top,1.25rem);
+    padding-bottom:env(safe-area-inset-bottom,1.25rem);
+  }
+
+  .card {
+    width:100%; max-width:380px;
+    background:var(--paper);
+    border-radius:20px;
+    padding:28px 24px 22px;
+    box-shadow:0 30px 80px -20px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.3);
+    position:relative;
+    display:flex; flex-direction:column;
+    overflow:hidden;
+  }
+  .card::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; background:var(--gold); }
+
+  /* ---------- Brand header ---------- */
+  .brand { text-align:center; margin-bottom:18px; }
+  .brand-logo { display:inline-flex; align-items:center; gap:7px; color:var(--gold-dark); }
+  .brand-logo svg { width:18px; height:18px; }
+  .brand-name { font-family:'Playfair Display',serif; font-size:13px; font-weight:600; letter-spacing:.02em; color:var(--ink); }
+  .brand-sub { font-size:9px; color:var(--muted); letter-spacing:.22em; text-transform:uppercase; margin-top:3px; font-weight:500; }
+
+  /* ---------- Identity block ---------- */
+  .identity { text-align:center; margin-bottom:20px; }
+  .avatar {
+    width:80px; height:80px; border-radius:50%;
+    background:var(--gold);
+    display:inline-flex; align-items:center; justify-content:center;
+    font-family:'Playfair Display',serif;
+    font-size:26px; font-weight:700;
+    color:var(--ink);
+    margin-bottom:12px;
+    border:3px solid var(--paper-2);
+  }
+  .name { font-family:'Playfair Display',serif; font-size:25px; font-weight:600; color:var(--ink); letter-spacing:-.01em; line-height:1.1; margin-bottom:6px; }
+  .role-wrap { display:inline-flex; align-items:center; gap:10px; }
+  .role-line { width:20px; height:1px; background:var(--gold); }
+  .role { font-size:10px; color:var(--gold-dark); letter-spacing:.25em; text-transform:uppercase; font-weight:600; }
+
+  /* ---------- Contact list ---------- */
+  .contact-list { display:flex; flex-direction:column; gap:7px; margin-bottom:14px; }
+  .contact-row {
+    display:flex; align-items:center; gap:12px;
+    padding:11px 13px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:10px;
+    color:var(--text); text-decoration:none;
+    transition:transform .15s, border-color .15s, box-shadow .15s;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .contact-row:hover, .contact-row:active { border-color:var(--gold); box-shadow:0 4px 12px rgba(184,150,62,.12); transform:translateY(-1px); }
+  .contact-icon {
+    width:32px; height:32px; border-radius:8px;
+    background:var(--paper-2);
+    color:var(--gold-dark);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .contact-icon svg { width:16px; height:16px; }
+  .contact-text { display:flex; flex-direction:column; min-width:0; gap:2px; }
+  .contact-label { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:.12em; font-weight:600; }
+  .contact-value { font-size:13px; font-weight:500; color:var(--ink); word-break:break-all; line-height:1.2; }
+
+  /* ---------- Actions ---------- */
+  .actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px; }
+  .cta-full { grid-column:1 / -1; }
+  .btn {
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    padding:12px; border-radius:10px;
+    font-weight:600; font-size:12px; font-family:inherit;
+    text-decoration:none; cursor:pointer; border:none;
+    transition:transform .15s, background .15s, box-shadow .15s;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .btn:active { transform:scale(.97); }
+  .btn-primary { background:var(--gold); color:var(--ink); }
+  .btn-primary:hover { background:var(--gold-light); box-shadow:0 6px 16px rgba(184,150,62,.3); }
+  .btn-outline { background:transparent; color:var(--ink); border:1px solid var(--line); }
+  .btn-outline:hover { border-color:var(--gold); color:var(--gold-dark); background:rgba(184,150,62,.05); }
+  .btn svg { width:13px; height:13px; }
+
+  /* ---------- QR ---------- */
+  .qr-section {
+    display:flex; align-items:center; gap:14px;
+    padding:12px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:12px;
+    margin-bottom:12px;
+  }
+  .qr-img { width:70px; height:70px; display:block; border-radius:6px; flex-shrink:0; }
+  .qr-text { display:flex; flex-direction:column; gap:3px; }
+  .qr-title { font-size:10px; color:var(--muted); letter-spacing:.18em; text-transform:uppercase; font-weight:600; }
+  .qr-desc { font-size:11px; color:var(--text); line-height:1.35; }
+
+  footer { text-align:center; padding-top:10px; border-top:1px solid var(--line); color:var(--muted); font-size:9px; letter-spacing:.05em; line-height:1.5; }
+  footer strong { color:var(--ink); font-weight:600; }
+  footer a { color:var(--gold-dark); text-decoration:none; font-weight:600; }
+
+  /* ---------- PRINT (single-page 105x170mm) ---------- */
+  @page { size: 105mm 170mm; margin: 0; }
+  @media print {
+    html, body { background:var(--paper) !important; margin:0 !important; padding:0 !important; min-height:0 !important; width:105mm !important; height:170mm !important; overflow:hidden !important; display:block !important; }
+    .card {
+      width:105mm !important; max-width:105mm !important;
+      height:170mm !important; min-height:170mm !important; max-height:170mm !important;
+      margin:0 !important;
+      border-radius:0 !important;
+      box-shadow:none !important;
+      padding:7mm 8mm 6mm !important;
+      overflow:hidden !important;
+      page-break-inside:avoid !important; break-inside:avoid !important;
+    }
+    .card::before { height:1.2mm !important; }
+    .brand { margin-bottom:4mm !important; }
+    .brand-logo svg { width:5mm !important; height:5mm !important; }
+    .brand-name { font-size:10pt !important; }
+    .brand-sub { font-size:6pt !important; margin-top:1mm !important; }
+    .identity { margin-bottom:5mm !important; }
+    .avatar { width:18mm !important; height:18mm !important; font-size:15pt !important; margin-bottom:3mm !important; border-width:0.8mm !important; }
+    .name { font-size:17pt !important; margin-bottom:1.5mm !important; }
+    .role { font-size:7pt !important; letter-spacing:.22em !important; }
+    .contact-list { gap:1.8mm !important; margin-bottom:3.5mm !important; }
+    .contact-row { padding:2.5mm 3mm !important; gap:2.5mm !important; border-radius:2mm !important; }
+    .contact-icon { width:7mm !important; height:7mm !important; border-radius:1.8mm !important; }
+    .contact-icon svg { width:3.5mm !important; height:3.5mm !important; }
+    .contact-label { font-size:5.5pt !important; }
+    .contact-value { font-size:8pt !important; }
+    .actions { gap:2mm !important; margin-bottom:3.5mm !important; }
+    .btn { padding:2.5mm 2mm !important; font-size:7.5pt !important; border-radius:2mm !important; gap:1.5mm !important; }
+    .btn svg { width:3mm !important; height:3mm !important; }
+    .qr-section { padding:2.5mm !important; gap:3mm !important; border-radius:2.5mm !important; margin-bottom:3mm !important; }
+    .qr-img { width:16mm !important; height:16mm !important; }
+    .qr-title { font-size:6pt !important; }
+    .qr-desc { font-size:7pt !important; }
+    footer { padding-top:2.5mm !important; font-size:5.5pt !important; }
+  }
+</style>
+</head>
+<body>
+  <main class="card" id="card" aria-live="polite"></main>
+
+  <script>
+  (() => {
+    const TEAM = {
+      mandeep: { name:'Mandeep Singh', role:'Founder & Director', phone:'+61455353855', email:'modernspacestyling@gmail.com', initials:'MS' },
+      mini:    { name:'Mini Bhumika',  role:'Director',           phone:'+61415580791', email:'Bhumika.sood1@gmail.com',     initials:'MB' },
+      sony:    { name:'Sony Rathore',  role:'Operations',         phone:'+61421237861', email:'Rathore6@gmail.com',          initials:'SR' },
+      tj:      { name:'Tj Hundal',     role:'Operations',         phone:'+61481322026', email:'hundalteji@gmail.com',        initials:'TH' },
+    };
+    const params = new URLSearchParams(location.search);
+    const id = (params.get('id') || location.hash.replace('#','') || 'mandeep').toLowerCase();
+    const p = TEAM[id] || TEAM.mandeep;
+
+    const esc = s => String(s).replace(/\\/g,'\\\\').replace(/,/g,'\\,').replace(/;/g,'\\;').replace(/\n/g,'\\n');
+    const lastName = p.name.split(' ').slice(-1)[0];
+    const firstName = p.name.split(' ').slice(0,-1).join(' ');
+    const vcard = ['BEGIN:VCARD','VERSION:3.0',
+      'FN:'+esc(p.name),
+      'N:'+esc(lastName)+';'+esc(firstName)+';;;',
+      'ORG:Modern Space Styling Pty Ltd',
+      'TITLE:'+esc(p.role),
+      'TEL;TYPE=CELL:'+esc(p.phone),
+      'EMAIL;TYPE=INTERNET:'+esc(p.email),
+      'URL:https://www.modernspacestyling.com.au',
+      'ADR;TYPE=WORK:;;;Geelong;VIC;;Australia',
+      'NOTE:Property Staging & Photography \u2014 Geelong VIC.',
+      'END:VCARD'].join('\r\n');
+    const vcardDataUri = 'data:text/vcard;charset=utf-8,'+encodeURIComponent(vcard);
+    const cardUrl = 'https://www.modernspacestyling.com.au/card.html?id='+id;
+    const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=6&data='+encodeURIComponent(cardUrl);
+
+    const svgIcon = (viewBox, pathD) => {
+      const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      s.setAttribute('viewBox', viewBox); s.setAttribute('fill','currentColor');
+      const pth = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      pth.setAttribute('d', pathD); s.appendChild(pth);
+      return s;
+    };
+
+    const card = document.getElementById('card');
+
+    // Brand header
+    const brand = document.createElement('div'); brand.className='brand';
+    const bl = document.createElement('div'); bl.className='brand-logo';
+    const blSvg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    blSvg.setAttribute('viewBox','0 0 80 80'); blSvg.setAttribute('fill','none'); blSvg.setAttribute('stroke','currentColor'); blSvg.setAttribute('stroke-width','2.5'); blSvg.setAttribute('stroke-linejoin','round');
+    const roof = document.createElementNS('http://www.w3.org/2000/svg','path'); roof.setAttribute('d','M40 65 L40 30 L16 46 L40 14 L64 46 L40 30');
+    const ln1 = document.createElementNS('http://www.w3.org/2000/svg','line'); ln1.setAttribute('x1','40'); ln1.setAttribute('y1','30'); ln1.setAttribute('x2','40'); ln1.setAttribute('y2','65');
+    const ln2 = document.createElementNS('http://www.w3.org/2000/svg','line'); ln2.setAttribute('x1','28'); ln2.setAttribute('y1','65'); ln2.setAttribute('x2','52'); ln2.setAttribute('y2','65');
+    blSvg.appendChild(roof); blSvg.appendChild(ln1); blSvg.appendChild(ln2);
+    bl.appendChild(blSvg);
+    const bn = document.createElement('span'); bn.className='brand-name'; bn.textContent='Modern Space Styling';
+    bl.appendChild(bn);
+    brand.appendChild(bl);
+    const bs = document.createElement('div'); bs.className='brand-sub'; bs.textContent='Property Staging · Geelong VIC';
+    brand.appendChild(bs);
+    card.appendChild(brand);
+
+    // Identity (avatar + name + role)
+    const identity = document.createElement('div'); identity.className='identity';
+    const avatar = document.createElement('div'); avatar.className='avatar'; avatar.setAttribute('aria-hidden','true');
+    avatar.textContent = p.initials;
+    identity.appendChild(avatar);
+    const name = document.createElement('h1'); name.className='name'; name.textContent = p.name;
+    identity.appendChild(name);
+    const roleWrap = document.createElement('div'); roleWrap.className='role-wrap';
+    const rl1 = document.createElement('span'); rl1.className='role-line';
+    const role = document.createElement('span'); role.className='role'; role.textContent = p.role;
+    const rl2 = document.createElement('span'); rl2.className='role-line';
+    roleWrap.appendChild(rl1); roleWrap.appendChild(role); roleWrap.appendChild(rl2);
+    identity.appendChild(roleWrap);
+    card.appendChild(identity);
+
+    // Contact list
+    const list = document.createElement('div'); list.className='contact-list';
+    const makeRow = (href, iconD, label, value, blank) => {
+      const a = document.createElement('a'); a.className='contact-row'; a.href = href;
+      if (blank) { a.setAttribute('target','_blank'); a.setAttribute('rel','noopener'); }
+      const ic = document.createElement('span'); ic.className='contact-icon'; ic.appendChild(svgIcon('0 0 24 24', iconD));
+      const tw = document.createElement('span'); tw.className='contact-text';
+      const lab = document.createElement('span'); lab.className='contact-label'; lab.textContent=label;
+      const val = document.createElement('span'); val.className='contact-value'; val.textContent=value;
+      tw.appendChild(lab); tw.appendChild(val);
+      a.appendChild(ic); a.appendChild(tw);
+      return a;
+    };
+    list.appendChild(makeRow('tel:'+p.phone, 'M6.6 10.8a15.1 15.1 0 006.6 6.6l2.2-2.2a1 1 0 011-.2 11.4 11.4 0 003.6.6 1 1 0 011 1V20a1 1 0 01-1 1A17 17 0 013 4a1 1 0 011-1h3.5a1 1 0 011 1 11.4 11.4 0 00.6 3.6 1 1 0 01-.2 1z', 'Phone', p.phone));
+    list.appendChild(makeRow('mailto:'+p.email, 'M20 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z', 'Email', p.email));
+    list.appendChild(makeRow('https://www.modernspacestyling.com.au', 'M12 2a10 10 0 100 20 10 10 0 000-20zm7.9 9h-3a15.6 15.6 0 00-1-5.3A8 8 0 0119.9 11zM12 4c1 1.3 1.8 3.6 2 7H10c.2-3.4 1-5.7 2-7zM4.3 13h3a15.4 15.4 0 001 5.3A8 8 0 014.3 13zm0-2a8 8 0 014-5.3A15.4 15.4 0 007.3 11h-3zM10 13h4c-.2 3.4-1 5.7-2 7-1-1.3-1.8-3.6-2-7zm6.9 5.3a15.6 15.6 0 001-5.3h3a8 8 0 01-4 5.3z', 'Website', 'modernspacestyling.com.au', true));
+    card.appendChild(list);
+
+    // Actions
+    const actions = document.createElement('div'); actions.className='actions';
+    const saveBtn = document.createElement('a'); saveBtn.className='btn btn-primary cta-full'; saveBtn.href = vcardDataUri; saveBtn.setAttribute('download', p.name.replace(/\s+/g,'_')+'.vcf');
+    saveBtn.appendChild(svgIcon('0 0 24 24','M19 3h-4.2A3 3 0 0012 1a3 3 0 00-2.8 2H5a2 2 0 00-2 2v15a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zM12 3a1 1 0 110 2 1 1 0 010-2zm3 16l-3-3-3 3v-8h6z'));
+    saveBtn.appendChild(document.createTextNode(' Save to Contacts'));
+    actions.appendChild(saveBtn);
+    const bookBtn = document.createElement('a'); bookBtn.className='btn btn-outline'; bookBtn.href='https://www.modernspacestyling.com.au/booking.html';
+    bookBtn.appendChild(svgIcon('0 0 24 24','M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2zm0 16H5V10h14zm0-12H5V6h14z'));
+    bookBtn.appendChild(document.createTextNode(' Book Staging'));
+    actions.appendChild(bookBtn);
+    const shareBtn = document.createElement('button'); shareBtn.className='btn btn-outline'; shareBtn.id='shareBtn'; shareBtn.type='button';
+    shareBtn.appendChild(svgIcon('0 0 24 24','M18 16c-.8 0-1.5.3-2 .8L9 13.3c.1-.3.1-.7.1-1 0-.3 0-.7-.1-1l7-4.5c.5.5 1.2.7 2 .7a3 3 0 100-6 3 3 0 00-3 3c0 .3 0 .7.1 1l-7 4.5a3 3 0 103 4.3l7 4.5c-.1.3-.1.6-.1.9a3 3 0 103-3z'));
+    shareBtn.appendChild(document.createTextNode(' Share'));
+    actions.appendChild(shareBtn);
+    card.appendChild(actions);
+
+    // QR
+    const qrSec = document.createElement('div'); qrSec.className='qr-section';
+    const qrImg = document.createElement('img'); qrImg.className='qr-img'; qrImg.src = qrUrl; qrImg.alt='QR code to open this digital card'; qrImg.loading='lazy';
+    const qrText = document.createElement('div'); qrText.className='qr-text';
+    const qrTitle = document.createElement('div'); qrTitle.className='qr-title'; qrTitle.textContent='Scan to Share';
+    const qrDesc = document.createElement('div'); qrDesc.className='qr-desc'; qrDesc.textContent='Open this card on any phone to save my contact instantly.';
+    qrText.appendChild(qrTitle); qrText.appendChild(qrDesc);
+    qrSec.appendChild(qrImg); qrSec.appendChild(qrText);
+    card.appendChild(qrSec);
+
+    // Footer
+    const f = document.createElement('footer');
+    const strong = document.createElement('strong'); strong.textContent = 'Modern Space Styling Pty Ltd';
+    f.appendChild(strong);
+    f.appendChild(document.createTextNode(' · ABN 75 685 915 495 · '));
+    const fa = document.createElement('a'); fa.href='https://www.modernspacestyling.com.au'; fa.textContent='modernspacestyling.com.au';
+    f.appendChild(fa);
+    card.appendChild(f);
+
+    document.title = p.name + ' · Modern Space Styling';
+
+    shareBtn.addEventListener('click', async () => {
+      if (navigator.share) {
+        try { await navigator.share({ title: p.name+' — Modern Space Styling', text:'Save my contact and book property staging.', url: cardUrl }); } catch(e) {}
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(cardUrl);
+        const orig = shareBtn.textContent;
+        shareBtn.textContent = 'Copied!';
+        setTimeout(() => {
+          shareBtn.textContent = '';
+          shareBtn.appendChild(svgIcon('0 0 24 24','M18 16c-.8 0-1.5.3-2 .8L9 13.3c.1-.3.1-.7.1-1 0-.3 0-.7-.1-1l7-4.5c.5.5 1.2.7 2 .7a3 3 0 100-6 3 3 0 00-3 3c0 .3 0 .7.1 1l-7 4.5a3 3 0 103 4.3l7 4.5c-.1.3-.1.6-.1.9a3 3 0 103-3z'));
+          shareBtn.appendChild(document.createTextNode(' Share'));
+        }, 1500);
+      }
+    });
+  })();
+  </script>
+</body>
+</html>

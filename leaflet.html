@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Property Staging Leaflet | Modern Space Styling</title>
+<meta name="description" content="Professional property staging for Geelong real estate agents. Transform spaces. Sell faster.">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="robots" content="noindex, follow">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+  :root { --gold:#B8963E; --gold-light:#D4B565; --gold-dark:#8B7030; --ink:#0a0a0a; --ink-2:#1a1a1a; --paper:#FAF7F1; --paper-2:#F2EDE1; --line:#2a2a2a; --muted:#6B5F4A; }
+
+  html, body { background: #262626; color: var(--ink); font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+
+  /* Toolbar (screen only) */
+  .toolbar {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,10,10,.95); backdrop-filter: blur(10px);
+    padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center;
+    color: #f5f5f5; border-bottom: 1px solid rgba(184,150,62,.25);
+  }
+  .toolbar h1 { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 500; }
+  .toolbar .actions { display: flex; gap: .6rem; }
+  .tb-btn {
+    background: var(--gold); color: var(--ink); border: none; padding: .55rem 1rem;
+    border-radius: 8px; font-weight: 600; font-size: .8rem; cursor: pointer; font-family: inherit;
+    transition: transform .15s, background .15s;
+  }
+  .tb-btn:hover { background: var(--gold-light); transform: translateY(-1px); }
+  .tb-btn.outline { background: transparent; color: #f5f5f5; border: 1px solid rgba(255,255,255,.2); }
+  .tb-btn.outline:hover { border-color: var(--gold); color: var(--gold-light); }
+
+  /* Page container — A4 at 96dpi = 794 x 1123 pixels */
+  .a4 {
+    width: 210mm; min-height: 297mm;
+    background: var(--paper);
+    margin: 2rem auto;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+    position: relative;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    color: var(--ink);
+  }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    background: linear-gradient(135deg, var(--ink) 0%, #1a1410 60%, #2a1f14 100%);
+    color: #fff;
+    padding: 18mm 14mm 14mm;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content:''; position:absolute; top:0; right:-30%; width:80%; height:100%;
+    background: radial-gradient(ellipse at top right, rgba(184,150,62,.25) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content:''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  .hero-brand {
+    display:flex; align-items:center; gap:.8rem; color: var(--gold); margin-bottom: 6mm;
+  }
+  .hero-brand svg { width: 38px; height: 38px; }
+  .hero-brand-text .name { font-family: 'Playfair Display', serif; font-size: 15pt; font-weight: 600; letter-spacing: .02em; }
+  .hero-brand-text .sub { font-size: 8pt; color: #c8b890; letter-spacing: .2em; text-transform: uppercase; margin-top: 2px; }
+
+  .hero-eyebrow {
+    font-size: 9pt; color: var(--gold-light); letter-spacing: .28em; text-transform: uppercase;
+    margin-bottom: 4mm; font-weight: 500;
+  }
+  .hero-headline {
+    font-family: 'Playfair Display', serif;
+    font-size: 44pt; font-weight: 700; line-height: 1.05; margin-bottom: 5mm; letter-spacing: -.02em;
+  }
+  .hero-headline .em { color: var(--gold); font-style: italic; }
+  .hero-sub { font-size: 11pt; color: #d8d0c0; max-width: 150mm; line-height: 1.55; margin-bottom: 8mm; }
+
+  .stats {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 6mm;
+    padding-top: 6mm; border-top: 1px solid rgba(184,150,62,.3);
+  }
+  .stat .num { font-family: 'Playfair Display', serif; font-size: 24pt; color: var(--gold); font-weight: 700; line-height: 1; }
+  .stat .label { font-size: 8pt; color: #c8b890; letter-spacing: .15em; text-transform: uppercase; margin-top: 2mm; }
+
+  /* ---------- Services ---------- */
+  .services { padding: 12mm 14mm; background: var(--paper); flex: 1; }
+  .section-eyebrow { font-size: 8pt; color: var(--gold-dark); letter-spacing: .28em; text-transform: uppercase; font-weight: 600; margin-bottom: 3mm; }
+  .section-title { font-family: 'Playfair Display', serif; font-size: 22pt; font-weight: 700; color: var(--ink); margin-bottom: 6mm; letter-spacing: -.01em; }
+
+  .service-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5mm; margin-bottom: 8mm; }
+  .service { padding: 6mm 5mm; background: #fff; border: 1px solid rgba(184,150,62,.25); border-radius: 3mm; position: relative; }
+  .service .ic { width: 10mm; height: 10mm; border-radius: 50%; background: linear-gradient(135deg, var(--gold-light), var(--gold)); color: var(--ink); display: flex; align-items: center; justify-content: center; margin-bottom: 3mm; }
+  .service .ic svg { width: 5mm; height: 5mm; }
+  .service h3 { font-family: 'Playfair Display', serif; font-size: 13pt; font-weight: 600; margin-bottom: 2mm; }
+  .service .price { font-size: 9pt; color: var(--gold-dark); font-weight: 600; margin-bottom: 2mm; letter-spacing: .02em; }
+  .service p { font-size: 9pt; color: var(--muted); line-height: 1.5; }
+
+  /* ---------- Why us ---------- */
+  .why { padding: 10mm 14mm 8mm; background: var(--paper-2); }
+  .why-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5mm; margin-top: 4mm; }
+  .why-item { text-align: center; }
+  .why-item .n { font-family: 'Playfair Display', serif; color: var(--gold); font-size: 20pt; font-weight: 700; line-height: 1; margin-bottom: 2mm; }
+  .why-item .t { font-size: 8pt; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; font-weight: 600; }
+
+  /* ---------- Offer ribbon ---------- */
+  .offer {
+    margin: 8mm 14mm; padding: 8mm 6mm;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%); color: var(--ink);
+    border-radius: 3mm; display: flex; align-items: center; gap: 6mm;
+    position: relative; overflow: hidden;
+  }
+  .offer::before { content: ''; position: absolute; top: 0; right: 0; width: 40%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2)); pointer-events:none; }
+  .offer .pct { font-family: 'Playfair Display', serif; font-size: 36pt; font-weight: 800; line-height: 1; }
+  .offer .msg h4 { font-family: 'Playfair Display', serif; font-size: 14pt; font-weight: 700; margin-bottom: 2mm; }
+  .offer .msg p { font-size: 9pt; opacity: .85; line-height: 1.4; }
+  .offer-cta { margin-left: auto; background: var(--ink); color: var(--gold-light); padding: 4mm 7mm; border-radius: 2mm; font-weight: 700; font-size: 9pt; letter-spacing: .1em; text-transform: uppercase; text-decoration: none; }
+
+  /* ---------- Footer contact ---------- */
+  .contact-bar {
+    background: var(--ink); color: #fff; padding: 9mm 14mm;
+    display: grid; grid-template-columns: 1fr 1fr auto; gap: 8mm; align-items: center;
+    position: relative;
+  }
+  .contact-bar::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+  .contact-col .lbl { font-size: 7pt; color: var(--gold-light); letter-spacing: .22em; text-transform: uppercase; margin-bottom: 2mm; }
+  .contact-col .val { font-size: 10pt; font-weight: 500; }
+  .contact-col .val.lg { font-size: 13pt; font-family: 'Playfair Display', serif; }
+  .qr-box { width: 26mm; height: 26mm; background: #fff; padding: 2mm; border-radius: 2mm; }
+  .qr-box img { width: 100%; height: 100%; display: block; }
+  .tagline-strip { padding: 4mm 14mm; background: var(--ink-2); color: var(--gold-light); font-size: 7pt; letter-spacing: .15em; text-transform: uppercase; text-align: center; font-weight: 500; }
+
+  /* ---------- Print: let content flow across 2 A4 pages gracefully ---------- */
+  @page { size: A4 portrait; margin: 0; }
+  @media print {
+    html, body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
+    .toolbar { display: none !important; }
+    .a4 { width: 210mm !important; min-height: auto !important; height: auto !important; margin: 0 !important; box-shadow: none !important; overflow: visible !important; }
+    /* Force a clean page break AFTER the services section, so Page 1 = Hero + Services, Page 2 = Why + Offer + Contact */
+    .services { page-break-after: always; break-after: page; }
+    .hero, .services, .why, .contact-bar { break-inside: avoid; page-break-inside: avoid; }
+    .service, .offer, .why-item { break-inside: avoid; page-break-inside: avoid; }
+    /* Give page 2 a little top breathing room to balance visually */
+    .why { padding-top: 18mm !important; }
+  }
+
+  /* Small screens — show as responsive but note "print to see properly" */
+  @media (max-width: 820px) {
+    .a4 { width: 100%; margin: 1rem 0; }
+    .hero-headline { font-size: 32pt; }
+    .service-grid, .why-grid { grid-template-columns: 1fr 1fr; }
+    .contact-bar { grid-template-columns: 1fr; text-align: center; justify-items: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Toolbar: screen only, hidden on print -->
+<div class="toolbar">
+  <h1>Modern Space Styling — Leaflet (A4)</h1>
+  <div class="actions">
+    <button class="tb-btn outline" onclick="window.print()">Print / Save as PDF</button>
+    <a class="tb-btn" href="/">← Back to site</a>
+  </div>
+</div>
+
+<div class="a4">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-brand">
+      <svg viewBox="0 0 80 80" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round">
+        <path d="M40 65 L40 30 L16 46 L40 14 L64 46 L40 30"/>
+        <line x1="40" y1="30" x2="40" y2="65"/>
+        <line x1="28" y1="65" x2="52" y2="65"/>
+      </svg>
+      <div class="hero-brand-text">
+        <div class="name">Modern Space Styling</div>
+        <div class="sub">Geelong · Property Specialists</div>
+      </div>
+    </div>
+
+    <div class="hero-eyebrow">For Real Estate Professionals</div>
+    <h1 class="hero-headline">Transform spaces.<br><span class="em">Sell faster.</span></h1>
+    <p class="hero-sub">
+      Premium property staging &amp; photography that turns listings into lifestyle experiences.
+      Trusted by agents across Geelong &amp; the Bellarine Peninsula.
+    </p>
+
+    <div class="stats">
+      <div class="stat"><div class="num">30%</div><div class="label">Faster sale on average*</div></div>
+      <div class="stat"><div class="num">42</div><div class="label">Day staging period</div></div>
+      <div class="stat"><div class="num">24h</div><div class="label">Install turnaround</div></div>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section class="services">
+    <div class="section-eyebrow">Our Services</div>
+    <h2 class="section-title">Everything you need to list with confidence.</h2>
+
+    <div class="service-grid">
+      <div class="service">
+        <div class="ic">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 7v13h18V7l-9-5-9 5zm9 11a4 4 0 110-8 4 4 0 010 8z"/></svg>
+        </div>
+        <h3>Full Property Staging</h3>
+        <div class="price">From $800 · 6-week period</div>
+        <p>Complete furnishing &amp; styling — bedrooms, bathrooms, living &amp; dining. Installed in one day, photo-ready the next.</p>
+      </div>
+
+      <div class="service">
+        <div class="ic">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4h-3.2l-1.8-2H9L7.2 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2zm-8 14a5 5 0 110-10 5 5 0 010 10z"/></svg>
+        </div>
+        <h3>Sales Photography</h3>
+        <div class="price">From $299+GST</div>
+        <p>Professional property photography packages — HD images, twilight shots, drone aerials. Delivered within 24&nbsp;hours.</p>
+      </div>
+
+      <div class="service">
+        <div class="ic">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
+        </div>
+        <h3>Rental Photography</h3>
+        <div class="price">$179+GST · 12 photos</div>
+        <p>Rental listing essentials. 12 high-quality photos tailored for Domain, realestate.com.au and agency websites.</p>
+      </div>
+
+      <div class="service">
+        <div class="ic">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-2 12H7v-2h10zm0-4H7V9h10zM7 7h10v2H7z"/></svg>
+        </div>
+        <h3>Virtual Staging &amp; Extras</h3>
+        <div class="price">From $100/room</div>
+        <p>Virtual staging, floor plans, 3D tours, social media reels. Add-on services to complement any listing.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHY -->
+  <section class="why">
+    <div class="section-eyebrow">Why Agents Choose Us</div>
+    <div class="why-grid">
+      <div class="why-item"><div class="n">✓</div><div class="t">Local &amp; independent</div></div>
+      <div class="why-item"><div class="n">✓</div><div class="t">Insured &amp; reliable</div></div>
+      <div class="why-item"><div class="n">✓</div><div class="t">Transparent pricing</div></div>
+      <div class="why-item"><div class="n">✓</div><div class="t">Flexible extensions</div></div>
+    </div>
+  </section>
+
+  <!-- OFFER -->
+  <div class="offer">
+    <div class="pct">10%</div>
+    <div class="msg">
+      <h4>Introductory offer for new agents</h4>
+      <p>Mention this flyer on your first booking. Valid for staging bookings of $2,000 or more.</p>
+    </div>
+    <a class="offer-cta" href="https://www.modernspacestyling.com.au/booking.html">Book Now</a>
+  </div>
+
+  <!-- CONTACT BAR -->
+  <section class="contact-bar">
+    <div class="contact-col">
+      <div class="lbl">Call / Text</div>
+      <div class="val lg">0415 580 791</div>
+      <div class="val" style="color:#c8b890;font-size:8pt;margin-top:1.5mm;letter-spacing:.1em;">MINI · DIRECTOR</div>
+      <div class="val lg" style="margin-top:3mm;">0421 237 861</div>
+      <div class="val" style="color:#c8b890;font-size:8pt;margin-top:1.5mm;letter-spacing:.1em;">SONY · OPERATIONS</div>
+    </div>
+    <div class="contact-col">
+      <div class="lbl">Book Online</div>
+      <div class="val">modernspacestyling.com.au</div>
+      <div class="val" style="color:#c8b890;font-size:8pt;margin-top:2mm;letter-spacing:.1em;">GEELONG VIC · ABN 75 685 915 495</div>
+    </div>
+    <div class="qr-box">
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=8&data=https%3A%2F%2Fwww.modernspacestyling.com.au%2Fbooking.html" alt="QR to booking page">
+    </div>
+  </section>
+
+  <div class="tagline-strip">Property Staging · Sales &amp; Rental Photography · Virtual Staging · Geelong &amp; Bellarine</div>
+</div>
+
+</body>
+</html>

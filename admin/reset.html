@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Set New Password | Modern Space Styling</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+  <div class="login-page">
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="login-logo-name">Modern Space Styling</div>
+        <div class="login-logo-sub">Admin Portal</div>
+      </div>
+      <h2 class="login-title">Set new password</h2>
+      <p class="login-sub">Choose a strong password for your admin account.</p>
+
+      <div class="f-group">
+        <label class="f-label" for="pw1">New Password</label>
+        <input type="password" id="pw1" class="f-control" placeholder="At least 8 characters" autocomplete="new-password">
+      </div>
+      <div class="f-group">
+        <label class="f-label" for="pw2">Confirm Password</label>
+        <input type="password" id="pw2" class="f-control" placeholder="Repeat new password" autocomplete="new-password">
+      </div>
+
+      <div id="msg" role="alert" style="font-size:0.82rem;margin-bottom:0.75rem;display:none;padding:0.6rem 0.85rem;border-radius:8px"></div>
+
+      <button class="ab ab-primary w-full" id="saveBtn" type="button"
+        style="width:100%;justify-content:center;padding:0.75rem;font-size:0.9rem">Update password</button>
+
+      <div style="text-align:center;margin-top:1rem;font-size:0.82rem">
+        <a href="login.html" style="color:var(--accent);font-weight:600;text-decoration:none">← Back to login</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="supabase.min.js"></script>
+  <script src="auth-supabase.js"></script>
+  <script>
+    const pw1 = document.getElementById('pw1');
+    const pw2 = document.getElementById('pw2');
+    const msgEl = document.getElementById('msg');
+    const btn = document.getElementById('saveBtn');
+
+    function show(type, text) {
+      msgEl.textContent = text;
+      msgEl.style.display = 'block';
+      if (type === 'success') {
+        msgEl.style.background = '#D1FAE5'; msgEl.style.color = '#065F46'; msgEl.style.border = '1px solid #6EE7B7';
+      } else {
+        msgEl.style.background = '#FEE2E2'; msgEl.style.color = '#991B1B'; msgEl.style.border = '1px solid #FCA5A5';
+      }
+    }
+
+    async function savePassword() {
+      msgEl.style.display = 'none';
+      const a = pw1.value, b = pw2.value;
+      if (!a || !b) { show('error', 'Please enter and confirm your new password.'); return; }
+      if (a.length < 8) { show('error', 'Password must be at least 8 characters.'); return; }
+      if (a !== b) { show('error', 'Passwords do not match.'); return; }
+      btn.disabled = true; btn.style.opacity = '0.6'; btn.textContent = 'Updating…';
+      try {
+        await MSSAuth.updatePassword(a);
+        show('success', 'Password updated successfully. Redirecting to login…');
+        setTimeout(() => { window.location.href = 'login.html'; }, 1800);
+      } catch (e) {
+        show('error', (e && e.message) || 'Could not update password. The reset link may have expired.');
+        btn.disabled = false; btn.style.opacity = '1'; btn.textContent = 'Update password';
+      }
+    }
+
+    btn.addEventListener('click', savePassword);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Enter') savePassword(); });
+
+    // When user arrives from reset email, Supabase SDK's detectSessionInUrl auto-parses the token.
+    // We just need to ensure the SDK is loaded so the session is picked up.
+    document.addEventListener('DOMContentLoaded', async () => {
+      try { await MSSAuth.client(); } catch (e) { /* ignore */ }
+    });
+  </script>
+</body>
+</html>
