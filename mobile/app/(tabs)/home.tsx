@@ -88,7 +88,7 @@ export default function HomeScreen() {
       <View style={[styles.section, { marginBottom: 40 }]}>
         <Text style={styles.sectionTitle}>Contact Us</Text>
         <View style={styles.contactCard}>
-          <Text style={styles.contactItem}>📞 0415 580 791 | 0521 237 861</Text>
+          <Text style={styles.contactItem}>📞 0415 580 791 | 0421 237 861</Text>
           <Text style={styles.contactItem}>✉ modrenspacestyling@gmail.com</Text>
           <Text style={styles.contactItem}>📍 Geelong, VIC 3220</Text>
           <Text style={styles.contactNote}>Mon-Fri 8am-5pm · Sat 9am-2pm</Text>
