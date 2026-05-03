@@ -235,14 +235,36 @@
     setStatus('ok', 'Saving…');
 
     try {
-      const session = await MSSAuth.getSession();
-      if (!session) throw new Error('Not signed in. Please refresh and log in.');
+      // Get access token. Try MSSAuth.getSession() with a 4s timeout because
+      // Supabase v2 getSession() can deadlock if autoRefreshToken races with
+      // a backgrounded tab. Fall back to reading the token straight out of
+      // localStorage (storageKey 'mss_sb_auth').
+      let accessToken = null;
+      try {
+        const session = await Promise.race([
+          MSSAuth.getSession(),
+          new Promise((_, rej) => setTimeout(() => rej(new Error('getSession timeout')), 4000))
+        ]);
+        if (session && session.access_token) accessToken = session.access_token;
+      } catch (e) {
+        console.warn('[manual-booking] getSession failed, falling back to localStorage:', e);
+      }
+      if (!accessToken) {
+        try {
+          const raw = localStorage.getItem('mss_sb_auth');
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            accessToken = (parsed && parsed.access_token) || (parsed && parsed.currentSession && parsed.currentSession.access_token) || null;
+          }
+        } catch (_) {}
+      }
+      if (!accessToken) throw new Error('Not signed in. Please refresh and log in.');
 
       const res = await fetch('/api/admin-create-booking', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + session.access_token
+          'Authorization': 'Bearer ' + accessToken
         },
         body: JSON.stringify(payload)
       });
