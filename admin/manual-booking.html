@@ -268,14 +268,24 @@
   }
 
   document.addEventListener('DOMContentLoaded', async () => {
-    const user = await MSSAuth.requireAdmin('login.html');
-    if (!user) return;
-    // Default install date: today
-    const today = new Date().toISOString().slice(0,10);
-    $('installDate').value = today;
-
+    // Attach button handlers FIRST so the Save button always works even if
+    // the auth check below throws (e.g. transient Supabase SDK init issue).
     $('saveBtn').addEventListener('click', saveBooking);
     $('resetBtn').addEventListener('click', resetForm);
+
+    // Default install date: today
+    try {
+      $('installDate').value = new Date().toISOString().slice(0,10);
+    } catch (_) {}
+
+    // Verify admin session (redirects to login if missing). Wrapped so any
+    // failure here cannot disable the form above. saveBooking() re-checks
+    // the session before posting, so unauth attempts still fail safely.
+    try {
+      await MSSAuth.requireAdmin('login.html');
+    } catch (e) {
+      console.error('[manual-booking] auth check failed:', e);
+    }
   });
 </script>
 </body>
