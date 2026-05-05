@@ -98,6 +98,30 @@
         </div>
       </div>
 
+      <!-- Customer (homeowner / vendor — invoice goes to them) -->
+      <div class="mb-section-title" style="margin-top:1.25rem">Customer Details (for invoice)</div>
+      <p class="mb-hint" style="margin-top:-0.35rem">The homeowner / vendor. Invoice will be addressed to them. Leave blank if invoice goes to the agent / agency.</p>
+      <div class="f-row">
+        <div class="f-group">
+          <label class="f-label" for="customerName">Customer Name</label>
+          <input id="customerName" class="f-control" type="text" placeholder="John & Mary Smith">
+        </div>
+        <div class="f-group">
+          <label class="f-label" for="customerPhone">Customer Phone</label>
+          <input id="customerPhone" class="f-control" type="tel" placeholder="+61 4xx xxx xxx">
+        </div>
+      </div>
+      <div class="f-row">
+        <div class="f-group">
+          <label class="f-label" for="customerEmail">Customer Email</label>
+          <input id="customerEmail" class="f-control" type="email" placeholder="customer@email.com">
+        </div>
+        <div class="f-group">
+          <label class="f-label" for="customerAddress">Customer Billing Address</label>
+          <input id="customerAddress" class="f-control" type="text" placeholder="Same as property if blank">
+        </div>
+      </div>
+
       <!-- Property -->
       <div class="mb-section-title" style="margin-top:1.25rem">Property Details</div>
       <div class="f-group">
@@ -209,6 +233,10 @@
       agentPhone:  $('agentPhone').value.trim(),
       agentEmail:  $('agentEmail').value.trim(),
       agency:      $('agency').value.trim(),
+      customerName:    $('customerName').value.trim(),
+      customerEmail:   $('customerEmail').value.trim(),
+      customerPhone:   $('customerPhone').value.trim(),
+      customerAddress: $('customerAddress').value.trim(),
       address:     $('address').value.trim(),
       installDate: $('installDate').value,
       installTime: $('installTime').value || '09:00',
@@ -270,7 +298,51 @@
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to save booking');
-      setStatus('ok', '✅ Booking saved: ' + data.jobNumber + ' — $' + payload.finalPrice.toLocaleString('en-AU',{minimumFractionDigits:2}) + ' inc GST. Redirecting to bookings list…');
+
+      // Mirror into localStorage so dashboard.html / bookings.html (which read
+      // KEYS.BOOKINGS) display the new manual booking right away. Server is
+      // still the source of truth — this just keeps the UI in sync until the
+      // admin pages are switched to fetch from Supabase.
+      try {
+        const list = JSON.parse(localStorage.getItem('mss_bookings') || '[]');
+        const installDateObj = new Date(payload.installDate);
+        const endDateObj = new Date(installDateObj); endDateObj.setDate(endDateObj.getDate() + 42);
+        list.push({
+          id: data.booking && data.booking.id ? String(data.booking.id) : (Date.now().toString(36) + Math.random().toString(36).slice(2,7)),
+          jobNumber:   data.jobNumber,
+          status:      payload.status,
+          agentName:   payload.agentName,
+          agentPhone:  payload.agentPhone,
+          agentEmail:  payload.agentEmail,
+          agency:      payload.agency,
+          customerName:    payload.customerName,
+          customerEmail:   payload.customerEmail,
+          customerPhone:   payload.customerPhone,
+          customerAddress: payload.customerAddress,
+          address:     payload.address,
+          installDate: payload.installDate,
+          installTime: payload.installTime,
+          bedrooms:    payload.bedrooms,
+          bathrooms:   payload.bathrooms,
+          livingAreas: payload.livingAreas,
+          diningAreas: payload.diningAreas,
+          garage:      payload.garage,
+          vacant:      payload.vacant,
+          notes:       payload.notes,
+          startDate:   payload.installDate,
+          endDate:     endDateObj.toISOString().slice(0,10),
+          estimatedPrice: Math.round(payload.finalPrice / 1.1),
+          finalPrice:  payload.finalPrice,
+          manualEntry: true,
+          createdAt:   new Date().toISOString(),
+        });
+        localStorage.setItem('mss_bookings', JSON.stringify(list));
+      } catch (mirrorErr) {
+        console.warn('[manual-booking] localStorage mirror failed (non-fatal):', mirrorErr);
+      }
+
+      const invoiceMsg = data.invoiceNumber ? ` Invoice ${data.invoiceNumber} created.` : '';
+      setStatus('ok', '✅ Booking saved: ' + data.jobNumber + ' — $' + payload.finalPrice.toLocaleString('en-AU',{minimumFractionDigits:2}) + ' inc GST.' + invoiceMsg + ' Redirecting to bookings list…');
       setTimeout(() => { window.location.href = 'bookings.html'; }, 1800);
     } catch (e) {
       setStatus('err', e.message || 'Unexpected error');
@@ -279,7 +351,7 @@
   }
 
   function resetForm() {
-    ['agentName','agentPhone','agentEmail','agency','address','installDate','installTime','lockbox','notes','finalPrice'].forEach(id => $(id).value = '');
+    ['agentName','agentPhone','agentEmail','agency','customerName','customerEmail','customerPhone','customerAddress','address','installDate','installTime','lockbox','notes','finalPrice'].forEach(id => $(id).value = '');
     $('bedrooms').value = 3; $('bathrooms').value = 2; $('livingAreas').value = 1; $('diningAreas').value = 1;
     $('installTime').value = '09:00';
     $('garage').checked = false; $('vacant').checked = true;

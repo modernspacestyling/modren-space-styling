@@ -10,7 +10,7 @@
  *
  * Behaviour:
  *   - Does NOT send SMS
- *   - Does NOT send invoice email
+ *   - Generates an invoice via /api/send-invoice (single line item at finalPrice)
  *   - Writes directly to the bookings table using the service-role key
  *   - Stores finalPrice (inc GST) so it appears in the admin bookings list and reports
  */
@@ -144,6 +144,10 @@ module.exports = async (req, res) => {
             agent_phone:     sanitize(b.agentPhone, 20),
             agent_email:     sanitize(b.agentEmail, 160),
             agency:          sanitize(b.agency, 160),
+            customer_name:    sanitize(b.customerName, 160),
+            customer_email:   sanitize(b.customerEmail, 160),
+            customer_phone:   sanitize(b.customerPhone, 20),
+            customer_address: sanitize(b.customerAddress, 300),
             address:         sanitize(b.address, 300),
             install_date:    installDate,
             install_time:    sanitize(b.installTime || '09:00', 8),
@@ -173,11 +177,15 @@ module.exports = async (req, res) => {
         if (error) {
             console.error('[admin-create-booking] insert error:', error);
             // If 'final_price' or 'manual_entry' columns don't exist yet, retry without them
-            if (error.message && /column .*(final_price|manual_entry|created_by)/i.test(error.message)) {
+            if (error.message && /column .*(final_price|manual_entry|created_by|customer_name|customer_email|customer_phone|customer_address)/i.test(error.message)) {
                 const fallback = { ...row };
                 delete fallback.final_price;
                 delete fallback.manual_entry;
                 delete fallback.created_by;
+                delete fallback.customer_name;
+                delete fallback.customer_email;
+                delete fallback.customer_phone;
+                delete fallback.customer_address;
                 const retry = await supabase.from('bookings').insert(fallback).select().single();
                 if (retry.error) { res.status(500).json({ error: 'Failed to save booking: ' + retry.error.message }); return; }
                 res.status(200).json({ success: true, jobNumber: jobNumber, warning: 'final_price column missing — run schema update SQL', booking: retry.data });
@@ -187,11 +195,40 @@ module.exports = async (req, res) => {
             return;
         }
 
+        // ── Generate invoice (best-effort, never blocks booking save) ──
+        let invoiceNumber = null;
+        try {
+            const host = req.headers.host;
+            const proto = (req.headers['x-forwarded-proto'] || 'https').split(',')[0].trim();
+            const invoiceRes = await fetch(`${proto}://${host}/api/send-invoice`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    type: 'staging',
+                    jobNumber,
+                    booking: {
+                        ...b,
+                        manual_entry: true,
+                        final_price: finalPrice,
+                    },
+                }),
+            });
+            if (invoiceRes.ok) {
+                const inv = await invoiceRes.json();
+                invoiceNumber = inv.invoiceNumber || null;
+            } else {
+                console.error('[admin-create-booking] invoice call failed status', invoiceRes.status);
+            }
+        } catch (invErr) {
+            console.error('[admin-create-booking] invoice call error:', invErr);
+        }
+
         res.status(200).json({
             success: true,
             jobNumber: jobNumber,
             booking: data,
             total: finalPrice,
+            invoiceNumber,
         });
     } catch (e) {
         console.error('[admin-create-booking] unexpected:', e);

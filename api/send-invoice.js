@@ -78,7 +78,7 @@ function generateInvoiceHTML(data) {
     <tr>
         <td>
             <div style="font-family: Georgia, 'Times New Roman', serif; font-size: 24px; font-weight: 600; color: #ffffff; letter-spacing: 1px;">Modern Space Styling</div>
-            <div style="font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 10px; color: #B8963E; letter-spacing: 3px; margin-top: 4px; text-transform: uppercase;">Property Staging &middot; Geelong VIC</div>
+            <div style="font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 10px; color: #B8963E; letter-spacing: 3px; margin-top: 4px; text-transform: uppercase;">Staging &middot; Photography</div>
             <div style="font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 9px; color: #888; letter-spacing: 1px; margin-top: 2px;">PTY LTD</div>
         </td>
         <td style="text-align: right; vertical-align: top;">
@@ -367,12 +367,25 @@ module.exports = async function handler(req, res) {
     let customerName, customerEmail, customerPhone, agency, address, serviceDate;
 
     if (type === 'staging') {
-        lineItems = buildStagingLineItems(booking, pricingConfig);
-        customerName = booking.agent_name || booking.agentName;
-        customerEmail = booking.agent_email || booking.agentEmail;
-        customerPhone = booking.agent_phone || booking.agentPhone;
+        // Manual entry: respect the admin-typed finalPrice as the only line item.
+        const manualPrice = Number(booking.final_price || booking.finalPrice);
+        if (booking.manual_entry && manualPrice > 0) {
+            lineItems = [{
+                description: 'Property Staging — Service',
+                qty: 1,
+                unitPrice: manualPrice,
+                amount: manualPrice,
+            }];
+        } else {
+            lineItems = buildStagingLineItems(booking, pricingConfig);
+        }
+        // Prefer dedicated customer fields if filled (manual bookings),
+        // otherwise fall back to the agent (legacy bookings).
+        customerName  = booking.customer_name  || booking.customerName  || booking.agent_name  || booking.agentName;
+        customerEmail = booking.customer_email || booking.customerEmail || booking.agent_email || booking.agentEmail;
+        customerPhone = booking.customer_phone || booking.customerPhone || booking.agent_phone || booking.agentPhone;
         agency = booking.agency;
-        address = booking.address;
+        address = booking.customer_address || booking.customerAddress || booking.address;
         serviceDate = booking.install_date || booking.installDate;
     } else {
         lineItems = buildPhotoLineItems(booking);
