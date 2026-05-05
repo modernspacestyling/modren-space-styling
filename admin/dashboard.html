@@ -132,6 +132,7 @@
     <div id="toast-container" class="toast-container"></div>
     <script src="supabase.min.js"></script>
     <script src="auth-supabase.js"></script>
+    <script src="sync-bookings.js"></script>
     <script src="../js/app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
@@ -141,6 +142,9 @@
             document.getElementById('userName').textContent = user.name;
             document.getElementById('userAvatar').textContent = user.name.charAt(0);
 
+            // Pull latest bookings from Supabase before rendering so manual
+            // entries appear on every device, not just the one that saved them.
+            try { await window.syncBookingsFromServer(); } catch (_) {}
             renderDashboard();
         });
 
