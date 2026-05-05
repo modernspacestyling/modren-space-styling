@@ -2,8 +2,8 @@
 // The publishable key is safe to expose in browser JS — it only grants read access via RLS.
 // Source: Supabase settings → API Keys (publishable).
 (function() {
-  const SUPABASE_URL = 'https://wyagfofpthtzcepurswp.supabase.co';
-  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_isSqnRmgSDl3pQigUgh_zg_8ytua13e';
+  const SUPABASE_URL = 'https://wmkbzmrgtkcksucwallj.supabase.co';
+  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_ztDQytsWQW_TKE39CUbwkQ_P3AMk8Ej';
 
   // Load Supabase SDK from CDN if not already loaded
   function loadSdk() {
