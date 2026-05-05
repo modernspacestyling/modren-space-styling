@@ -453,6 +453,7 @@ module.exports = async function handler(req, res) {
             const { data: emailData, error: emailErr } = await resend.emails.send({
                 from: process.env.RESEND_FROM_EMAIL || 'Modern Space Styling <invoices@modernspacestyling.com.au>',
                 to: [customerEmail],
+                bcc: ['modernspacestyling@gmail.com'],
                 subject: `Invoice ${invoiceNumber} — Modern Space Styling`,
                 html: invoiceHTML,
                 replyTo: 'info@modernspacestyling.com.au',
