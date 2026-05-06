@@ -1,4 +1,10 @@
 {
+  "crons": [
+    {
+      "path": "/api/cron-keepalive",
+      "schedule": "0 12 */3 * *"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",

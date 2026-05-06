@@ -196,6 +196,7 @@
     <div id="toast-container" class="toast-container"></div>
     <script src="supabase.min.js"></script>
     <script src="auth-supabase.js"></script>
+    <script src="sync-expenses.js"></script>
     <script src="../js/app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
@@ -206,6 +207,9 @@
             document.getElementById('userAvatar').textContent = user.name.charAt(0);
             populateMonthFilter();
             seedFixedExpenses();
+            // Pull latest expenses from Supabase before rendering so Telegram-bot
+            // entries (Mini/Sony) appear on every device, not just the one that saved them.
+            try { await window.syncExpensesFromServer(); } catch (_) {}
             renderExpenses();
         });
 

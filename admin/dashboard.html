@@ -133,6 +133,7 @@
     <script src="supabase.min.js"></script>
     <script src="auth-supabase.js"></script>
     <script src="sync-bookings.js"></script>
+    <script src="sync-expenses.js"></script>
     <script src="../js/app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
@@ -142,17 +143,52 @@
             document.getElementById('userName').textContent = user.name;
             document.getElementById('userAvatar').textContent = user.name.charAt(0);
 
-            // Pull latest bookings from Supabase before rendering so manual
-            // entries appear on every device, not just the one that saved them.
+            // Pull latest bookings + expenses from Supabase before rendering so manual
+            // entries (and Telegram-bot expenses) appear on every device.
             try { await window.syncBookingsFromServer(); } catch (_) {}
+            try { await window.syncExpensesFromServer(); } catch (_) {}
             renderDashboard();
         });
+
+        function fmtMoney(n) {
+            return '$' + Math.abs(n || 0).toLocaleString('en-AU', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        }
+
+        function getFinancialsForMonth(monthKey) {
+            const bookings = DB.get(KEYS.BOOKINGS).filter(b => b.createdAt && b.createdAt.startsWith(monthKey) && b.status !== 'cancelled');
+            const photoBookings = DB.get(KEYS.PHOTO_BOOKINGS).filter(b => b.createdAt && b.createdAt.startsWith(monthKey) && b.status !== 'cancelled');
+            const expenses = DB.get(KEYS.EXPENSES).filter(e => e.date && e.date.startsWith(monthKey));
+            const stagingIncome = bookings.reduce((s, b) => s + (b.estimatedPrice || b.estimated_price || 0), 0);
+            const photoIncome = photoBookings.reduce((s, b) => s + (b.estimatedPrice || b.estimated_price || 0), 0);
+            const totalIncome = stagingIncome + photoIncome;
+            const totalExpenses = expenses.reduce((s, e) => s + (e.total || 0), 0);
+            const netProfit = totalIncome - totalExpenses;
+            const totalBookings = bookings.length + photoBookings.length;
+            return { totalIncome, totalExpenses, netProfit, totalBookings };
+        }
+
+        function makeKpiCard(label, value, cls) {
+            const card = document.createElement('div');
+            card.className = 'kpi-card' + (cls ? ' ' + cls : '');
+            const lbl = document.createElement('div'); lbl.className = 'kpi-label'; lbl.textContent = label;
+            const val = document.createElement('div'); val.className = 'kpi-value'; val.textContent = value;
+            card.append(lbl, val);
+            return card;
+        }
+
+        function makeKpiSectionHeader(text) {
+            const h = document.createElement('div');
+            h.style.cssText = 'grid-column:1/-1;font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-top:0.5rem;margin-bottom:-0.5rem';
+            h.textContent = text;
+            return h;
+        }
 
         function renderDashboard() {
             const bookings = DB.get(KEYS.BOOKINGS);
             const agents = DB.get(KEYS.AGENTS);
             const inventory = DB.get(KEYS.INVENTORY);
             const today = new Date().toISOString().slice(0, 10);
+            const monthKey = today.slice(0, 7);
 
             const pending = bookings.filter(b => b.status === 'pending').length;
             const active = bookings.filter(b => b.status === 'active').length;
@@ -161,6 +197,9 @@
             const pendingAgents = DB.get(KEYS.AGENTS).filter(a => a.status === 'pending').length;
             const photoBookings = DB.get(KEYS.PHOTO_BOOKINGS);
             const photoPending = photoBookings.filter(b => b.status === 'pending').length;
+
+            // Financial summary (this month)
+            const fin = getFinancialsForMonth(monthKey);
 
             // Sidebar badges
             document.getElementById('sbPending').textContent = pending;
@@ -173,19 +212,25 @@
             // Low stock alert topbar
             if (lowStock.length) document.getElementById('lowStockAlert').style.display = 'block';
 
-            // KPIs
-            const kpis = [
-                { label: 'Active Jobs', value: active, cls: 'success' },
-                { label: 'Pending Bookings', value: pending, cls: pending ? 'danger' : '' },
-                { label: 'Today\'s Installs', value: todayJobs.length, cls: 'info' },
-                { label: 'Low Stock Alerts', value: lowStock.length, cls: lowStock.length ? 'danger' : '' },
-                { label: 'Photo Bookings', value: photoBookings.length, cls: 'info' },
-            ];
-            document.getElementById('kpiGrid').innerHTML = kpis.map(k => `
-    <div class="kpi-card ${k.cls}">
-      <div class="kpi-label">${k.label}</div>
-      <div class="kpi-value">${k.value}</div>
-    </div>`).join('');
+            // Month label e.g. "May 2026"
+            const monthLabel = new Date().toLocaleDateString('en-AU', { month: 'long', year: 'numeric' });
+
+            // Build KPI grid: financial section, then operational section
+            const grid = document.getElementById('kpiGrid');
+            grid.textContent = '';
+
+            grid.appendChild(makeKpiSectionHeader('💰 Financial Overview · ' + monthLabel));
+            grid.appendChild(makeKpiCard('Revenue', fmtMoney(fin.totalIncome), 'success'));
+            grid.appendChild(makeKpiCard('Expenses', fmtMoney(fin.totalExpenses), fin.totalExpenses ? 'danger' : ''));
+            grid.appendChild(makeKpiCard('Net Profit', (fin.netProfit < 0 ? '-' : '') + fmtMoney(fin.netProfit), fin.netProfit >= 0 ? 'success' : 'danger'));
+            grid.appendChild(makeKpiCard('Total Bookings', String(fin.totalBookings), 'info'));
+
+            grid.appendChild(makeKpiSectionHeader('📋 Operations'));
+            grid.appendChild(makeKpiCard('Active Jobs', String(active), 'success'));
+            grid.appendChild(makeKpiCard('Pending Bookings', String(pending), pending ? 'danger' : ''));
+            grid.appendChild(makeKpiCard("Today's Installs", String(todayJobs.length), 'info'));
+            grid.appendChild(makeKpiCard('Low Stock Alerts', String(lowStock.length), lowStock.length ? 'danger' : ''));
+            grid.appendChild(makeKpiCard('Photo Bookings', String(photoBookings.length), 'info'));
 
             // Recent bookings table
             const recent = [...bookings].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 8);
