@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "au.com.modernspacestyling.www.twa",
+      "sha256_cert_fingerprints": [
+        "73:5E:FD:15:50:40:14:A4:F8:A3:58:FF:87:14:FE:01:99:EA:34:4D:84:D2:F2:6F:BF:62:D0:53:86:14:81:5E"
+      ]
+    }
+  }
+]
