@@ -45,3 +45,4 @@ temp/
 .env.*
 *.pdf
 previews/
+.gstack/

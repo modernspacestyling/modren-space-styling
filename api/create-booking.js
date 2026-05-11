@@ -101,8 +101,101 @@ function fmtDate(dateStr) {
     });
 }
 
+// ── GET handler: list signed-in user's bookings ──
+// Merged in from /api/my-bookings.js on 2026-05-11 to stay under the
+// Vercel Hobby 12-function limit. Conceptually still a "bookings"
+// endpoint — POST creates, GET lists for the authenticated user.
+const MY_BOOKINGS_SAFE_COLUMNS = [
+    'job_number', 'status',
+    'agent_name', 'agent_phone', 'agent_email', 'agency',
+    'address', 'install_date', 'install_time', 'end_date',
+    'bedrooms', 'bathrooms', 'living_areas', 'dining_areas',
+    'notes', 'estimated_price', 'created_at',
+].join(',');
+
+async function listBookingsForUser(req, res) {
+    const authHeader = req.headers['authorization'] || req.headers['Authorization'] || '';
+    const m = authHeader.match(/^Bearer\s+(.+)$/i);
+    if (!m) return res.status(401).json({ error: 'Missing Authorization header' });
+    const accessToken = m[1].trim();
+    if (!accessToken) return res.status(401).json({ error: 'Empty access token' });
+
+    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        return res.status(500).json({ error: 'Server misconfigured' });
+    }
+
+    const supabase = createClient(
+        process.env.SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+
+    // Verify JWT and extract authoritative user email.
+    let userEmail = null;
+    try {
+        const { data: userData, error: userErr } = await supabase.auth.getUser(accessToken);
+        if (userErr || !userData?.user) {
+            return res.status(401).json({ error: 'Invalid or expired session' });
+        }
+        userEmail = (userData.user.email || '').toLowerCase();
+        if (!userEmail) return res.status(401).json({ error: 'User has no email' });
+    } catch (e) {
+        console.error('[bookings:GET] getUser failed', e);
+        return res.status(401).json({ error: 'Could not verify session' });
+    }
+
+    // Staging bookings owned by this email.
+    let bookings;
+    try {
+        const { data, error: queryErr } = await supabase
+            .from('bookings')
+            .select(MY_BOOKINGS_SAFE_COLUMNS)
+            .eq('agent_email', userEmail)
+            .order('install_date', { ascending: false })
+            .limit(50);
+        if (queryErr) throw queryErr;
+        bookings = data || [];
+    } catch (e) {
+        console.error('[bookings:GET] query failed', e);
+        return res.status(500).json({ error: 'Could not load bookings' });
+    }
+
+    // Photo bookings — fail-soft (separate table, missing-table not fatal).
+    try {
+        const { data: photo } = await supabase
+            .from('photo_bookings')
+            .select('job_number, status, client_name, client_phone, client_email, agency, address, preferred_date, package, bedrooms, bathrooms, notes, estimated_price, created_at')
+            .eq('client_email', userEmail)
+            .order('preferred_date', { ascending: false })
+            .limit(50);
+        if (photo && photo.length) {
+            const normalised = photo.map(p => ({
+                job_number: p.job_number, status: p.status,
+                agent_name: p.client_name, agent_phone: p.client_phone,
+                agent_email: p.client_email, agency: p.agency,
+                address: p.address, install_date: p.preferred_date,
+                install_time: null, end_date: null,
+                bedrooms: p.bedrooms, bathrooms: p.bathrooms,
+                living_areas: null, dining_areas: null,
+                notes: p.notes, estimated_price: p.estimated_price,
+                created_at: p.created_at, package: p.package,
+            }));
+            bookings = bookings.concat(normalised);
+            bookings.sort((a, b) => {
+                const da = a.install_date ? new Date(a.install_date).getTime() : 0;
+                const db = b.install_date ? new Date(b.install_date).getTime() : 0;
+                return db - da;
+            });
+        }
+    } catch (e) {
+        console.warn('[bookings:GET] photo_bookings fetch failed (non-fatal)', e.message);
+    }
+
+    return res.status(200).json({ bookings });
+}
+
 module.exports = async function handler(req, res) {
     if (req.method === 'OPTIONS') return res.status(200).end();
+    if (req.method === 'GET') return listBookingsForUser(req, res);
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
     const ip = req.headers['x-forwarded-for']?.split(',')[0] || 'unknown';

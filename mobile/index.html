@@ -346,7 +346,7 @@
         const { data: { session } } = await sbClient.auth.getSession();
         const token = session?.access_token;
         if (!token) throw new Error('No active session');
-        const res = await fetch(API + '/my-bookings', {
+        const res = await fetch(API + '/create-booking', {
           method: 'GET',
           headers: { 'Authorization': 'Bearer ' + token },
         });
@@ -466,7 +466,7 @@
         const { data: { session } } = await sbClient.auth.getSession();
         const token = session?.access_token;
         if (!token) return;
-        const res = await fetch(API + '/my-bookings', {
+        const res = await fetch(API + '/create-booking', {
           method: 'GET',
           headers: { 'Authorization': 'Bearer ' + token },
         });
