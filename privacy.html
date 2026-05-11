@@ -183,11 +183,15 @@
         consultation services. Specifically:</p>
       <ul>
         <li><strong>Name</strong> — to identify you and address you correctly in communications.</li>
-        <li><strong>Email address</strong> — to send booking confirmations, quotes, invoices and service updates.</li>
+        <li><strong>Email address</strong> — to send booking confirmations, quotes, invoices and service updates, and
+          to verify your identity when you sign in to view your bookings (see section 2A below).</li>
         <li><strong>Phone number</strong> — to contact you about your booking, installation timing and on-site logistics.</li>
         <li><strong>Property address</strong> — the location where staging or photography services are to be performed.
         </li>
         <li><strong>Real estate agency name (optional)</strong> — provided by agents booking on behalf of vendors.</li>
+        <li><strong>Property access details (optional)</strong> — for example, a lockbox code provided by the agent so
+          our installation team can access the property. Stored encrypted at rest (AES-256-GCM) and only accessible to
+          authorised staging personnel.</li>
         <li><strong>Booking-related details</strong> — such as preferred date, number of bedrooms, package selected and
           any notes you provide.</li>
         <li><strong>App usage data</strong> — anonymised crash logs and basic interaction events from our mobile app,
@@ -196,6 +200,25 @@
       <p>We do not collect financial account numbers, payment card details, government identifiers, biometric data,
         precise location data, photos, contacts, calendar entries, health information, or browsing history through our
         website or app.</p>
+    </div>
+
+    <div class="terms-section">
+      <h2><span class="term-num">2A.</span> Optional sign-in (passwordless email verification)</h2>
+      <p>From version 1.1 of our mobile app, customers can optionally sign in using a passwordless "magic link" sent to
+        their email address. Signing in is not required to book — it's offered purely as a convenience so that previous
+        bookings appear in one place and form fields can be pre-filled on subsequent enquiries.</p>
+      <p>If you choose to sign in:</p>
+      <ul>
+        <li>We use your <strong>email address</strong> as the unique identifier for your account. No password is
+          collected or stored.</li>
+        <li>We send a single-use sign-in link to your inbox, valid for one hour. Clicking the link signs you in on the
+          device that requested it.</li>
+        <li>An authenticated session token is stored locally on your device. It is never shared with third parties or
+          used for tracking outside the Modern Space Styling app.</li>
+        <li>We do not collect or store passwords because the magic-link flow does not use them.</li>
+      </ul>
+      <p>You can sign out at any time from the "My Bookings" tab. Signing out clears the session token from your
+        device. To delete the account itself, email us per section 7 below.</p>
     </div>
 
     <div class="terms-section">
@@ -306,7 +329,7 @@
         ABN: 75 685 915 495
       </p>
       <p style="margin-top:1rem;font-size:0.78rem;color:var(--color-gold);letter-spacing:0.08em;text-transform:uppercase">
-        Last updated: 11 May 2026
+        Last updated: 11 May 2026 (v1.1 — added optional sign-in)
       </p>
     </div>
 
