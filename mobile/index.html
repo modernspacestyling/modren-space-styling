@@ -126,6 +126,7 @@
         <div class="form-group"><label class="form-label">Living Areas</label><input class="form-input" id="sLiving" type="number" value="1" min="0"></div>
         <div class="form-group"><label class="form-label">Dining Areas</label><input class="form-input" id="sDining" type="number" value="1" min="0"></div>
       </div>
+      <div class="form-group"><label class="form-label">Lockbox Code (optional)</label><input class="form-input" id="sLockbox" placeholder="e.g. 4321 — leave blank if not arranged yet"></div>
       <div class="form-group"><label class="form-label">Notes</label><textarea class="form-input" id="sNotes" rows="3" placeholder="Special requirements..."></textarea></div>
       <button class="btn btn-gold" onclick="submitStaging()">Submit Booking Request</button>
     </div>
@@ -227,7 +228,7 @@
       setTimeout(function(){t.className='toast'},3000);
     }
     async function submitStaging(){
-      var body={agentName:document.getElementById('sName').value.trim(),agentPhone:document.getElementById('sPhone').value.trim(),agentEmail:document.getElementById('sEmail').value.trim(),agency:document.getElementById('sAgency').value.trim(),address:document.getElementById('sAddress').value.trim(),installDate:document.getElementById('sDate').value,bedrooms:parseInt(document.getElementById('sBeds').value)||0,bathrooms:parseInt(document.getElementById('sBaths').value)||0,livingAreas:parseInt(document.getElementById('sLiving').value)||0,diningAreas:parseInt(document.getElementById('sDining').value)||0,vacant:true,notes:document.getElementById('sNotes').value.trim()};
+      var body={agentName:document.getElementById('sName').value.trim(),agentPhone:document.getElementById('sPhone').value.trim(),agentEmail:document.getElementById('sEmail').value.trim(),agency:document.getElementById('sAgency').value.trim(),address:document.getElementById('sAddress').value.trim(),installDate:document.getElementById('sDate').value,bedrooms:parseInt(document.getElementById('sBeds').value)||0,bathrooms:parseInt(document.getElementById('sBaths').value)||0,livingAreas:parseInt(document.getElementById('sLiving').value)||0,diningAreas:parseInt(document.getElementById('sDining').value)||0,vacant:true,lockbox:document.getElementById('sLockbox').value.trim(),notes:document.getElementById('sNotes').value.trim()};
       if(!body.agentName||!body.agentPhone||!body.agentEmail||!body.address||!body.installDate){toast('Please fill all required fields',true);return}
       try{
         var res=await fetch(API+'/create-booking',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
