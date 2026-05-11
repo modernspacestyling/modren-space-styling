@@ -210,8 +210,90 @@
   </nav>
   <div class="toast" id="toast"></div>
 
+  <!-- Supabase JS SDK (reuse the copy bundled for admin pages) -->
+  <script src="../admin/supabase.min.js"></script>
   <script>
     const API = '/api';
+
+    // ── Supabase auth client (publishable key is browser-safe — only reads via RLS) ──
+    const SUPABASE_URL = 'https://wmkbzmrgtkcksucwallj.supabase.co';
+    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_ztDQytsWQW_TKE39CUbwkQ_P3AMk8Ej';
+    const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,   // auto-handles magic link callback (#access_token=…)
+        storage: window.localStorage,
+        storageKey: 'mss_customer_auth',
+        flowType: 'pkce',
+      },
+    });
+
+    // Tracks the signed-in user across the app. Mutates only via refreshSession().
+    let MSSUser = null;
+
+    // Called on page load + after sign-in/out events. Updates MSSUser and re-renders nav.
+    async function refreshSession() {
+      try {
+        const { data: { session } } = await sbClient.auth.getSession();
+        MSSUser = session?.user || null;
+      } catch (e) {
+        console.error('[auth] getSession failed', e);
+        MSSUser = null;
+      }
+      applyAuthUI();
+    }
+
+    // Updates the bottom-nav Track item to reflect signed-in state.
+    // Signed out: "📍 Track" → opens job-number lookup
+    // Signed in:  "📋 My Jobs" → opens user's booking list
+    function applyAuthUI() {
+      const navTrack = document.getElementById('navTrack');
+      if (!navTrack) return;
+      // Rebuild children using safe DOM methods (no innerHTML — avoids XSS surface).
+      while (navTrack.firstChild) navTrack.removeChild(navTrack.firstChild);
+      const icon = document.createElement('span');
+      icon.className = 'nav-icon';
+      icon.textContent = MSSUser ? '📋' : '📍';
+      navTrack.appendChild(icon);
+      navTrack.appendChild(document.createTextNode(MSSUser ? 'My Jobs' : 'Track'));
+    }
+
+    // Send the magic link. Supabase will auto-create the user on first link.
+    // Redirect target = current page so the SDK can pick the access_token out of the URL.
+    async function sendMagicLink(email) {
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        toast('Enter a valid email', true);
+        return false;
+      }
+      const redirectTo = window.location.origin + '/mobile/';
+      const { error } = await sbClient.auth.signInWithOtp({
+        email: email.trim().toLowerCase(),
+        options: { emailRedirectTo: redirectTo },
+      });
+      if (error) {
+        toast(error.message || 'Could not send link', true);
+        return false;
+      }
+      return true;
+    }
+
+    async function signOutUser() {
+      try { await sbClient.auth.signOut(); } catch(e){}
+      MSSUser = null;
+      applyAuthUI();
+      toast('Signed out');
+    }
+
+    // Re-render nav whenever auth state changes (sign-in, sign-out, token refresh).
+    sbClient.auth.onAuthStateChange((_event, session) => {
+      MSSUser = session?.user || null;
+      applyAuthUI();
+    });
+
+    // Fire on first load — picks up magic link callback or existing session.
+    refreshSession();
+
     function showPage(id) {
       document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
       document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active')});
