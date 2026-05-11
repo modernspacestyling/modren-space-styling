@@ -119,7 +119,7 @@ module.exports = async function handler(req, res) {
         garage, vacant, lockbox, notes, travelSurcharge,
     } = req.body;
 
-    const required = { agentName, agentPhone, agentEmail, address, installDate, bedrooms, lockbox };
+    const required = { agentName, agentPhone, agentEmail, address, installDate, bedrooms };
     for (const [field, value] of Object.entries(required)) {
         if (!value && value !== 0) {
             return res.status(400).json({ error: `Missing required field: ${field}` });
@@ -162,8 +162,9 @@ module.exports = async function handler(req, res) {
     // ── Generate job number ──
     const jobNumber = await generateJobNumber(supabase);
 
-    // ── Encrypt lockbox ──
-    const lockboxEnc = encryptLockbox(sanitize(lockbox, 50));
+    // ── Encrypt lockbox (optional — agents often add this later when access is arranged) ──
+    const lockboxClean = sanitize(lockbox || '', 50);
+    const lockboxEnc = lockboxClean ? encryptLockbox(lockboxClean) : null;
 
     // ── Calculate end date (6 weeks from install) ──
     const endDate = new Date(installDateObj);
