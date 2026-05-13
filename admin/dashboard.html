@@ -167,6 +167,24 @@
             return { totalIncome, totalExpenses, netProfit, totalBookings };
         }
 
+        // v1.2: pull registered-agent stats from Supabase profiles and update two KPI cards in place.
+        async function loadAgentStats(totalCard, weekCard) {
+            try {
+                const c = await MSSAuth.client();
+                const sevenDaysAgo = new Date(Date.now() - 7*24*3600*1000).toISOString();
+                const { count: total } = await c.from('profiles').select('*', { count: 'exact', head: true });
+                const { count: week }  = await c.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', sevenDaysAgo);
+                const setValue = (card, val) => {
+                    const v = card.querySelector('.kpi-value');
+                    if (v) v.textContent = (val == null ? '—' : String(val));
+                };
+                setValue(totalCard, total);
+                setValue(weekCard,  week);
+            } catch (e) {
+                console.warn('[dashboard] agent stats failed', e);
+            }
+        }
+
         function makeKpiCard(label, value, cls) {
             const card = document.createElement('div');
             card.className = 'kpi-card' + (cls ? ' ' + cls : '');
@@ -231,6 +249,13 @@
             grid.appendChild(makeKpiCard("Today's Installs", String(todayJobs.length), 'info'));
             grid.appendChild(makeKpiCard('Low Stock Alerts', String(lowStock.length), lowStock.length ? 'danger' : ''));
             grid.appendChild(makeKpiCard('Photo Bookings', String(photoBookings.length), 'info'));
+
+            // v1.2: Registered agent stats (Supabase profiles)
+            const agentTotalCard = makeKpiCard('Registered Agents', '—', 'info');
+            const agentWeekCard  = makeKpiCard('New This Week',    '—', 'info');
+            grid.appendChild(agentTotalCard);
+            grid.appendChild(agentWeekCard);
+            loadAgentStats(agentTotalCard, agentWeekCard);
 
             // Recent bookings table
             const recent = [...bookings].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 8);
