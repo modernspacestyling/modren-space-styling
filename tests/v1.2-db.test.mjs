@@ -36,3 +36,34 @@ test('bookings backfill linked at least one Mandeep booking', async () => {
   assert.equal(error, null);
   assert.ok(data.length >= 1, 'expected at least 1 linked booking');
 });
+
+test('signUp + profile insert + signInWithPassword roundtrip', async () => {
+  const email = `test-${Date.now()}@example.test`;
+  const password = 'TestPass123!';
+  const profile = { full_name: 'Test User', agency_name: 'Test Agency', mobile_phone: '0400000000' };
+
+  const anon = createClient(SUPABASE_URL, ANON_KEY, { auth: { persistSession: false }});
+  const { data: su, error: suErr } = await anon.auth.signUp({ email, password, options: { data: profile }});
+  assert.equal(suErr, null, `signUp error: ${suErr?.message}`);
+  assert.ok(su.user, 'expected user from signUp');
+
+  // Force-confirm via service role so signInWithPassword works without clicking the email
+  await admin.auth.admin.updateUserById(su.user.id, { email_confirm: true });
+
+  const anon2 = createClient(SUPABASE_URL, ANON_KEY, { auth: { persistSession: false }});
+  const { data: si, error: siErr } = await anon2.auth.signInWithPassword({ email, password });
+  assert.equal(siErr, null, `signIn error: ${siErr?.message}`);
+  assert.ok(si.session, 'expected session from signInWithPassword');
+
+  const { error: pErr } = await anon2.from('profiles').insert({ id: su.user.id, email, ...profile });
+  assert.equal(pErr, null, `profile insert error: ${pErr?.message}`);
+
+  const { data: rows, error: rErr } = await anon2.from('profiles').select('*').eq('id', su.user.id);
+  assert.equal(rErr, null);
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].agency_name, profile.agency_name);
+  assert.equal(rows[0].mobile_phone, profile.mobile_phone);
+
+  // Cleanup
+  await admin.auth.admin.deleteUser(su.user.id);
+});
