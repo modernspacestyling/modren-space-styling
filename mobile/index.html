@@ -222,7 +222,11 @@
           <input class="form-input" id="signInPassword" type="password" placeholder="Password" style="background:#2A2A2A;color:#FFF;border-color:#444">
         </div>
         <button class="btn btn-gold" id="signInBtn">Sign in</button>
-        <div style="margin-top:14px;font-size:13px;color:rgba(255,255,255,.7)">
+        <label style="display:flex;align-items:center;gap:10px;margin-top:14px;font-size:13px;color:rgba(255,255,255,.85);cursor:pointer;user-select:none">
+          <input type="checkbox" id="rememberMe" checked style="width:18px;height:18px;accent-color:var(--gold);cursor:pointer">
+          <span>Remember me on this device</span>
+        </label>
+        <div style="margin-top:12px;font-size:13px;color:rgba(255,255,255,.7)">
           <a href="#" id="linkForgot" style="color:var(--gold);text-decoration:none">Forgot password?</a>
           &nbsp;·&nbsp;
           <a href="#" id="linkRegister" style="color:var(--gold);text-decoration:none">New here? Sign up</a>
@@ -395,7 +399,25 @@
     async function refreshSession() {
       try {
         const { data: { session } } = await sbClient.auth.getSession();
-        MSSUser = session?.user || null;
+        let user = session?.user || null;
+
+        // v1.2.2: "Remember me" enforcement. If the prior sign-in was marked volatile
+        // and this is a NEW launch (sessionStorage is empty), sign the user out.
+        if (user) {
+          const volatileFlag = localStorage.getItem('mss_session_volatile') === '1';
+          const sameLaunch   = sessionStorage.getItem('mss_active_session') === '1';
+          if (volatileFlag && !sameLaunch) {
+            try { await sbClient.auth.signOut(); } catch (e) {}
+            try { localStorage.removeItem('mss_session_volatile'); } catch (e) {}
+            user = null;
+          } else if (user) {
+            // Mark this launch as "active" so subsequent reloads in the same launch
+            // don't trip the volatile guard.
+            try { sessionStorage.setItem('mss_active_session', '1'); } catch (e) {}
+          }
+        }
+
+        MSSUser = user;
       } catch (e) {
         console.error('[auth] getSession failed', e);
         MSSUser = null;
@@ -468,6 +490,7 @@
     async function onSignInClick() {
       const email    = (document.getElementById('signInEmail').value || '').trim();
       const password = document.getElementById('signInPassword').value || '';
+      const remember = document.getElementById('rememberMe')?.checked !== false; // default true
       const btn = document.getElementById('signInBtn');
       if (!email || !password) {
         setAuthHint('signInHint', 'Enter both email and password.');
@@ -481,9 +504,20 @@
       btn.textContent = 'Sign in';
       if (error) { setAuthHint('signInHint', '❌ ' + (error.message || 'Sign-in failed')); return; }
       setAuthHint('signInHint', '✅ Signed in. Loading your bookings…');
-      // Remember that this device has a registered user — next launch shows Sign In not Register.
-      try { localStorage.setItem('mss_has_registered', '1'); } catch (e) {}
-      // onAuthStateChange will fire and refresh UI (which hides the gate)
+      try {
+        localStorage.setItem('mss_has_registered', '1');
+        if (remember) {
+          // Persistent: drop any volatile flag so future relaunches keep the session.
+          localStorage.removeItem('mss_session_volatile');
+        } else {
+          // Volatile: this session must not survive an app close. Mark it volatile;
+          // refreshSession on the next launch will sign the user out before any UI shows.
+          localStorage.setItem('mss_session_volatile', '1');
+        }
+        // Mark the currently-running session as "trusted for this launch" so the
+        // refreshSession guard on subsequent reloads in THIS app session doesn't sign us out.
+        sessionStorage.setItem('mss_active_session', '1');
+      } catch (e) {}
     }
 
     async function onRegisterClick() {
@@ -633,7 +667,12 @@
 
     async function signOutUser() {
       try { await sbClient.auth.signOut(); } catch(e){}
+      try {
+        sessionStorage.removeItem('mss_active_session');
+        localStorage.removeItem('mss_session_volatile');
+      } catch (e) {}
       MSSUser = null;
+      applyAuthGate();
       applyAuthUI();
       toast('Signed out');
     }
@@ -676,10 +715,15 @@
       wireAuthHandlers();
     }
 
-    // Re-render nav whenever auth state changes (sign-in, sign-out, token refresh).
-    sbClient.auth.onAuthStateChange((_event, session) => {
+    // Re-render nav + gate whenever auth state changes (sign-in, sign-out, token refresh).
+    sbClient.auth.onAuthStateChange((event, session) => {
       MSSUser = session?.user || null;
+      applyAuthGate();
       applyAuthUI();
+      // After a successful SIGNED_IN event, drop the user on the Home tab.
+      if (event === 'SIGNED_IN' && MSSUser && typeof showPage === 'function') {
+        showPage('pageHome');
+      }
     });
 
     // Fire on first load — picks up recovery/verify callback or existing session.
