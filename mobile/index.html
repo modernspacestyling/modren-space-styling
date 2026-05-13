@@ -191,15 +191,63 @@
         <div style="font-size:13px;color:var(--muted);line-height:1.6">It was sent via SMS when you booked. Looks like MSS-2026-0001 or PHOTO-2026-0001.</div>
       </div>
 
-      <!-- Inline sign-in card -->
-      <div class="card" style="margin-top:24px;background:#1C1C1C;color:#FFF">
-        <div style="font-size:16px;font-weight:700;color:var(--gold);margin-bottom:6px">See all your bookings in one place</div>
-        <div style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.6;margin-bottom:14px">Sign in with your email to view every booking you've placed and have your details pre-filled next time. No password — we'll email you a secure link.</div>
+      <!-- Sign-in card (v1.2 email+password) -->
+      <div class="card" id="signInCard" style="margin-top:24px;background:#1C1C1C;color:#FFF">
+        <div style="font-size:16px;font-weight:700;color:var(--gold);margin-bottom:6px">Sign in</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.6;margin-bottom:14px">Sign in to see your bookings, manage your profile, and get pre-filled booking forms next time.</div>
         <div class="form-group" style="margin-bottom:10px">
-          <input class="form-input" id="signInEmail" type="email" placeholder="you@example.com" style="background:#2A2A2A;color:#FFF;border-color:#444">
+          <input class="form-input" id="signInEmail" type="email" placeholder="you@agency.com.au" style="background:#2A2A2A;color:#FFF;border-color:#444">
         </div>
-        <button class="btn btn-gold" onclick="onSignInClick()" id="signInBtn">Email me a sign-in link</button>
+        <div class="form-group" style="margin-bottom:10px">
+          <input class="form-input" id="signInPassword" type="password" placeholder="Password" style="background:#2A2A2A;color:#FFF;border-color:#444">
+        </div>
+        <button class="btn btn-gold" id="signInBtn">Sign in</button>
+        <div style="margin-top:14px;font-size:13px;color:rgba(255,255,255,.7)">
+          <a href="#" id="linkForgot" style="color:var(--gold);text-decoration:none">Forgot password?</a>
+          &nbsp;·&nbsp;
+          <a href="#" id="linkRegister" style="color:var(--gold);text-decoration:none">New here? Sign up</a>
+        </div>
         <div id="signInHint" style="display:none;margin-top:12px;padding:12px;background:rgba(184,150,62,.12);border-left:3px solid var(--gold);font-size:13px;line-height:1.6;color:rgba(255,255,255,.85)"></div>
+      </div>
+
+      <!-- Register card (v1.2) -->
+      <div class="card" id="registerCard" style="display:none;margin-top:24px;background:#1C1C1C;color:#FFF">
+        <div style="font-size:16px;font-weight:700;color:var(--gold);margin-bottom:6px">Create your agent account</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.6;margin-bottom:14px">Register once. Book staging in seconds next time.</div>
+        <div class="form-group" style="margin-bottom:10px">
+          <input class="form-input" id="regFullName" type="text" placeholder="Full name" style="background:#2A2A2A;color:#FFF;border-color:#444">
+        </div>
+        <div class="form-group" style="margin-bottom:10px">
+          <input class="form-input" id="regAgency" type="text" placeholder="Agency name (e.g. Ray White Geelong)" style="background:#2A2A2A;color:#FFF;border-color:#444">
+        </div>
+        <div class="form-group" style="margin-bottom:10px">
+          <input class="form-input" id="regPhone" type="tel" placeholder="Mobile phone (04xx xxx xxx)" style="background:#2A2A2A;color:#FFF;border-color:#444">
+        </div>
+        <div class="form-group" style="margin-bottom:10px">
+          <input class="form-input" id="regEmail" type="email" placeholder="you@agency.com.au" style="background:#2A2A2A;color:#FFF;border-color:#444">
+        </div>
+        <div class="form-group" style="margin-bottom:10px">
+          <input class="form-input" id="regPassword" type="password" placeholder="Password (8+ characters)" style="background:#2A2A2A;color:#FFF;border-color:#444">
+        </div>
+        <button class="btn btn-gold" id="regBtn">Create account</button>
+        <div style="margin-top:14px;font-size:13px;color:rgba(255,255,255,.7)">
+          Already have an account? <a href="#" id="linkSignInFromRegister" style="color:var(--gold);text-decoration:none">Sign in</a>
+        </div>
+        <div id="regHint" style="display:none;margin-top:12px;padding:12px;background:rgba(184,150,62,.12);border-left:3px solid var(--gold);font-size:13px;line-height:1.6;color:rgba(255,255,255,.85)"></div>
+      </div>
+
+      <!-- Forgot-password card (v1.2) -->
+      <div class="card" id="forgotCard" style="display:none;margin-top:24px;background:#1C1C1C;color:#FFF">
+        <div style="font-size:16px;font-weight:700;color:var(--gold);margin-bottom:6px">Reset your password</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.6;margin-bottom:14px">We'll send you a secure link to set a new password.</div>
+        <div class="form-group" style="margin-bottom:10px">
+          <input class="form-input" id="forgotEmail" type="email" placeholder="you@agency.com.au" style="background:#2A2A2A;color:#FFF;border-color:#444">
+        </div>
+        <button class="btn btn-gold" id="forgotBtn">Send reset link</button>
+        <div style="margin-top:14px;font-size:13px;color:rgba(255,255,255,.7)">
+          <a href="#" id="linkSignInFromForgot" style="color:var(--gold);text-decoration:none">Back to sign in</a>
+        </div>
+        <div id="forgotHint" style="display:none;margin-top:12px;padding:12px;background:rgba(184,150,62,.12);border-left:3px solid var(--gold);font-size:13px;line-height:1.6;color:rgba(255,255,255,.85)"></div>
       </div>
     </div>
 
@@ -255,7 +303,7 @@
       auth: {
         persistSession: true,
         autoRefreshToken: true,
-        detectSessionInUrl: true,   // auto-handles magic link callback (#access_token=…)
+        detectSessionInUrl: true,   // auto-handles password-recovery + email-verify callback (#access_token=…)
         storage: window.localStorage,
         storageKey: 'mss_customer_auth',
         flowType: 'pkce',
@@ -314,23 +362,106 @@
       }
     }
 
-    // Sign-in button handler — sends magic link and updates UI hint.
+    // ── v1.2 auth: email + password (replaces magic-link) ──
+
+    function showAuthCard(which) {
+      const ids = ['signInCard', 'registerCard', 'forgotCard'];
+      for (const id of ids) {
+        const el = document.getElementById(id);
+        if (el) el.style.display = (id === which) ? 'block' : 'none';
+      }
+    }
+    function showSignIn()   { showAuthCard('signInCard'); }
+    function showRegister() { showAuthCard('registerCard'); }
+    function showForgot()   { showAuthCard('forgotCard'); }
+
+    function setAuthHint(id, msg) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.style.display = 'block';
+      el.textContent = msg;
+    }
+
     async function onSignInClick() {
-      const emailEl = document.getElementById('signInEmail');
+      const email    = (document.getElementById('signInEmail').value || '').trim();
+      const password = document.getElementById('signInPassword').value || '';
       const btn = document.getElementById('signInBtn');
-      const hint = document.getElementById('signInHint');
-      if (!emailEl) return;
-      const email = (emailEl.value || '').trim();
+      if (!email || !password) {
+        setAuthHint('signInHint', 'Enter both email and password.');
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = 'Signing in…';
+      setAuthHint('signInHint', 'Signing in…');
+      const { error } = await sbClient.auth.signInWithPassword({ email: email.toLowerCase(), password });
+      btn.disabled = false;
+      btn.textContent = 'Sign in';
+      if (error) { setAuthHint('signInHint', '❌ ' + (error.message || 'Sign-in failed')); return; }
+      setAuthHint('signInHint', '✅ Signed in. Loading your bookings…');
+      // onAuthStateChange will fire and refresh UI
+    }
+
+    async function onRegisterClick() {
+      const full_name    = (document.getElementById('regFullName').value || '').trim();
+      const agency_name  = (document.getElementById('regAgency').value || '').trim();
+      const mobile_phone = (document.getElementById('regPhone').value || '').trim();
+      const email        = ((document.getElementById('regEmail').value || '').trim()).toLowerCase();
+      const password     = document.getElementById('regPassword').value || '';
+      const btn = document.getElementById('regBtn');
+      if (!full_name || !agency_name || !mobile_phone || !email || password.length < 8) {
+        setAuthHint('regHint', '❌ Fill every field. Password must be 8+ characters.');
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = 'Creating account…';
+      setAuthHint('regHint', 'Creating your account…');
+      const { data, error } = await sbClient.auth.signUp({
+        email, password,
+        options: {
+          data: { full_name, agency_name, mobile_phone },
+          emailRedirectTo: window.location.origin + '/mobile/',
+        },
+      });
+      if (error) {
+        btn.disabled = false;
+        btn.textContent = 'Create account';
+        setAuthHint('regHint', '❌ ' + (error.message || 'Registration failed'));
+        return;
+      }
+      if (data && data.user) {
+        // Insert profile row. RLS allows self-insert when signed in (signUp returns a session
+        // if email confirm is off, otherwise we defer the insert until first sign-in).
+        if (data.session) {
+          const { error: pe } = await sbClient.from('profiles').insert({
+            id: data.user.id, full_name, agency_name, mobile_phone, email,
+          });
+          if (pe) {
+            btn.disabled = false;
+            btn.textContent = 'Create account';
+            setAuthHint('regHint', '⚠️ Account created but profile failed to save: ' + pe.message);
+            return;
+          }
+        }
+      }
+      btn.disabled = false;
+      btn.textContent = 'Create account';
+      setAuthHint('regHint', '✅ Check your inbox to verify your email, then sign in here.');
+    }
+
+    async function onForgotClick() {
+      const email = ((document.getElementById('forgotEmail').value || '').trim()).toLowerCase();
+      const btn = document.getElementById('forgotBtn');
+      if (!email) { setAuthHint('forgotHint', 'Enter your email.'); return; }
       btn.disabled = true;
       btn.textContent = 'Sending…';
-      const ok = await sendMagicLink(email);
+      setAuthHint('forgotHint', 'Sending reset link…');
+      const { error } = await sbClient.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/mobile/',
+      });
       btn.disabled = false;
-      btn.textContent = 'Email me a sign-in link';
-      if (ok) {
-        hint.style.display = 'block';
-        hint.textContent = 'Check ' + email + ' for a sign-in link from Modern Space Styling. Open it on this device to finish signing in.';
-        emailEl.value = '';
-      }
+      btn.textContent = 'Send reset link';
+      if (error) { setAuthHint('forgotHint', '❌ ' + (error.message || 'Could not send link')); return; }
+      setAuthHint('forgotHint', '✅ If that email is registered, a reset link is on its way.');
     }
 
     // Fetches and renders the signed-in user's bookings.
@@ -410,30 +541,43 @@
       }
     }
 
-    // Send the magic link. Supabase will auto-create the user on first link.
-    // Redirect target = current page so the SDK can pick the access_token out of the URL.
-    async function sendMagicLink(email) {
-      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        toast('Enter a valid email', true);
-        return false;
-      }
-      const redirectTo = window.location.origin + '/mobile/';
-      const { error } = await sbClient.auth.signInWithOtp({
-        email: email.trim().toLowerCase(),
-        options: { emailRedirectTo: redirectTo },
-      });
-      if (error) {
-        toast(error.message || 'Could not send link', true);
-        return false;
-      }
-      return true;
-    }
-
     async function signOutUser() {
       try { await sbClient.auth.signOut(); } catch(e){}
       MSSUser = null;
       applyAuthUI();
       toast('Signed out');
+    }
+
+    // Wire auth UI handlers (deferred to DOMContentLoaded to ensure inputs exist)
+    function wireAuthHandlers() {
+      const signInBtn  = document.getElementById('signInBtn');
+      const regBtn     = document.getElementById('regBtn');
+      const forgotBtn  = document.getElementById('forgotBtn');
+      if (signInBtn)  signInBtn.addEventListener('click', onSignInClick);
+      if (regBtn)     regBtn.addEventListener('click', onRegisterClick);
+      if (forgotBtn)  forgotBtn.addEventListener('click', onForgotClick);
+
+      const linkForgot   = document.getElementById('linkForgot');
+      const linkRegister = document.getElementById('linkRegister');
+      const linkSignFromReg    = document.getElementById('linkSignInFromRegister');
+      const linkSignFromForgot = document.getElementById('linkSignInFromForgot');
+      if (linkForgot)         linkForgot.addEventListener('click',   function(e){ e.preventDefault(); showForgot(); });
+      if (linkRegister)       linkRegister.addEventListener('click', function(e){ e.preventDefault(); showRegister(); });
+      if (linkSignFromReg)    linkSignFromReg.addEventListener('click', function(e){ e.preventDefault(); showSignIn(); });
+      if (linkSignFromForgot) linkSignFromForgot.addEventListener('click', function(e){ e.preventDefault(); showSignIn(); });
+
+      // Enter key submits the focused form
+      const signInPwd = document.getElementById('signInPassword');
+      const regPwd    = document.getElementById('regPassword');
+      const forgotEm  = document.getElementById('forgotEmail');
+      if (signInPwd) signInPwd.addEventListener('keydown', function(e){ if (e.key === 'Enter') onSignInClick(); });
+      if (regPwd)    regPwd.addEventListener('keydown',    function(e){ if (e.key === 'Enter') onRegisterClick(); });
+      if (forgotEm)  forgotEm.addEventListener('keydown',  function(e){ if (e.key === 'Enter') onForgotClick(); });
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', wireAuthHandlers);
+    } else {
+      wireAuthHandlers();
     }
 
     // Re-render nav whenever auth state changes (sign-in, sign-out, token refresh).
@@ -442,7 +586,7 @@
       applyAuthUI();
     });
 
-    // Fire on first load — picks up magic link callback or existing session.
+    // Fire on first load — picks up recovery/verify callback or existing session.
     refreshSession();
 
     function showPage(id) {
