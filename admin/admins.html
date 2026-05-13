@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admins | MSS Admin</title>
+    <link rel="stylesheet" href="../css/admin.css">
+</head>
+
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <div class="sidebar-logo-name">Modern Space Styling</div>
+                <div class="sidebar-logo-sub">Admin Panel</div>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Main</div>
+                <a class="sidebar-link" href="dashboard.html"><span class="sidebar-icon">📊</span> Dashboard</a>
+                <a class="sidebar-link" href="bookings.html"><span class="sidebar-icon">📋</span> Bookings</a>
+                <a class="sidebar-link" href="photo-bookings.html"><span class="sidebar-icon">📸</span> Photo Bookings</a>
+                <a class="sidebar-link" href="inventory.html"><span class="sidebar-icon">📦</span> Inventory</a>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Finance</div>
+                <a class="sidebar-link" href="invoices.html"><span class="sidebar-icon">🧾</span> Invoices</a>
+                <a class="sidebar-link" href="expenses.html"><span class="sidebar-icon">💸</span> Expenses</a>
+                <a class="sidebar-link" href="reports.html"><span class="sidebar-icon">📈</span> Reports</a>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Management</div>
+                <a class="sidebar-link" href="pricing.html"><span class="sidebar-icon">💰</span> Pricing</a>
+                <a class="sidebar-link" href="sms.html"><span class="sidebar-icon">💬</span> SMS Centre</a>
+                <a class="sidebar-link" href="team.html"><span class="sidebar-icon">👥</span> Team Contacts</a>
+                <a class="sidebar-link" href="agents.html"><span class="sidebar-icon">🏢</span> Agents</a>
+                <a class="sidebar-link active" href="admins.html"><span class="sidebar-icon">🛡</span> Admins</a>
+                <a class="sidebar-link" href="logs.html"><span class="sidebar-icon">📝</span> Activity Log</a>
+            </div>
+            <div class="sidebar-footer">
+                <a class="sidebar-link" href="../index.html" style="padding:0"><span class="sidebar-icon">🏠</span> View
+                    Website</a>
+                <a class="sidebar-link" href="#" onclick="Auth.logout()"
+                    style="padding:0;margin-top:0.5rem;color:#F87171"><span class="sidebar-icon">🚪</span> Logout</a>
+            </div>
+        </aside>
+        <header class="topbar">
+            <div class="topbar-title">Admin Users</div>
+            <div class="topbar-right">
+                <div class="topbar-user">
+                    <div class="user-avatar" id="userAvatar">A</div><span id="userName">Admin</span>
+                </div>
+            </div>
+        </header>
+        <main class="main-content">
+            <!-- Current admins -->
+            <div class="panel" style="margin-bottom:1.25rem">
+                <div class="panel-header"><span class="panel-title">Current Admins</span></div>
+                <div class="tbl-wrap">
+                    <table class="tbl">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Added</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminsTbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Invite -->
+            <div class="panel">
+                <div class="panel-header"><span class="panel-title">Invite a Team Member</span></div>
+                <div class="panel-body">
+                    <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1rem">
+                        Type their email + name below. They will receive an invite email from Supabase to set their password.
+                        Once they sign in, they'll have full admin access (same as you). To remove access later, contact support.
+                    </p>
+                    <form id="inviteForm" style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:flex-end">
+                        <div style="display:flex;flex-direction:column;min-width:240px;flex:1">
+                            <label class="f-label" for="inviteEmail">Email</label>
+                            <input class="f-control" id="inviteEmail" type="email" placeholder="teammate@example.com" required>
+                        </div>
+                        <div style="display:flex;flex-direction:column;min-width:240px;flex:1">
+                            <label class="f-label" for="inviteName">Full name</label>
+                            <input class="f-control" id="inviteName" type="text" placeholder="Jane Smith" required>
+                        </div>
+                        <button class="ab ab-accent" type="submit" id="inviteBtn" style="height:38px">Send invite</button>
+                    </form>
+                    <div id="inviteHint" style="display:none;margin-top:1rem;padding:0.75rem 1rem;border-left:3px solid var(--accent);background:rgba(0,0,0,0.04);font-size:0.9rem;line-height:1.5"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <div id="toast-container" class="toast-container"></div>
+    <script src="supabase.min.js"></script>
+    <script src="auth-supabase.js"></script>
+    <script src="../js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            await seedDatabase();
+            if (!Auth.requireAdmin()) return;
+            const u = Auth.current();
+            document.getElementById('userName').textContent = u.name;
+            document.getElementById('userAvatar').textContent = (u.name || 'A').charAt(0);
+            document.getElementById('inviteForm').addEventListener('submit', onInvite);
+            await loadAdmins();
+        });
+
+        function cell(text, opts) {
+            opts = opts || {};
+            const td = document.createElement('td');
+            if (opts.bold) {
+                const s = document.createElement('strong');
+                s.textContent = text == null ? '' : String(text);
+                td.appendChild(s);
+            } else {
+                td.textContent = text == null ? '' : String(text);
+            }
+            return td;
+        }
+
+        function fmtDate(iso) {
+            if (!iso) return '—';
+            try { return new Date(iso).toLocaleDateString('en-AU', { day:'2-digit', month:'short', year:'numeric' }); }
+            catch (e) { return '—'; }
+        }
+
+        async function loadAdmins() {
+            const tbody = document.getElementById('adminsTbody');
+            tbody.replaceChildren();
+            try {
+                const c = await MSSAuth.client();
+                const { data, error } = await c
+                    .from('admin_users')
+                    .select('email, full_name, created_at')
+                    .order('created_at', { ascending: true });
+                if (error) throw error;
+                if (!data || data.length === 0) {
+                    const tr = document.createElement('tr');
+                    const td = document.createElement('td');
+                    td.colSpan = 3;
+                    td.style.cssText = 'text-align:center;padding:1.5rem;color:var(--text-muted)';
+                    td.textContent = 'No admins found.';
+                    tr.appendChild(td);
+                    tbody.appendChild(tr);
+                    return;
+                }
+                for (const a of data) {
+                    const tr = document.createElement('tr');
+                    tr.appendChild(cell(a.full_name, { bold: true }));
+                    tr.appendChild(cell(a.email));
+                    tr.appendChild(cell(fmtDate(a.created_at)));
+                    tbody.appendChild(tr);
+                }
+            } catch (e) {
+                console.error('[admins] load failed', e);
+                const tr = document.createElement('tr');
+                const td = document.createElement('td');
+                td.colSpan = 3;
+                td.style.cssText = 'text-align:center;padding:1.5rem;color:var(--danger)';
+                td.textContent = 'Could not load admins. Please sign out and back in.';
+                tr.appendChild(td);
+                tbody.appendChild(tr);
+            }
+        }
+
+        function setInviteHint(msg, ok) {
+            const el = document.getElementById('inviteHint');
+            el.style.display = 'block';
+            el.style.borderLeftColor = ok ? 'var(--success)' : 'var(--accent)';
+            el.textContent = msg;
+        }
+
+        async function onInvite(e) {
+            e.preventDefault();
+            const email = (document.getElementById('inviteEmail').value || '').trim().toLowerCase();
+            const full_name = (document.getElementById('inviteName').value || '').trim();
+            const btn = document.getElementById('inviteBtn');
+            if (!email || !full_name) { setInviteHint('Enter both email and full name.', false); return; }
+            btn.disabled = true;
+            btn.textContent = 'Sending…';
+            setInviteHint('Sending invite…', false);
+            try {
+                const c = await MSSAuth.client();
+                const session = (await c.auth.getSession()).data.session;
+                if (!session) { setInviteHint('Not signed in. Please sign in again.', false); btn.disabled = false; btn.textContent = 'Send invite'; return; }
+                const resp = await fetch('/api/agent-approval?action=invite_admin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+                    body: JSON.stringify({ email, full_name })
+                });
+                const json = await resp.json().catch(() => ({}));
+                btn.disabled = false;
+                btn.textContent = 'Send invite';
+                if (!resp.ok) {
+                    setInviteHint('❌ ' + (json.error || ('HTTP ' + resp.status)), false);
+                    return;
+                }
+                setInviteHint('✅ Invite sent. They will receive an email to set their password and sign in.', true);
+                document.getElementById('inviteEmail').value = '';
+                document.getElementById('inviteName').value = '';
+                await loadAdmins();
+            } catch (err) {
+                btn.disabled = false;
+                btn.textContent = 'Send invite';
+                setInviteHint('❌ ' + (err.message || 'Network error'), false);
+            }
+        }
+    </script>
+</body>
+
+</html>
