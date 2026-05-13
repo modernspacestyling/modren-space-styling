@@ -207,10 +207,42 @@
     }
   };
 
-  // Auto-inject sidebar links when DOM is ready (on any page that loads this script)
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => window.MSSAuth.injectAccountLinks());
-  } else {
+  // v1.3.3: inject a persistent "← Back to App" button into the topbar
+  // so admin pages always have a way back to /mobile/ on phones where
+  // the sidebar (which has the same link) is hidden by responsive CSS.
+  function injectMobileBackButton() {
+    try {
+      if (document.getElementById('mssBackToAppBtn')) return; // idempotent
+      const topbar = document.querySelector('.topbar');
+      if (!topbar) return;
+      const link = document.createElement('a');
+      link.id = 'mssBackToAppBtn';
+      link.href = '/mobile/';
+      link.textContent = '← Back to App';
+      link.setAttribute('aria-label', 'Back to MSS app');
+      link.style.cssText = [
+        'display:inline-flex','align-items:center','gap:0.4rem',
+        'margin-right:0.75rem','padding:0.4rem 0.75rem',
+        'background:#1A1410','color:#FAF7F1','border:1px solid #B8963E',
+        'border-radius:6px','font-size:0.8rem','font-weight:600',
+        'text-decoration:none','white-space:nowrap','cursor:pointer',
+        'transition:background 0.15s'
+      ].join(';');
+      link.addEventListener('mouseenter', () => link.style.background = '#2A1F18');
+      link.addEventListener('mouseleave', () => link.style.background = '#1A1410');
+      // Insert as the first child of topbar so it appears at the far left of the bar.
+      topbar.insertBefore(link, topbar.firstChild);
+    } catch (e) { /* fail silent — never block admin UI */ }
+  }
+
+  // Auto-inject sidebar links + mobile back button when DOM is ready.
+  function autoInject() {
     window.MSSAuth.injectAccountLinks();
+    injectMobileBackButton();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', autoInject);
+  } else {
+    autoInject();
   }
 })();
