@@ -260,6 +260,33 @@
         </div>
         <button class="btn btn-outline" style="width:auto;padding:8px 14px;font-size:13px" onclick="signOutUser()">Sign out</button>
       </div>
+      <!-- Profile view/edit (v1.2) -->
+      <div class="card" id="profileCard" style="display:none;margin-bottom:16px;background:#1C1C1C;color:#FFF">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="font-size:16px;font-weight:700;color:var(--gold)">Your profile</div>
+          <button class="btn btn-outline" id="profileToggleBtn" style="width:auto;padding:6px 12px;font-size:12px;background:transparent;color:var(--gold);border-color:var(--gold)">Edit</button>
+        </div>
+        <div id="profileView" style="font-size:13px;line-height:1.8;color:rgba(255,255,255,.85)">
+          <div><span style="color:var(--muted)">Name:</span> <span id="pvName"></span></div>
+          <div><span style="color:var(--muted)">Agency:</span> <span id="pvAgency"></span></div>
+          <div><span style="color:var(--muted)">Mobile:</span> <span id="pvPhone"></span></div>
+          <div><span style="color:var(--muted)">Email:</span> <span id="pvEmail"></span></div>
+        </div>
+        <div id="profileEdit" style="display:none">
+          <div class="form-group" style="margin-bottom:8px">
+            <input class="form-input" id="profFullName" type="text" placeholder="Full name" style="background:#2A2A2A;color:#FFF;border-color:#444">
+          </div>
+          <div class="form-group" style="margin-bottom:8px">
+            <input class="form-input" id="profAgency" type="text" placeholder="Agency" style="background:#2A2A2A;color:#FFF;border-color:#444">
+          </div>
+          <div class="form-group" style="margin-bottom:8px">
+            <input class="form-input" id="profPhone" type="tel" placeholder="Mobile phone" style="background:#2A2A2A;color:#FFF;border-color:#444">
+          </div>
+          <button class="btn btn-gold" id="profSaveBtn" style="width:100%">Save changes</button>
+          <div id="profHint" style="display:none;margin-top:8px;padding:10px;background:rgba(184,150,62,.12);border-left:3px solid var(--gold);font-size:12px;line-height:1.5;color:rgba(255,255,255,.85)"></div>
+        </div>
+      </div>
+
       <div id="myBookingsList">
         <div style="text-align:center;padding:40px 20px;color:var(--muted);font-size:14px">Loading your bookings…</div>
       </div>
@@ -352,9 +379,13 @@
         if (title) title.textContent = 'My Bookings';
         if (sub) sub.textContent = 'Your booking history';
         if (emailDisplay) emailDisplay.textContent = MSSUser.email || '';
-        // Lazy-load bookings the first time the signed-in view shows.
+        // Lazy-load profile + bookings the first time the signed-in view shows.
+        renderProfile();
         renderMyBookings();
       } else {
+        const profCard = document.getElementById('profileCard');
+        if (profCard) profCard.style.display = 'none';
+        MSSProfile = null;
         signedOut.style.display = 'block';
         signedIn.style.display = 'none';
         if (title) title.textContent = 'Track Booking';
@@ -573,6 +604,12 @@
       if (signInPwd) signInPwd.addEventListener('keydown', function(e){ if (e.key === 'Enter') onSignInClick(); });
       if (regPwd)    regPwd.addEventListener('keydown',    function(e){ if (e.key === 'Enter') onRegisterClick(); });
       if (forgotEm)  forgotEm.addEventListener('keydown',  function(e){ if (e.key === 'Enter') onForgotClick(); });
+
+      // Profile card (v1.2)
+      const profToggleBtn = document.getElementById('profileToggleBtn');
+      const profSaveBtn   = document.getElementById('profSaveBtn');
+      if (profToggleBtn) profToggleBtn.addEventListener('click', toggleProfileEdit);
+      if (profSaveBtn)   profSaveBtn.addEventListener('click', onSaveProfile);
     }
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', wireAuthHandlers);
@@ -603,47 +640,126 @@
       }
     }
 
-    // Fetches the user's most recent booking and pre-fills name/email/phone/agency
-    // on the staging or photo form. Empty fields only — never overwrites typed input.
+    // Cached profile row (loaded once per sign-in). Mutated only by loadProfile / onSaveProfile.
+    let MSSProfile = null;
+
+    async function loadProfile() {
+      if (!MSSUser) { MSSProfile = null; return null; }
+      try {
+        const { data, error } = await sbClient
+          .from('profiles')
+          .select('full_name, agency_name, mobile_phone, email')
+          .eq('id', MSSUser.id)
+          .maybeSingle();
+        if (error) { console.warn('[profile] load error', error); return null; }
+        MSSProfile = data || null;
+        return MSSProfile;
+      } catch (e) {
+        console.warn('[profile] load failed', e);
+        return null;
+      }
+    }
+
+    // v1.2 pre-fill: profile table first, last booking fallback, auth email last.
     async function prefillFormFromProfile(pageId) {
       try {
-        const { data: { session } } = await sbClient.auth.getSession();
-        const token = session?.access_token;
-        if (!token) return;
-        const res = await fetch(API + '/create-booking', {
-          method: 'GET',
-          headers: { 'Authorization': 'Bearer ' + token },
-        });
-        const data = await res.json();
-        const last = (data && data.bookings && data.bookings[0]) || null;
-        if (!last) {
-          // No prior booking — fall back to just the auth email.
-          const email = MSSUser.email || '';
-          if (pageId === 'pageBookStaging' && !document.getElementById('sEmail').value) {
-            document.getElementById('sEmail').value = email;
-          } else if (pageId === 'pageBookPhoto' && !document.getElementById('pEmail').value) {
-            document.getElementById('pEmail').value = email;
+        if (!MSSUser) return;
+        const fields = pageId === 'pageBookStaging'
+          ? { name: 'sName', phone: 'sPhone', email: 'sEmail', agency: 'sAgency' }
+          : { name: 'pName', phone: 'pPhone', email: 'pEmail', agency: 'pAgency' };
+
+        // 1) Prefer profile row
+        const profile = MSSProfile || await loadProfile();
+        if (profile) {
+          const map = { name: profile.full_name, phone: profile.mobile_phone, email: profile.email, agency: profile.agency_name };
+          for (const [key, val] of Object.entries(map)) {
+            const el = document.getElementById(fields[key]);
+            if (el && !el.value && val) el.value = val;
           }
           return;
         }
-        // Prefill name/phone/email/agency from the most recent booking.
-        if (pageId === 'pageBookStaging') {
-          const map = { sName: 'agent_name', sPhone: 'agent_phone', sEmail: 'agent_email', sAgency: 'agency' };
-          for (const [fieldId, col] of Object.entries(map)) {
-            const el = document.getElementById(fieldId);
-            if (el && !el.value && last[col]) el.value = last[col];
-          }
-        } else if (pageId === 'pageBookPhoto') {
-          const map = { pName: 'agent_name', pPhone: 'agent_phone', pEmail: 'agent_email', pAgency: 'agency' };
-          for (const [fieldId, col] of Object.entries(map)) {
-            const el = document.getElementById(fieldId);
-            if (el && !el.value && last[col]) el.value = last[col];
+
+        // 2) Fall back to most recent booking
+        const { data: { session } } = await sbClient.auth.getSession();
+        const token = session?.access_token;
+        if (token) {
+          const res = await fetch(API + '/create-booking', {
+            method: 'GET',
+            headers: { 'Authorization': 'Bearer ' + token },
+          });
+          const data = await res.json();
+          const last = (data && data.bookings && data.bookings[0]) || null;
+          if (last) {
+            const map = { name: last.agent_name, phone: last.agent_phone, email: last.agent_email, agency: last.agency };
+            for (const [key, val] of Object.entries(map)) {
+              const el = document.getElementById(fields[key]);
+              if (el && !el.value && val) el.value = val;
+            }
+            return;
           }
         }
+
+        // 3) Last resort: auth email only
+        const emailEl = document.getElementById(fields.email);
+        if (emailEl && !emailEl.value && MSSUser.email) emailEl.value = MSSUser.email;
       } catch (e) {
         // Pre-fill is best-effort. Silent failure — don't block the user.
         console.warn('[prefill] failed', e);
       }
+    }
+
+    // ── v1.2 Profile view/edit on Track tab ──
+
+    async function renderProfile() {
+      const card = document.getElementById('profileCard');
+      if (!card) return;
+      if (!MSSUser) { card.style.display = 'none'; return; }
+      card.style.display = 'block';
+      const profile = await loadProfile();
+      // Populate view
+      document.getElementById('pvName').textContent   = (profile && profile.full_name)    || '—';
+      document.getElementById('pvAgency').textContent = (profile && profile.agency_name)  || '—';
+      document.getElementById('pvPhone').textContent  = (profile && profile.mobile_phone) || '—';
+      document.getElementById('pvEmail').textContent  = (profile && profile.email)        || (MSSUser.email || '—');
+      // Populate edit inputs
+      document.getElementById('profFullName').value = (profile && profile.full_name)    || '';
+      document.getElementById('profAgency').value   = (profile && profile.agency_name)  || '';
+      document.getElementById('profPhone').value    = (profile && profile.mobile_phone) || '';
+    }
+
+    function toggleProfileEdit() {
+      const view = document.getElementById('profileView');
+      const edit = document.getElementById('profileEdit');
+      const btn  = document.getElementById('profileToggleBtn');
+      const editing = (edit.style.display !== 'none');
+      view.style.display = editing ? 'block' : 'none';
+      edit.style.display = editing ? 'none' : 'block';
+      btn.textContent    = editing ? 'Edit' : 'Cancel';
+    }
+
+    async function onSaveProfile() {
+      if (!MSSUser) return;
+      const full_name    = (document.getElementById('profFullName').value || '').trim();
+      const agency_name  = (document.getElementById('profAgency').value   || '').trim();
+      const mobile_phone = (document.getElementById('profPhone').value    || '').trim();
+      const hint = document.getElementById('profHint');
+      if (!full_name || !agency_name || !mobile_phone) {
+        hint.style.display = 'block';
+        hint.textContent = '❌ All three fields are required.';
+        return;
+      }
+      hint.style.display = 'block';
+      hint.textContent = 'Saving…';
+      // Upsert in case the row doesn't exist yet (older user signed in via magic link)
+      const { error } = await sbClient.from('profiles').upsert({
+        id: MSSUser.id, full_name, agency_name, mobile_phone, email: MSSUser.email,
+      }, { onConflict: 'id' });
+      if (error) { hint.textContent = '❌ ' + error.message; return; }
+      hint.textContent = '✅ Saved.';
+      MSSProfile = { full_name, agency_name, mobile_phone, email: MSSUser.email };
+      // Refresh the view and collapse edit
+      await renderProfile();
+      toggleProfileEdit();
     }
     function toast(msg,isError){
       var t=document.getElementById('toast');
