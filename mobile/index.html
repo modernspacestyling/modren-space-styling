@@ -111,6 +111,32 @@
       <p>Geelong's leading staging & photography service. Book online, track your job, get results.</p>
       <button class="hero-btn" onclick="showPage('pageBookStaging')">Book a Staging</button>
     </div>
+
+    <!-- v1.3: Admin panel — visible only to users in admin_users -->
+    <div id="adminPanel" style="display:none;margin:16px;padding:18px;background:linear-gradient(135deg,#1A1410 0%,#2A1F18 100%);border-radius:14px;border:1px solid rgba(184,150,62,.35);color:#FFF">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div>
+          <div style="font-size:11px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;font-weight:700">🛡 Admin</div>
+          <div style="font-size:17px;font-weight:700;margin-top:2px">Manage MSS</div>
+        </div>
+        <a href="/admin/dashboard.html" class="btn btn-gold" style="width:auto;padding:9px 16px;font-size:13px;text-decoration:none;text-align:center">Open Dashboard →</a>
+      </div>
+      <div style="font-size:12px;color:rgba(255,255,255,.6);line-height:1.5;margin-bottom:14px">All admin pages: bookings, photo bookings, inventory, invoices, expenses, reports, pricing, SMS, team, agents, admins, activity log.</div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+        <a href="/admin/bookings.html"        style="display:block;padding:10px 12px;background:rgba(255,255,255,.05);border-radius:8px;color:#FFF;text-decoration:none;font-size:13px"><span style="margin-right:6px">📋</span>Bookings</a>
+        <a href="/admin/photo-bookings.html"  style="display:block;padding:10px 12px;background:rgba(255,255,255,.05);border-radius:8px;color:#FFF;text-decoration:none;font-size:13px"><span style="margin-right:6px">📸</span>Photo Bookings</a>
+        <a href="/admin/agents.html"          style="display:block;padding:10px 12px;background:rgba(255,255,255,.05);border-radius:8px;color:#FFF;text-decoration:none;font-size:13px"><span style="margin-right:6px">🏢</span>Agents</a>
+        <a href="/admin/admins.html"          style="display:block;padding:10px 12px;background:rgba(255,255,255,.05);border-radius:8px;color:#FFF;text-decoration:none;font-size:13px"><span style="margin-right:6px">🛡</span>Admins</a>
+        <a href="/admin/inventory.html"       style="display:block;padding:10px 12px;background:rgba(255,255,255,.05);border-radius:8px;color:#FFF;text-decoration:none;font-size:13px"><span style="margin-right:6px">📦</span>Inventory</a>
+        <a href="/admin/invoices.html"        style="display:block;padding:10px 12px;background:rgba(255,255,255,.05);border-radius:8px;color:#FFF;text-decoration:none;font-size:13px"><span style="margin-right:6px">🧾</span>Invoices</a>
+        <a href="/admin/expenses.html"        style="display:block;padding:10px 12px;background:rgba(255,255,255,.05);border-radius:8px;color:#FFF;text-decoration:none;font-size:13px"><span style="margin-right:6px">💸</span>Expenses</a>
+        <a href="/admin/reports.html"         style="display:block;padding:10px 12px;background:rgba(255,255,255,.05);border-radius:8px;color:#FFF;text-decoration:none;font-size:13px"><span style="margin-right:6px">📈</span>Reports</a>
+        <a href="/admin/pricing.html"         style="display:block;padding:10px 12px;background:rgba(255,255,255,.05);border-radius:8px;color:#FFF;text-decoration:none;font-size:13px"><span style="margin-right:6px">💰</span>Pricing</a>
+        <a href="/admin/sms.html"             style="display:block;padding:10px 12px;background:rgba(255,255,255,.05);border-radius:8px;color:#FFF;text-decoration:none;font-size:13px"><span style="margin-right:6px">💬</span>SMS Centre</a>
+        <a href="/admin/team.html"            style="display:block;padding:10px 12px;background:rgba(255,255,255,.05);border-radius:8px;color:#FFF;text-decoration:none;font-size:13px"><span style="margin-right:6px">👥</span>Team Contacts</a>
+        <a href="/admin/logs.html"            style="display:block;padding:10px 12px;background:rgba(255,255,255,.05);border-radius:8px;color:#FFF;text-decoration:none;font-size:13px"><span style="margin-right:6px">📝</span>Activity Log</a>
+      </div>
+    </div>
     <div class="actions">
       <button class="action-card" onclick="showPage('pageBookStaging')"><div class="action-icon">🏠</div><div class="action-label">Book Staging</div></button>
       <button class="action-card" onclick="showPage('pageBookPhoto')"><div class="action-icon">📸</div><div class="action-label">Photography</div></button>
@@ -363,6 +389,7 @@
 
     // Tracks the signed-in user across the app. Mutates only via refreshSession().
     let MSSUser = null;
+    let MSSIsAdmin = false;
 
     // v1.2.1: move auth cards into the full-screen gate on first call (idempotent).
     function ensureAuthGateMounted() {
@@ -422,8 +449,49 @@
         console.error('[auth] getSession failed', e);
         MSSUser = null;
       }
+
+      // v1.3: detect admin membership + mirror session to /admin/ storage key
+      MSSIsAdmin = false;
+      if (MSSUser) {
+        try {
+          const { data: row } = await sbClient
+            .from('admin_users')
+            .select('id')
+            .eq('id', MSSUser.id)
+            .maybeSingle();
+          MSSIsAdmin = !!row;
+          if (MSSIsAdmin) {
+            // Copy the active Supabase auth blob to the admin client's storage key
+            // so /admin/ pages pick up the session and skip their own login screen.
+            const raw = localStorage.getItem('mss_customer_auth');
+            if (raw) localStorage.setItem('mss_sb_auth', raw);
+            // Also seed the legacy admin sessionStorage shim used by Auth.requireAdmin().
+            const legacySession = {
+              id: MSSUser.id, email: MSSUser.email,
+              name: (MSSUser.email || '').split('@')[0],
+              role: 'admin', loggedInAt: new Date().toISOString(),
+            };
+            sessionStorage.setItem('mss_session', JSON.stringify(legacySession));
+          }
+        } catch (e) {
+          console.warn('[auth] admin check failed', e);
+        }
+      } else {
+        // Signed out — clear any mirrored admin state
+        try {
+          localStorage.removeItem('mss_sb_auth');
+          sessionStorage.removeItem('mss_session');
+        } catch (e) {}
+      }
+
       applyAuthGate();
       applyAuthUI();
+      applyAdminPanel();
+    }
+
+    function applyAdminPanel() {
+      const panel = document.getElementById('adminPanel');
+      if (panel) panel.style.display = MSSIsAdmin ? 'block' : 'none';
     }
 
     // Updates the bottom-nav Track item AND the Track-page content
@@ -715,15 +783,14 @@
       wireAuthHandlers();
     }
 
-    // Re-render nav + gate whenever auth state changes (sign-in, sign-out, token refresh).
+    // Re-render nav + gate + admin panel whenever auth state changes.
     sbClient.auth.onAuthStateChange((event, session) => {
-      MSSUser = session?.user || null;
-      applyAuthGate();
-      applyAuthUI();
-      // After a successful SIGNED_IN event, drop the user on the Home tab.
-      if (event === 'SIGNED_IN' && MSSUser && typeof showPage === 'function') {
-        showPage('pageHome');
-      }
+      // Delegate everything to refreshSession so admin check + mirroring run too.
+      refreshSession().then(() => {
+        if (event === 'SIGNED_IN' && MSSUser && typeof showPage === 'function') {
+          showPage('pageHome');
+        }
+      });
     });
 
     // Fire on first load — picks up recovery/verify callback or existing session.
