@@ -72,11 +72,14 @@
 
             <!-- Invite -->
             <div class="panel">
-                <div class="panel-header"><span class="panel-title">Invite a Team Member</span></div>
+                <div class="panel-header">
+                    <span class="panel-title">Invite a Team Member</span>
+                    <span id="adminCountBadge" class="b b-pending" style="font-size:0.75rem">— / 4</span>
+                </div>
                 <div class="panel-body">
                     <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1rem">
-                        Type their email + name below. They will receive an invite email from Supabase to set their password.
-                        Once they sign in, they'll have full admin access (same as you). To remove access later, contact support.
+                        Maximum <strong>4 admin accounts</strong>. Type their email + name below — they'll receive a Supabase invite email to set their password.
+                        Once they sign in, they'll have full admin access (same as you). To remove an admin later, delete their row from Supabase → <code>admin_users</code>.
                     </p>
                     <form id="inviteForm" style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:flex-end">
                         <div style="display:flex;flex-direction:column;min-width:240px;flex:1">
@@ -154,6 +157,18 @@
                     tr.appendChild(cell(a.email));
                     tr.appendChild(cell(fmtDate(a.created_at)));
                     tbody.appendChild(tr);
+                }
+                // Update the N/4 badge
+                const badge = document.getElementById('adminCountBadge');
+                if (badge) {
+                    badge.textContent = data.length + ' / 4';
+                    badge.className = 'b ' + (data.length >= 4 ? 'b-low' : (data.length >= 3 ? 'b-pending' : 'b-active'));
+                }
+                // Disable the invite form when at cap
+                const inviteBtn = document.getElementById('inviteBtn');
+                if (inviteBtn && data.length >= 4) {
+                    inviteBtn.disabled = true;
+                    inviteBtn.textContent = 'Limit reached (4 / 4)';
                 }
             } catch (e) {
                 console.error('[admins] load failed', e);

@@ -160,6 +160,20 @@ async function inviteAdmin(req, res) {
         return res.status(400).json({ error: 'Invalid email address' });
     }
 
+    // v1.3: enforce max 4 admins (DB trigger backs this up).
+    // Skip the cap if this email is ALREADY an admin (re-sending an invite is fine).
+    const { count: adminCount } = await supabase
+        .from('admin_users')
+        .select('*', { count: 'exact', head: true });
+    const { data: existingAdmin } = await supabase
+        .from('admin_users')
+        .select('id')
+        .eq('email', email)
+        .maybeSingle();
+    if (!existingAdmin && (adminCount || 0) >= 4) {
+        return res.status(400).json({ error: 'Admin limit reached: maximum 4 admin accounts. Remove an admin in Supabase before adding another.' });
+    }
+
     // Send Supabase invite (creates the auth user + emails them a set-password link)
     let invitedUserId = null;
     try {
