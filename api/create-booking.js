@@ -129,13 +129,15 @@ async function listBookingsForUser(req, res) {
         process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
-    // Verify JWT and extract authoritative user email.
+    // Verify JWT and extract authoritative user id + email.
+    let userId = null;
     let userEmail = null;
     try {
         const { data: userData, error: userErr } = await supabase.auth.getUser(accessToken);
         if (userErr || !userData?.user) {
             return res.status(401).json({ error: 'Invalid or expired session' });
         }
+        userId = userData.user.id;
         userEmail = (userData.user.email || '').toLowerCase();
         if (!userEmail) return res.status(401).json({ error: 'User has no email' });
     } catch (e) {
@@ -143,13 +145,14 @@ async function listBookingsForUser(req, res) {
         return res.status(401).json({ error: 'Could not verify session' });
     }
 
-    // Staging bookings owned by this email.
+    // v1.2: Match either by user_id (preferred — bookings created by signed-in users)
+    // or by agent_email (legacy — bookings made anonymously by the same email).
     let bookings;
     try {
         const { data, error: queryErr } = await supabase
             .from('bookings')
             .select(MY_BOOKINGS_SAFE_COLUMNS)
-            .eq('agent_email', userEmail)
+            .or(`user_id.eq.${userId},agent_email.eq.${userEmail}`)
             .order('install_date', { ascending: false })
             .limit(50);
         if (queryErr) throw queryErr;
@@ -246,6 +249,22 @@ module.exports = async function handler(req, res) {
         process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
+    // ── v1.2: Resolve user_id from Bearer JWT (optional — anonymous bookings still work) ──
+    let bookingUserId = null;
+    const authHeader = req.headers.authorization || '';
+    if (authHeader.startsWith('Bearer ')) {
+        const token = authHeader.slice(7).trim();
+        if (token) {
+            try {
+                const { data: u, error: uErr } = await supabase.auth.getUser(token);
+                if (!uErr && u?.user?.id) bookingUserId = u.user.id;
+            } catch (e) {
+                // Token decode failed — fall through with bookingUserId = null
+                console.warn('[create-booking:POST] getUser failed, continuing anonymously', e.message);
+            }
+        }
+    }
+
     // ── Fetch pricing config ──
     const { data: pricingData } = await supabase
         .from('pricing_config')
@@ -302,6 +321,7 @@ module.exports = async function handler(req, res) {
             notes: sanitize(notes || '', 1000),
             end_date: endDateStr,
             estimated_price: estimatedPrice,
+            user_id: bookingUserId,
         })
         .select()
         .single();

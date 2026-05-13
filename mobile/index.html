@@ -627,6 +627,12 @@
     refreshSession();
 
     function showPage(id) {
+      // v1.2 auth gate: Book + Photo tabs require sign-in. Deflect to Track tab + show Sign In.
+      if ((id === 'pageBookStaging' || id === 'pageBookPhoto') && !MSSUser) {
+        toast('Please sign in to book staging.', true);
+        showSignIn();
+        id = 'pageTrack';
+      }
       document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
       document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active')});
       document.getElementById(id).classList.add('active');
@@ -634,7 +640,7 @@
       var nav=document.getElementById(map[id]);
       if(nav)nav.classList.add('active');
       window.scrollTo(0,0);
-      // Pre-fill booking forms with the signed-in user's last booking, if any.
+      // Pre-fill booking forms with the signed-in user's profile, if any.
       if (MSSUser && (id === 'pageBookStaging' || id === 'pageBookPhoto')) {
         prefillFormFromProfile(id);
       }
@@ -767,11 +773,22 @@
       t.className='toast show'+(isError?' error':'');
       setTimeout(function(){t.className='toast'},3000);
     }
+    // Build the Authorization header if the user is signed in.
+    // Returns {} when anonymous so the spread `...await authHeader()` is a no-op.
+    async function authHeader() {
+      try {
+        const { data: { session } } = await sbClient.auth.getSession();
+        if (session && session.access_token) return { 'Authorization': 'Bearer ' + session.access_token };
+      } catch (e) { /* fall through */ }
+      return {};
+    }
+
     async function submitStaging(){
       var body={agentName:document.getElementById('sName').value.trim(),agentPhone:document.getElementById('sPhone').value.trim(),agentEmail:document.getElementById('sEmail').value.trim(),agency:document.getElementById('sAgency').value.trim(),address:document.getElementById('sAddress').value.trim(),installDate:document.getElementById('sDate').value,bedrooms:parseInt(document.getElementById('sBeds').value)||0,bathrooms:parseInt(document.getElementById('sBaths').value)||0,livingAreas:parseInt(document.getElementById('sLiving').value)||0,diningAreas:parseInt(document.getElementById('sDining').value)||0,vacant:true,lockbox:document.getElementById('sLockbox').value.trim(),notes:document.getElementById('sNotes').value.trim()};
       if(!body.agentName||!body.agentPhone||!body.agentEmail||!body.address||!body.installDate){toast('Please fill all required fields',true);return}
       try{
-        var res=await fetch(API+'/create-booking',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+        const extraHeaders = await authHeader();
+        var res=await fetch(API+'/create-booking',{method:'POST',headers:Object.assign({'Content-Type':'application/json'}, extraHeaders),body:JSON.stringify(body)});
         var data=await res.json();
         if(data.success){document.getElementById('stagingJobNum').textContent=data.jobNumber;document.getElementById('stagingForm').style.display='none';document.getElementById('stagingSuccess').style.display='block';toast('Booking submitted!')}
         else{toast(data.error||'Failed',true)}
@@ -782,7 +799,8 @@
       var body={clientName:document.getElementById('pName').value.trim(),clientPhone:document.getElementById('pPhone').value.trim(),clientEmail:document.getElementById('pEmail').value.trim(),agency:document.getElementById('pAgency').value.trim(),address:document.getElementById('pAddress').value.trim(),propertyType:document.getElementById('pType').value,preferredDate:document.getElementById('pDate').value,package:document.getElementById('pPackage').value,bedrooms:parseInt(document.getElementById('pBeds').value)||0,bathrooms:parseInt(document.getElementById('pBaths').value)||0,addons:[],notes:document.getElementById('pNotes').value.trim()};
       if(!body.clientName||!body.clientPhone||!body.clientEmail||!body.address||!body.preferredDate){toast('Please fill all required fields',true);return}
       try{
-        var res=await fetch(API+'/create-photo-booking',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+        const extraHeaders = await authHeader();
+        var res=await fetch(API+'/create-photo-booking',{method:'POST',headers:Object.assign({'Content-Type':'application/json'}, extraHeaders),body:JSON.stringify(body)});
         var data=await res.json();
         if(data.success){document.getElementById('photoJobNum').textContent=data.jobNumber+' — $'+data.estimatedPrice;document.getElementById('photoForm').style.display='none';document.getElementById('photoSuccess').style.display='block';toast('Photo booking submitted!')}
         else{toast(data.error||'Failed',true)}
