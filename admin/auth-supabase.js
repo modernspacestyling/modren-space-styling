@@ -72,6 +72,24 @@
       const c = await this.client();
       const { data, error } = await c.auth.signInWithPassword({ email, password });
       if (error) throw error;
+      // v1.2: verify the signed-in user is in admin_users — customer credentials must NOT
+      // escalate to admin. RLS on admin_users only lets admins read it, so a non-admin
+      // gets data===null and is rejected.
+      try {
+        const { data: adminRow, error: adminErr } = await c
+          .from('admin_users')
+          .select('id')
+          .eq('id', data.user.id)
+          .maybeSingle();
+        if (adminErr || !adminRow) {
+          await c.auth.signOut();
+          throw new Error('This account is not an admin. If you think this is a mistake, contact Modern Space Styling support.');
+        }
+      } catch (e) {
+        // Re-throw with a clear message
+        await c.auth.signOut().catch(() => {});
+        throw e;
+      }
       await this.syncLegacySession(data.user);
       return data;
     },
