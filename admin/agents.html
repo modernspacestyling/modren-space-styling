@@ -52,35 +52,11 @@
             </div>
         </header>
         <main class="main-content">
-            <!-- Pending -->
-            <div class="panel" style="margin-bottom:1.25rem">
-                <div class="panel-header"><span class="panel-title">⏳ Pending Approvals</span></div>
-                <div class="tbl-wrap">
-                    <table class="tbl">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Phone</th>
-                                <th>Agency</th>
-                                <th>Registered</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="pendingTbody"></tbody>
-                    </table>
-                </div>
-            </div>
-            <!-- All agents -->
+            <!-- v1.2: Registered customer agents (from public.profiles) -->
             <div class="panel">
                 <div class="panel-header">
-                    <span class="panel-title">All Agents</span>
-                    <select class="f-control" id="agentFilter" style="width:150px" onchange="renderAll()">
-                        <option value="">All Statuses</option>
-                        <option value="approved">Approved</option>
-                        <option value="pending">Pending</option>
-                        <option value="rejected">Rejected</option>
-                    </select>
+                    <span class="panel-title">Registered Agents</span>
+                    <input class="f-control" type="search" id="agentSearch" placeholder="Search name, agency, email…" style="width:260px">
                 </div>
                 <div class="tbl-wrap">
                     <table class="tbl">
@@ -89,13 +65,12 @@
                                 <th>Name</th>
                                 <th>Agency</th>
                                 <th>Email</th>
-                                <th>Phone</th>
-                                <th>Status</th>
-                                <th>Jobs</th>
-                                <th>Actions</th>
+                                <th>Mobile</th>
+                                <th>Bookings</th>
+                                <th>Joined</th>
                             </tr>
                         </thead>
-                        <tbody id="allAgentsTbody"></tbody>
+                        <tbody id="agentsTbody"></tbody>
                     </table>
                 </div>
             </div>
@@ -106,75 +81,107 @@
     <script src="auth-supabase.js"></script>
     <script src="../js/app.js"></script>
     <script>
+        // ── v1.2: registered customer agents are real Supabase profiles ──
+        let _allAgents = [];
+
         document.addEventListener('DOMContentLoaded', async () => {
             await seedDatabase();
             if (!Auth.requireAdmin()) return;
             const u = Auth.current();
             document.getElementById('userName').textContent = u.name;
             document.getElementById('userAvatar').textContent = u.name.charAt(0);
-            render();
+            const searchEl = document.getElementById('agentSearch');
+            if (searchEl) searchEl.addEventListener('input', () => renderAgents(searchEl.value));
+            await loadAgents();
         });
 
-        function render() {
-            const agents = DB.get(KEYS.AGENTS);
-            const pending = agents.filter(a => a.status === 'pending');
-            document.getElementById('pendingTbody').innerHTML = pending.map(a => `<tr>
-    <td><strong>${esc(a.name)}</strong></td>
-    <td>${esc(a.email)}</td>
-    <td>${esc(a.phone)}</td>
-    <td>${esc(a.agency)}</td>
-    <td>${esc(DateUtils.format(a.createdAt))}</td>
-    <td>
-      <button class="ab ab-success ab-sm" onclick="approveAgent('${esc(a.id)}')">✓ Approve</button>
-      <button class="ab ab-danger ab-sm" onclick="rejectAgent('${esc(a.id)}')">✕ Reject</button>
-    </td>
-  </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;padding:1.5rem;color:var(--text-muted)">No pending approvals ✓</td></tr>';
-            renderAll();
-        }
+        async function loadAgents() {
+            try {
+                const c = await MSSAuth.client();
+                const { data: profiles, error } = await c
+                    .from('profiles')
+                    .select('id, full_name, agency_name, mobile_phone, email, created_at')
+                    .order('created_at', { ascending: false });
+                if (error) throw error;
+                _allAgents = profiles || [];
 
-        function renderAll() {
-            const filter = document.getElementById('agentFilter').value;
-            let agents = DB.get(KEYS.AGENTS);
-            if (filter) agents = agents.filter(a => a.status === filter);
-            const statusBadges = { approved: 'b-active', pending: 'b-pending', rejected: 'b-low' };
-            document.getElementById('allAgentsTbody').innerHTML = agents.map(a => {
-                const jobCount = DB.query(KEYS.BOOKINGS, b => b.agentEmail === a.email).length;
-                return `<tr>
-      <td><strong>${esc(a.name)}</strong></td>
-      <td>${esc(a.agency)}</td>
-      <td style="font-size:0.8rem">${esc(a.email)}</td>
-      <td>${esc(a.phone)}</td>
-      <td><span class="b ${statusBadges[a.status] || 'b-pending'}">${esc(a.status)}</span></td>
-      <td>${jobCount}</td>
-      <td>
-        ${a.status !== 'approved' ? `<button class="ab ab-success ab-sm" onclick="approveAgent('${esc(a.id)}')">Approve</button>` : ''}
-        ${a.status !== 'rejected' ? `<button class="ab ab-danger ab-sm" onclick="rejectAgent('${esc(a.id)}')">Reject</button>` : ''}
-      </td>
-    </tr>`;
-            }).join('') || '<tr><td colspan="7" style="text-align:center;padding:1.5rem;color:var(--text-muted)">No agents found</td></tr>';
-        }
+                // Booking counts per user_id — single query, group client-side.
+                const { data: bookings } = await c
+                    .from('bookings')
+                    .select('user_id')
+                    .not('user_id', 'is', null);
+                const counts = new Map();
+                for (const b of (bookings || [])) {
+                    counts.set(b.user_id, (counts.get(b.user_id) || 0) + 1);
+                }
+                _allAgents.forEach(a => { a._bookingCount = counts.get(a.id) || 0; });
 
-        function approveAgent(id) {
-            const a = DB.getOne(KEYS.AGENTS, id);
-            DB.update(KEYS.AGENTS, id, { status: 'approved' });
-            // Also update users table so they can log in
-            const existing = DB.query(KEYS.USERS, u => u.email === a.email);
-            if (!existing.length) {
-                DB.insert(KEYS.USERS, { email: a.email, password: a.password, name: a.name, role: 'agent', status: 'approved', agentId: id });
-            } else {
-                DB.update(KEYS.USERS, existing[0].id, { status: 'approved' });
+                renderAgents('');
+            } catch (e) {
+                console.error('[agents] load failed', e);
+                const tbody = document.getElementById('agentsTbody');
+                tbody.replaceChildren();
+                const tr = document.createElement('tr');
+                const td = document.createElement('td');
+                td.colSpan = 6;
+                td.style.cssText = 'text-align:center;padding:1.5rem;color:var(--text-muted)';
+                td.textContent = 'Could not load agents. Check your sign-in.';
+                tr.appendChild(td);
+                tbody.appendChild(tr);
             }
-            logActivity(`Agent approved: ${a.name}`, Auth.current()?.name);
-            toast(`${a.name} approved ✓`, 'success');
-            render();
         }
 
-        function rejectAgent(id) {
-            const a = DB.getOne(KEYS.AGENTS, id);
-            DB.update(KEYS.AGENTS, id, { status: 'rejected' });
-            logActivity(`Agent rejected: ${a.name}`, Auth.current()?.name);
-            toast(`${a.name} rejected`, 'warning');
-            render();
+        function makeCell(text, opts = {}) {
+            const td = document.createElement('td');
+            if (opts.bold) {
+                const s = document.createElement('strong');
+                s.textContent = text == null ? '' : String(text);
+                td.appendChild(s);
+            } else {
+                td.textContent = text == null ? '' : String(text);
+            }
+            if (opts.style) td.style.cssText = opts.style;
+            return td;
+        }
+
+        function fmtDate(iso) {
+            if (!iso) return '—';
+            try { return new Date(iso).toLocaleDateString('en-AU', { day:'2-digit', month:'short', year:'numeric' }); }
+            catch (e) { return '—'; }
+        }
+
+        function renderAgents(searchTerm) {
+            const tbody = document.getElementById('agentsTbody');
+            tbody.replaceChildren();
+            const q = (searchTerm || '').trim().toLowerCase();
+            let rows = _allAgents;
+            if (q) {
+                rows = rows.filter(a => (
+                    (a.full_name && a.full_name.toLowerCase().includes(q)) ||
+                    (a.agency_name && a.agency_name.toLowerCase().includes(q)) ||
+                    (a.email && a.email.toLowerCase().includes(q))
+                ));
+            }
+            if (rows.length === 0) {
+                const tr = document.createElement('tr');
+                const td = document.createElement('td');
+                td.colSpan = 6;
+                td.style.cssText = 'text-align:center;padding:1.5rem;color:var(--text-muted)';
+                td.textContent = q ? 'No matches for "' + q + '"' : 'No registered agents yet.';
+                tr.appendChild(td);
+                tbody.appendChild(tr);
+                return;
+            }
+            for (const a of rows) {
+                const tr = document.createElement('tr');
+                tr.appendChild(makeCell(a.full_name, { bold: true }));
+                tr.appendChild(makeCell(a.agency_name || '—'));
+                tr.appendChild(makeCell(a.email, { style: 'font-size:0.8rem' }));
+                tr.appendChild(makeCell(a.mobile_phone || '—'));
+                tr.appendChild(makeCell(a._bookingCount));
+                tr.appendChild(makeCell(fmtDate(a.created_at)));
+                tbody.appendChild(tr);
+            }
         }
     </script>
 </body>
