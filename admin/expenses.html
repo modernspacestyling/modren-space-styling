@@ -96,6 +96,17 @@
                 </div>
             </div>
 
+            <!-- v1.4: Quick Receipt Upload -->
+            <div class="panel" style="margin-bottom:1.25rem;background:linear-gradient(135deg,#1A1410 0%,#2A1F18 100%);color:#FAF7F1;border:1px solid rgba(184,150,62,.35)">
+                <div class="panel-body" style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;justify-content:space-between">
+                    <div>
+                        <div style="font-size:11px;letter-spacing:2px;color:#B8963E;font-weight:700;text-transform:uppercase">📷 Quick Receipt</div>
+                        <div style="font-size:14px;margin-top:4px">Snap a photo of a purchase receipt — it's logged as an expense automatically.</div>
+                    </div>
+                    <button class="ab ab-accent" type="button" id="openReceiptBtn" style="padding:0.65rem 1.25rem;font-size:0.9rem;font-weight:700">📷 Add Receipt</button>
+                </div>
+            </div>
+
             <!-- Expenses Table -->
             <div class="panel">
                 <div class="panel-header">
@@ -194,6 +205,76 @@
     </div>
 
     <div id="toast-container" class="toast-container"></div>
+    <!-- v1.4: Receipt Upload Modal -->
+    <div id="receiptModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1100;align-items:center;justify-content:center;padding:1rem">
+      <div style="background:white;border-radius:14px;padding:1.5rem;width:100%;max-width:480px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 40px rgba(0,0,0,0.3)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+          <h3 style="margin:0;font-size:1.1rem">📷 Add Receipt</h3>
+          <button type="button" id="receiptCloseBtn" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#666;padding:0;line-height:1">×</button>
+        </div>
+
+        <!-- Photo preview / picker -->
+        <div id="receiptPhotoArea" style="border:2px dashed #D1D5DB;border-radius:10px;padding:1.5rem 1rem;text-align:center;background:#F9FAFB;margin-bottom:1rem;cursor:pointer">
+          <div id="receiptPhotoEmpty">
+            <div style="font-size:2.5rem;line-height:1;margin-bottom:0.5rem">📷</div>
+            <div style="font-size:0.95rem;font-weight:600;color:#374151;margin-bottom:0.25rem">Take a photo or choose file</div>
+            <div style="font-size:0.8rem;color:#6B7280">JPG, PNG, HEIC · max 5 MB</div>
+          </div>
+          <img id="receiptPhotoPreview" alt="" style="display:none;max-width:100%;max-height:300px;border-radius:8px;object-fit:contain">
+        </div>
+        <div style="display:flex;gap:0.5rem;margin-bottom:1rem">
+          <button type="button" class="ab ab-outline" id="receiptCameraBtn" style="flex:1;padding:0.55rem;font-size:0.85rem">📷 Camera</button>
+          <button type="button" class="ab ab-outline" id="receiptFileBtn"   style="flex:1;padding:0.55rem;font-size:0.85rem">📁 File</button>
+          <button type="button" class="ab ab-outline" id="receiptClearBtn"  style="padding:0.55rem 0.9rem;font-size:0.85rem;display:none">✕</button>
+        </div>
+        <input type="file" id="receiptCameraInput" accept="image/*" capture="environment" style="display:none">
+        <input type="file" id="receiptFileInput"   accept="image/*"                       style="display:none">
+
+        <!-- Fields -->
+        <form id="receiptForm">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.75rem">
+            <div>
+              <label class="f-label">Date *</label>
+              <input class="f-control" type="date" id="rDate" required>
+            </div>
+            <div>
+              <label class="f-label">Amount (inc GST) *</label>
+              <input class="f-control" type="number" step="0.01" min="0" id="rAmount" placeholder="0.00" required>
+            </div>
+          </div>
+          <div style="margin-bottom:0.75rem">
+            <label class="f-label">Vendor / Description *</label>
+            <input class="f-control" type="text" id="rDescription" placeholder="e.g. Bunnings — bench legs" required>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1rem">
+            <div>
+              <label class="f-label">Category *</label>
+              <select class="f-control" id="rCategory" required>
+                <option value="supplies">Supplies / Materials</option>
+                <option value="truck">Truck / Transport</option>
+                <option value="designer">Interior Designer</option>
+                <option value="photography">Photography</option>
+                <option value="rent">Warehouse Rent</option>
+                <option value="insurance">Insurance</option>
+                <option value="software">Software / Subscriptions</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label class="f-label">Type *</label>
+              <select class="f-control" id="rType" required>
+                <option value="one-off">One-Off</option>
+                <option value="variable">Variable (Per Job)</option>
+                <option value="fixed">Fixed</option>
+              </select>
+            </div>
+          </div>
+          <div id="receiptHint" style="display:none;padding:0.65rem 0.85rem;border-radius:8px;font-size:0.85rem;line-height:1.4;margin-bottom:0.75rem"></div>
+          <button type="submit" class="ab ab-accent" id="receiptSaveBtn" style="width:100%;padding:0.75rem;font-size:0.95rem;font-weight:700">Save Expense</button>
+        </form>
+      </div>
+    </div>
+
     <script src="supabase.min.js"></script>
     <script src="auth-supabase.js"></script>
     <script src="sync-expenses.js"></script>
@@ -465,6 +546,126 @@
             const amount = parseFloat(document.getElementById('expAmount').value) || 0;
             document.getElementById('expGst').value = (amount * 0.10).toFixed(2);
         });
+
+        // ── v1.4: Quick Receipt Upload (camera + file) → Supabase Storage + expenses row ──
+        (function initReceiptUpload() {
+          const $ = (id) => document.getElementById(id);
+          let pickedFile = null;
+
+          function openModal() {
+            $('rDate').value = new Date().toISOString().slice(0, 10);
+            $('rAmount').value = '';
+            $('rDescription').value = '';
+            $('rCategory').value = 'supplies';
+            $('rType').value = 'one-off';
+            clearPhoto();
+            hideHint();
+            $('receiptModal').style.display = 'flex';
+          }
+          function closeModal() { $('receiptModal').style.display = 'none'; }
+
+          function clearPhoto() {
+            pickedFile = null;
+            $('receiptPhotoEmpty').style.display = 'block';
+            $('receiptPhotoPreview').style.display = 'none';
+            $('receiptPhotoPreview').src = '';
+            $('receiptClearBtn').style.display = 'none';
+          }
+
+          function setPhoto(file) {
+            if (!file) return;
+            if (!file.type.startsWith('image/')) { showHint('❌ Pick an image file.', 'err'); return; }
+            if (file.size > 5 * 1024 * 1024)     { showHint('❌ File is over 5 MB.', 'err'); return; }
+            pickedFile = file;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              $('receiptPhotoPreview').src = e.target.result;
+              $('receiptPhotoPreview').style.display = 'block';
+              $('receiptPhotoEmpty').style.display = 'none';
+              $('receiptClearBtn').style.display = 'inline-flex';
+            };
+            reader.readAsDataURL(file);
+            hideHint();
+          }
+
+          function showHint(msg, kind) {
+            const el = $('receiptHint');
+            el.style.display = 'block';
+            el.textContent = msg;
+            el.style.background = kind === 'err' ? '#FEE2E2' : (kind === 'ok' ? '#DCFCE7' : '#FEF3C7');
+            el.style.color      = kind === 'err' ? '#991B1B' : (kind === 'ok' ? '#166534' : '#92400E');
+          }
+          function hideHint() { $('receiptHint').style.display = 'none'; }
+
+          $('openReceiptBtn').addEventListener('click', openModal);
+          $('receiptCloseBtn').addEventListener('click', closeModal);
+          $('receiptModal').addEventListener('click', (e) => { if (e.target.id === 'receiptModal') closeModal(); });
+
+          // Picker triggers
+          $('receiptCameraBtn').addEventListener('click', () => $('receiptCameraInput').click());
+          $('receiptFileBtn').addEventListener('click',   () => $('receiptFileInput').click());
+          $('receiptClearBtn').addEventListener('click', clearPhoto);
+          $('receiptPhotoArea').addEventListener('click', () => { if (!pickedFile) $('receiptFileInput').click(); });
+          $('receiptCameraInput').addEventListener('change', (e) => setPhoto(e.target.files && e.target.files[0]));
+          $('receiptFileInput').addEventListener('change',   (e) => setPhoto(e.target.files && e.target.files[0]));
+
+          // Submit
+          $('receiptForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!pickedFile) { showHint('❌ Take a photo or pick a file first.', 'err'); return; }
+            const date        = $('rDate').value;
+            const description = ($('rDescription').value || '').trim();
+            const category    = $('rCategory').value;
+            const type        = $('rType').value;
+            const totalNum    = parseFloat($('rAmount').value);
+            if (!date || !description || !totalNum || totalNum <= 0) {
+              showHint('❌ Fill every field. Amount must be > 0.', 'err'); return;
+            }
+            // Aussie GST: total = amount + (amount * 10%) → amount = total / 1.1, gst = total - amount
+            const exGst = +(totalNum / 1.1).toFixed(2);
+            const gst   = +(totalNum - exGst).toFixed(2);
+
+            const saveBtn = $('receiptSaveBtn');
+            saveBtn.disabled = true; saveBtn.textContent = 'Uploading…';
+            showHint('Uploading photo + saving expense…', 'info');
+
+            try {
+              const c = await MSSAuth.client();
+              const { data: { session } } = await c.auth.getSession();
+              if (!session) { throw new Error('Not signed in — please sign back in.'); }
+
+              // 1) Upload photo to Storage
+              const ext = (pickedFile.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g,'');
+              const path = `${session.user.id}/${Date.now()}.${ext}`;
+              const { error: upErr } = await c.storage.from('receipts').upload(path, pickedFile, {
+                contentType: pickedFile.type, upsert: false,
+              });
+              if (upErr) throw new Error('Photo upload failed: ' + upErr.message);
+
+              // Build a signed read URL (1 year). Private bucket so we don't expose a public URL.
+              const { data: signed, error: sigErr } = await c.storage.from('receipts').createSignedUrl(path, 60 * 60 * 24 * 365);
+              if (sigErr) throw new Error('Could not sign receipt URL: ' + sigErr.message);
+
+              // 2) Insert expense row
+              const { error: insErr } = await c.from('expenses').insert({
+                date, description, category, type,
+                amount: exGst, gst, total: totalNum,
+                receipt_url: signed.signedUrl,
+                source: 'admin-camera',
+                created_by: session.user.email || null,
+              });
+              if (insErr) throw new Error('Expense save failed: ' + insErr.message);
+
+              showHint('✅ Saved. The expense and receipt are in your records.', 'ok');
+              saveBtn.disabled = false; saveBtn.textContent = 'Save Expense';
+              setTimeout(() => { closeModal(); if (typeof renderExpenses === 'function') renderExpenses(); }, 1200);
+            } catch (err) {
+              saveBtn.disabled = false; saveBtn.textContent = 'Save Expense';
+              showHint('❌ ' + (err.message || 'Save failed'), 'err');
+              console.error('[receipt]', err);
+            }
+          });
+        })();
     </script>
 </body>
 
