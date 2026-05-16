@@ -75,6 +75,27 @@
       <h3 style="margin-bottom:0.35rem">Add a booking manually</h3>
       <p class="mb-hint">Use this for jobs already done or confirmed outside the website. Set the exact price you charged. No SMS or invoice email is sent automatically.</p>
 
+      <!-- v1.4.1: Service Type -->
+      <div class="mb-section-title">Service Type</div>
+      <div class="f-row">
+        <div class="f-group" style="flex:1">
+          <label class="f-label" for="serviceType">What kind of job is this? *</label>
+          <select id="serviceType" class="f-control">
+            <option value="staging">🏠 Property Staging (creates MSS-YYYY-XXXX)</option>
+            <option value="photography">📸 Photography (creates PHOTO-YYYY-XXXX)</option>
+          </select>
+        </div>
+        <div class="f-group" id="photoPackageRow" style="flex:1;display:none">
+          <label class="f-label" for="photoPackage">Photography Package *</label>
+          <select id="photoPackage" class="f-control">
+            <option value="essential">Essential — $349 inc GST</option>
+            <option value="premium">Premium — $449 inc GST</option>
+            <option value="ultimate">Ultimate — $599 inc GST</option>
+            <option value="rental">Rental — $196.90 inc GST</option>
+          </select>
+        </div>
+      </div>
+
       <!-- Agent / Client -->
       <div class="mb-section-title">Agent Details</div>
       <div class="f-row">
@@ -130,11 +151,11 @@
       </div>
       <div class="f-row">
         <div class="f-group">
-          <label class="f-label" for="installDate">Install Date *</label>
+          <label class="f-label" for="installDate" id="installDateLabel">Install Date *</label>
           <input id="installDate" class="f-control" type="date">
         </div>
         <div class="f-group">
-          <label class="f-label" for="installTime">Install Time</label>
+          <label class="f-label" for="installTime" id="installTimeLabel">Install Time</label>
           <input id="installTime" class="f-control" type="time" value="09:00">
         </div>
       </div>
@@ -147,16 +168,16 @@
           <label class="f-label" for="bathrooms">Bathrooms</label>
           <input id="bathrooms" class="f-control" type="number" min="0" max="10" value="2">
         </div>
-        <div class="f-group">
+        <div class="f-group staging-only">
           <label class="f-label" for="livingAreas">Living Areas</label>
           <input id="livingAreas" class="f-control" type="number" min="0" max="10" value="1">
         </div>
-        <div class="f-group">
+        <div class="f-group staging-only">
           <label class="f-label" for="diningAreas">Dining Areas</label>
           <input id="diningAreas" class="f-control" type="number" min="0" max="10" value="1">
         </div>
       </div>
-      <div class="f-row">
+      <div class="f-row staging-only">
         <div class="mb-checkbox-row">
           <input type="checkbox" id="garage"> <label for="garage">Garage</label>
         </div>
@@ -187,7 +208,7 @@
             <option value="pending">Pending</option>
           </select>
         </div>
-        <div class="f-group">
+        <div class="f-group staging-only">
           <label class="f-label" for="lockbox">Lockbox Code (optional)</label>
           <input id="lockbox" class="f-control" type="text" placeholder="e.g. 4827">
         </div>
@@ -226,9 +247,35 @@
     m.textContent = text;
   }
 
+  // v1.4.1: toggle staging-only fields based on Service Type
+  function applyServiceType() {
+    const isPhoto = $('serviceType').value === 'photography';
+    $('photoPackageRow').style.display = isPhoto ? '' : 'none';
+    document.querySelectorAll('.staging-only').forEach(el => {
+      el.style.display = isPhoto ? 'none' : '';
+    });
+    // Relabel date/time + reset status options for clarity
+    $('installDateLabel').textContent = isPhoto ? 'Shoot Date *' : 'Install Date *';
+    $('installTimeLabel').textContent = isPhoto ? 'Shoot Time'   : 'Install Time';
+    // Auto-fill price from package on photography
+    if (isPhoto) syncPhotoPrice();
+  }
+
+  function syncPhotoPrice() {
+    const map = { essential: 349, premium: 449, ultimate: 599, rental: 196.90 };
+    const v = map[$('photoPackage').value];
+    if (v && !$('finalPrice').value) {
+      $('finalPrice').value = v;
+      updateGst();
+    }
+  }
+
   async function saveBooking() {
+    const serviceType = $('serviceType').value;
     // Validate
     const payload = {
+      serviceType: serviceType,
+      package:     $('photoPackage').value,
       agentName:   $('agentName').value.trim(),
       agentPhone:  $('agentPhone').value.trim(),
       agentEmail:  $('agentEmail').value.trim(),
@@ -342,8 +389,9 @@
       }
 
       const invoiceMsg = data.invoiceNumber ? ` Invoice ${data.invoiceNumber} created.` : '';
-      setStatus('ok', '✅ Booking saved: ' + data.jobNumber + ' — $' + payload.finalPrice.toLocaleString('en-AU',{minimumFractionDigits:2}) + ' inc GST.' + invoiceMsg + ' Redirecting to bookings list…');
-      setTimeout(() => { window.location.href = 'bookings.html'; }, 1800);
+      const destination = serviceType === 'photography' ? 'photo-bookings.html' : 'bookings.html';
+      setStatus('ok', '✅ Booking saved: ' + data.jobNumber + ' — $' + payload.finalPrice.toLocaleString('en-AU',{minimumFractionDigits:2}) + ' inc GST.' + invoiceMsg + ' Redirecting…');
+      setTimeout(() => { window.location.href = destination; }, 1800);
     } catch (e) {
       setStatus('err', e.message || 'Unexpected error');
       btn.disabled = false; btn.style.opacity = '1'; btn.textContent = 'Save Booking';
@@ -366,6 +414,10 @@
     // the auth check below throws (e.g. transient Supabase SDK init issue).
     $('saveBtn').addEventListener('click', saveBooking);
     $('resetBtn').addEventListener('click', resetForm);
+    // v1.4.1: react to service-type changes
+    $('serviceType').addEventListener('change', applyServiceType);
+    $('photoPackage').addEventListener('change', () => { $('finalPrice').value = ''; syncPhotoPrice(); });
+    applyServiceType();
 
     // Default install date: today
     try {

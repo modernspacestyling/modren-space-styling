@@ -62,6 +62,25 @@ async function generateJobNumber(supabase) {
     return `MSS-${year}-${String(next).padStart(4, '0')}`;
 }
 
+// v1.4.1: photo_bookings job-number generator (PHOTO-YYYY-XXXX)
+async function generatePhotoJobNumber(supabase) {
+    const year = new Date().getFullYear();
+    const { data, error } = await supabase
+        .from('photo_bookings')
+        .select('job_number')
+        .like('job_number', `PHOTO-${year}-%`)
+        .order('created_at', { ascending: false })
+        .limit(1);
+    if (error) throw error;
+    let next = 1;
+    if (data && data.length > 0) {
+        const last = data[0].job_number;
+        const m = last && last.match(/PHOTO-\d{4}-(\d+)/);
+        if (m) next = parseInt(m[1], 10) + 1;
+    }
+    return `PHOTO-${year}-${String(next).padStart(4, '0')}`;
+}
+
 function addDays(isoDate, days) {
     const d = new Date(isoDate);
     d.setDate(d.getDate() + days);
@@ -120,8 +139,83 @@ module.exports = async (req, res) => {
             return;
         }
 
-        // --- Build row ---
         const supabase = createClient(supabaseUrl, serviceRoleKey);
+
+        // v1.4.1: branch on serviceType — 'photography' goes to photo_bookings
+        const serviceType = (b.serviceType === 'photography') ? 'photography' : 'staging';
+
+        if (serviceType === 'photography') {
+            const photoStatuses = ['pending','confirmed','active','closed'];
+            const status = photoStatuses.includes(b.status) ? b.status : 'closed';
+            const validPackages = ['essential','premium','ultimate','rental'];
+            const pkg = validPackages.includes(b.package) ? b.package : 'essential';
+
+            const photoJobNumber = await generatePhotoJobNumber(supabase);
+            const photoRow = {
+                job_number:     photoJobNumber,
+                status:         status,
+                // photo_bookings uses client_* columns (not agent_*) — fall back to agent fields
+                client_name:    sanitize(b.customerName || b.agentName, 160),
+                client_phone:   sanitize(b.customerPhone || b.agentPhone, 20),
+                client_email:   sanitize(b.customerEmail || b.agentEmail || 'unknown@local', 160),
+                agency:         sanitize(b.agency, 160),
+                address:        sanitize(b.address, 300),
+                property_type:  sanitize(b.propertyType || 'house', 40),
+                preferred_date: b.installDate,
+                preferred_time: sanitize(b.installTime || '09:00', 8),
+                package:        pkg,
+                bedrooms:       parseInt(b.bedrooms, 10) || 0,
+                bathrooms:      parseInt(b.bathrooms, 10) || 0,
+                addons:         Array.isArray(b.addons) ? b.addons : [],
+                notes:          sanitize(b.notes, 1000),
+                estimated_price: Math.round(finalPrice / 1.1), // ex-GST
+            };
+
+            const { data: photoData, error: photoErr } = await supabase
+                .from('photo_bookings')
+                .insert(photoRow)
+                .select()
+                .single();
+            if (photoErr) {
+                console.error('[admin-create-booking] photo insert error:', photoErr);
+                res.status(500).json({ error: 'Failed to save photo booking: ' + photoErr.message });
+                return;
+            }
+
+            // Best-effort invoice (send-invoice already supports type:'photography')
+            let invoiceNumber = null;
+            try {
+                const host = req.headers.host;
+                const proto = (req.headers['x-forwarded-proto'] || 'https').split(',')[0].trim();
+                const invoiceRes = await fetch(`${proto}://${host}/api/send-invoice`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'photography',
+                        jobNumber: photoJobNumber,
+                        booking: { ...b, manual_entry: true, final_price: finalPrice },
+                    }),
+                });
+                if (invoiceRes.ok) {
+                    const inv = await invoiceRes.json();
+                    invoiceNumber = inv.invoiceNumber || null;
+                }
+            } catch (invErr) {
+                console.error('[admin-create-booking] photo invoice call error:', invErr);
+            }
+
+            res.status(200).json({
+                success: true,
+                serviceType: 'photography',
+                jobNumber: photoJobNumber,
+                booking: photoData,
+                total: finalPrice,
+                invoiceNumber,
+            });
+            return;
+        }
+
+        // --- Staging path (default) ---
         const jobNumber = await generateJobNumber(supabase);
 
         // Staging period = 6 weeks from install date
