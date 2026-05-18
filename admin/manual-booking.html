@@ -417,6 +417,16 @@
     // v1.4.1: react to service-type changes
     $('serviceType').addEventListener('change', applyServiceType);
     $('photoPackage').addEventListener('change', () => { $('finalPrice').value = ''; syncPhotoPrice(); });
+    // v1.4.2: allow callers (e.g. iOS PWA Quick Actions) to pre-select via ?type=photography
+    try {
+      const params = new URLSearchParams(location.search);
+      const typeParam = (params.get('type') || '').toLowerCase();
+      if (typeParam === 'photography' || typeParam === 'photo') {
+        $('serviceType').value = 'photography';
+      } else if (typeParam === 'staging') {
+        $('serviceType').value = 'staging';
+      }
+    } catch (_) {}
     applyServiceType();
 
     // Default install date: today

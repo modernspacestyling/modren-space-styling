@@ -413,6 +413,17 @@
                             📍 <strong>Service Area:</strong> Geelong, Tarneit, Greater Melbourne &amp; Surf Coast. Distant properties may incur a <strong>$50 travel surcharge</strong> — confirmed on quote.
                         </div>
 
+                        <!-- v1.4.2: contract acceptance -->
+                        <label for="acceptTerms"
+                            style="display:flex;align-items:flex-start;gap:.6rem;margin:1.25rem 0;padding:1rem;background:#FFF8E7;border:1px solid #E5D5A8;border-radius:10px;font-size:13px;color:#374151;line-height:1.5;cursor:pointer">
+                            <input type="checkbox" id="acceptTerms"
+                                style="margin-top:2px;flex:0 0 18px;width:18px;height:18px;accent-color:#B8963E;cursor:pointer">
+                            <span>I have read and accept the
+                                <a href="/terms.html" target="_blank" rel="noopener"
+                                    style="color:#B8963E;font-weight:700;text-decoration:underline">Terms &amp; Conditions</a>
+                                including photography pricing, deliverables and cancellation policy. <span style="color:#DC2626;font-weight:700">*</span></span>
+                        </label>
+
                         <button class="btn btn-gold"
                             style="width:100%;justify-content:center;padding:1rem;font-size:0.95rem"
                             onclick="submitPhotoBooking()" id="submitBtn">
@@ -602,6 +613,10 @@
 
             if (!name || !phone || !email || !address || !date || !state.package) {
                 toast('Please fill in all required fields and select a package', 'error');
+                return;
+            }
+            if (!document.getElementById('acceptTerms').checked) {
+                toast('Please tick the Terms & Conditions box to continue', 'error');
                 return;
             }
 
