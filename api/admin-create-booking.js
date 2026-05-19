@@ -145,10 +145,17 @@ module.exports = async (req, res) => {
         const serviceType = (b.serviceType === 'photography') ? 'photography' : 'staging';
 
         if (serviceType === 'photography') {
-            const photoStatuses = ['pending','confirmed','active','closed'];
-            const status = photoStatuses.includes(b.status) ? b.status : 'closed';
+            // photo_bookings status check allows: pending/confirmed/scheduled/completed/delivered/cancelled
+            // Map UI-side legacy statuses (active/closed) → photo_bookings vocabulary.
+            const photoStatusMap = { active: 'scheduled', closed: 'completed' };
+            const photoStatuses = ['pending','confirmed','scheduled','completed','delivered','cancelled'];
+            const mappedStatus = photoStatusMap[b.status] || b.status;
+            const status = photoStatuses.includes(mappedStatus) ? mappedStatus : 'completed';
             const validPackages = ['essential','premium','ultimate','rental'];
             const pkg = validPackages.includes(b.package) ? b.package : 'essential';
+            // photo_bookings.property_type CHECK constraint allows only 'sale' or 'rent' (default 'sale').
+            // Anything else (legacy 'house' etc.) violates the constraint, so coerce safely.
+            const propType = (b.propertyType === 'rent') ? 'rent' : 'sale';
 
             const photoJobNumber = await generatePhotoJobNumber(supabase);
             const photoRow = {
@@ -160,7 +167,7 @@ module.exports = async (req, res) => {
                 client_email:   sanitize(b.customerEmail || b.agentEmail || 'unknown@local', 160),
                 agency:         sanitize(b.agency, 160),
                 address:        sanitize(b.address, 300),
-                property_type:  sanitize(b.propertyType || 'house', 40),
+                property_type:  propType,
                 preferred_date: b.installDate,
                 preferred_time: sanitize(b.installTime || '09:00', 8),
                 package:        pkg,

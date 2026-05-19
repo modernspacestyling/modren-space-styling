@@ -96,6 +96,18 @@
         </div>
       </div>
 
+      <!-- v1.4.3: photo-only Property Type (DB CHECK allows only 'sale' or 'rent') -->
+      <div class="f-row photo-only" id="photoPropertyTypeRow" style="display:none">
+        <div class="f-group" style="flex:1">
+          <label class="f-label" for="propertyType">Property Type *</label>
+          <select id="propertyType" class="f-control">
+            <option value="sale">For Sale</option>
+            <option value="rent">For Rent</option>
+          </select>
+        </div>
+        <div class="f-group" style="flex:1"></div>
+      </div>
+
       <!-- Agent / Client -->
       <div class="mb-section-title">Agent Details</div>
       <div class="f-row">
@@ -251,6 +263,10 @@
   function applyServiceType() {
     const isPhoto = $('serviceType').value === 'photography';
     $('photoPackageRow').style.display = isPhoto ? '' : 'none';
+    // v1.4.3: photo-only fields (Property Type for invoice/DB constraint)
+    document.querySelectorAll('.photo-only').forEach(el => {
+      el.style.display = isPhoto ? '' : 'none';
+    });
     document.querySelectorAll('.staging-only').forEach(el => {
       el.style.display = isPhoto ? 'none' : '';
     });
@@ -276,6 +292,7 @@
     const payload = {
       serviceType: serviceType,
       package:     $('photoPackage').value,
+      propertyType: $('propertyType') ? $('propertyType').value : 'sale',
       agentName:   $('agentName').value.trim(),
       agentPhone:  $('agentPhone').value.trim(),
       agentEmail:  $('agentEmail').value.trim(),
