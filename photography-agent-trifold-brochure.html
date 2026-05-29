@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photography Agent Program - Trifold Brochure</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        /* A4 Trifold: 210mm × 297mm = 9 × 11.7 inches at 96dpi ≈ 864 × 1123px */
+        .brochure {
+            width: 210mm;
+            height: 297mm;
+            background: white;
+            margin: 20px auto;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: row;
+            position: relative;
+            print-color-adjust: exact;
+            color-adjust: exact;
+        }
+
+        /* Three columns for trifold (each 70mm wide, 1mm gutter) */
+        .panel {
+            flex: 1;
+            padding: 1.5rem;
+            border-right: 1px solid #e8e8e8;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .panel:last-child {
+            border-right: none;
+        }
+
+        /* Front panel (left, mailed address side) */
+        .panel.front {
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            color: white;
+            text-align: center;
+            padding: 2rem 1.5rem;
+        }
+
+        .panel.front h1 {
+            font-size: 1.8rem;
+            font-weight: 300;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+            color: #d4af37;
+        }
+
+        .panel.front .tagline {
+            font-size: 0.9rem;
+            color: #a0aec0;
+            letter-spacing: 0.5px;
+        }
+
+        .panel.front .badge {
+            background: rgba(212, 175, 55, 0.15);
+            border: 1px solid #d4af37;
+            color: #d4af37;
+            padding: 1rem;
+            margin: 2rem 0;
+            border-radius: 4px;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .panel.front .contact {
+            margin-top: auto;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #cbd5e0;
+            line-height: 1.8;
+        }
+
+        .panel.front .contact strong {
+            color: #d4af37;
+            display: block;
+            margin-bottom: 0.3rem;
+        }
+
+        /* Middle panel (center, main benefits/pricing) */
+        .panel.middle {
+            background: white;
+            padding: 1.5rem;
+            border-left: 1px solid #e8e8e8;
+        }
+
+        .panel.middle h2 {
+            font-size: 1.2rem;
+            color: #1a202c;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .benefit-item {
+            margin-bottom: 0.8rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .benefit-item:last-child {
+            border-bottom: none;
+        }
+
+        .benefit-item .label {
+            font-weight: 600;
+            color: #d4af37;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .benefit-item .value {
+            color: #374151;
+            font-size: 0.9rem;
+            margin-top: 0.2rem;
+        }
+
+        /* Right panel (back flap, key offers) */
+        .panel.back {
+            background: linear-gradient(135deg, #0f172a 0%, #1a202c 100%);
+            color: #e8e8e8;
+            padding: 1.5rem;
+        }
+
+        .panel.back h3 {
+            font-size: 1.1rem;
+            color: #d4af37;
+            margin-bottom: 1rem;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+        }
+
+        .offer {
+            background: rgba(212, 175, 55, 0.05);
+            border-left: 2px solid #d4af37;
+            padding: 0.7rem;
+            margin-bottom: 0.7rem;
+            font-size: 0.8rem;
+        }
+
+        .offer .name {
+            font-weight: 600;
+            color: #d4af37;
+        }
+
+        .offer .price {
+            color: #a0aec0;
+            font-size: 0.75rem;
+        }
+
+        .offer .saving {
+            color: #d4af37;
+            font-weight: 600;
+            margin-top: 0.2rem;
+        }
+
+        .panel.back .cta {
+            margin-top: auto;
+            text-align: center;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .panel.back .cta-text {
+            font-size: 0.8rem;
+            color: #cbd5e0;
+            margin-bottom: 0.5rem;
+        }
+
+        .panel.back .website {
+            font-size: 0.85rem;
+            color: #d4af37;
+            font-weight: 600;
+            word-break: break-word;
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .brochure {
+                margin: 0;
+                box-shadow: none;
+                width: 100%;
+                height: 100%;
+                max-width: none;
+            }
+        }
+
+        /* Guidelines (visible on screen, hidden in print) */
+        .guideline {
+            position: absolute;
+            border: 1px dashed #ccc;
+            pointer-events: none;
+        }
+
+        @media print {
+            .guideline {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="brochure">
+        <!-- LEFT PANEL: FRONT (when folded) -->
+        <div class="panel front">
+            <div>
+                <h1>📸 Photography<br>Agent Program</h1>
+                <div class="tagline">Lock In Your Rates For 12 Months</div>
+            </div>
+
+            <div class="badge">
+                ⭐ Up to 16% Savings<br>
+                Guaranteed Pricing Protection
+            </div>
+
+            <div class="contact">
+                <strong>Modern Space Styling</strong>
+                Professional Property Photography
+                <div style="margin-top: 0.5rem;">
+                    📧 modernspacestyling@gmail.com<br>
+                    📞 0415 580 791
+                </div>
+            </div>
+        </div>
+
+        <!-- MIDDLE PANEL: KEY PRICING -->
+        <div class="panel middle">
+            <h2>Package Options</h2>
+
+            <div class="benefit-item">
+                <div class="label">Starter</div>
+                <div class="value">Day Photos + Floor Plan<br>$189 (Save $21)</div>
+            </div>
+
+            <div class="benefit-item">
+                <div class="label">Essentials</div>
+                <div class="value">Day + Dusk + Floor Plan<br>$346 (Save $44)</div>
+            </div>
+
+            <div class="benefit-item">
+                <div class="label">Video Basics</div>
+                <div class="value">Day Photos + Cinematic Video<br>$513 (Save $57)</div>
+            </div>
+
+            <div class="benefit-item">
+                <div class="label">Complete Package</div>
+                <div class="value">Day + Dusk + Aerial + Video + Floor Plan<br>$833 (Save $147)</div>
+            </div>
+
+            <div class="benefit-item">
+                <div class="label">⭐ Full Production</div>
+                <div class="value">Complete + Instagram Reel + Virtual Staging<br>$915 (Save $180)</div>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL: BACK (when folded) -->
+        <div class="panel back">
+            <h3>Why Join?</h3>
+
+            <div class="offer">
+                <div class="name">✓ Locked-In Pricing</div>
+                <div class="saving">No increases for 12 months</div>
+            </div>
+
+            <div class="offer">
+                <div class="name">✓ Direct Access</div>
+                <div class="saving">Priority booking, direct MSS team</div>
+            </div>
+
+            <div class="offer">
+                <div class="name">✓ Flexible Bundles</div>
+                <div class="saving">Starter to Full Production</div>
+            </div>
+
+            <div class="offer">
+                <div class="name">✓ Premium Quality</div>
+                <div class="saving">Same service your clients expect</div>
+            </div>
+
+            <div class="cta">
+                <div class="cta-text">Registration is FREE & takes 2 minutes</div>
+                <div class="website">modernspacestyling.com.au<br>/photography-agent-program</div>
+            </div>
+        </div>
+    </div>
+
+    <p style="text-align: center; margin-top: 2rem; color: #666; font-size: 0.9rem;">
+        <strong>To print:</strong> Press Cmd+P (Mac) or Ctrl+P (Windows)<br>
+        Select "Landscape" orientation • Set margins to "None" • Print on A4 white cardstock (200-250gsm recommended)
+    </p>
+</body>
+</html>

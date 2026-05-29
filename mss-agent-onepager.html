@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MSS Agent Offers — One-Pager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+  :root {
+    --gold: #B8963E; --gold-light: #D4B565; --gold-dark: #8B7030;
+    --ink: #0a0a0a; --ink-2: #1a1a1a; --paper: #FAF7F1; --paper-2: #F2EDE1;
+    --line: #2a2a2a; --muted: #6B5F4A; --red: #B8362E;
+  }
+  html, body { background: #262626; color: var(--ink); font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+
+  .a4 {
+    width: 210mm; min-height: 297mm; background: var(--paper);
+    margin: 0 auto; box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+    position: relative; overflow: hidden; color: var(--ink);
+  }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    background: linear-gradient(135deg, var(--ink) 0%, #1a1410 60%, #2a1f14 100%);
+    color: #fff; padding: 8mm 14mm 7mm; position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content:''; position:absolute; top:0; right:-30%; width:80%; height:100%;
+    background: radial-gradient(ellipse at top right, rgba(184,150,62,.25) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content:''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+
+  .hero-top { display: flex; align-items: center; justify-content: space-between; gap: 6mm; margin-bottom: 5mm; }
+  .brand { display: flex; align-items: center; gap: 3mm; color: var(--gold); }
+  .brand svg { width: 11mm; height: 11mm; }
+  .brand .name { font-family: 'Playfair Display', serif; font-size: 13pt; font-weight: 600; letter-spacing: .02em; line-height: 1.1; }
+  .brand .sub { font-size: 7pt; color: #c8b890; letter-spacing: .22em; text-transform: uppercase; margin-top: 1mm; }
+
+  .contact-mini { text-align: right; color: #d8d0c0; font-size: 8pt; line-height: 1.5; }
+  .contact-mini .phone { color: var(--gold-light); font-family: 'Playfair Display', serif; font-size: 12pt; letter-spacing: .02em; }
+  .contact-mini .small { font-size: 7pt; color: #ada094; letter-spacing: .12em; text-transform: uppercase; }
+
+  .eyebrow { font-size: 7.5pt; color: var(--gold-light); letter-spacing: .3em; text-transform: uppercase; margin-bottom: 2mm; font-weight: 600; }
+  .headline { font-family: 'Playfair Display', serif; font-size: 24pt; font-weight: 700; line-height: 1.05; letter-spacing: -.015em; color: #fff; }
+  .headline .em { color: var(--gold); font-style: italic; }
+  .sub-text { font-size: 8.5pt; color: #d8d0c0; max-width: 165mm; line-height: 1.45; margin-top: 2.5mm; }
+
+  /* ---------- URGENCY ---------- */
+  .urgency {
+    background: var(--red); color: #fff; padding: 2.2mm 14mm;
+    font-size: 8pt; font-weight: 700; letter-spacing: .12em;
+    text-transform: uppercase; text-align: center;
+  }
+  .urgency span { letter-spacing: .25em; }
+
+  /* ---------- OFFERS ---------- */
+  .offers { padding: 5mm 14mm 4mm; }
+  .section-eyebrow { font-size: 7pt; color: var(--gold-dark); letter-spacing: .28em; text-transform: uppercase; font-weight: 700; margin-bottom: 1mm; }
+  .section-title { font-family: 'Playfair Display', serif; font-size: 13pt; font-weight: 700; color: var(--ink); margin-bottom: 3mm; letter-spacing: -.01em; }
+
+  .offer {
+    background: #fff; border: 1px solid rgba(184,150,62,.3); border-radius: 3mm;
+    padding: 2.5mm 3.5mm; margin-bottom: 1.8mm;
+    display: grid; grid-template-columns: 8mm 1fr auto; gap: 2.5mm; align-items: start;
+  }
+  .offer.feature {
+    background: linear-gradient(135deg, var(--ink) 0%, #1a1410 100%);
+    color: #f5f5f5; border: 1px solid var(--gold);
+  }
+  .offer.feature .name { color: var(--gold-light); }
+  .offer.feature p { color: #d8d0c0; }
+  .offer.feature .value-stack { background: rgba(184,150,62,.08); border-color: rgba(184,150,62,.25); }
+  .offer.feature .value-stack td { color: #e8e0c8; border-color: rgba(184,150,62,.15); }
+  .offer.feature .value-stack .total td { color: var(--gold-light); }
+  .offer.feature .price-tag { background: var(--gold); color: var(--ink); }
+
+  .offer-num {
+    width: 8mm; height: 8mm; border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold-light), var(--gold-dark));
+    color: var(--ink); font-family: 'Playfair Display', serif;
+    font-size: 10pt; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .offer-body { min-width: 0; }
+  .offer .name {
+    font-family: 'Playfair Display', serif;
+    font-size: 10.5pt; font-weight: 700; margin-bottom: 0.8mm; letter-spacing: -.005em;
+  }
+  .offer .tag {
+    display: inline-block; font-size: 7pt; font-weight: 700; letter-spacing: .15em;
+    text-transform: uppercase; color: var(--red); background: rgba(184,54,46,.12);
+    padding: 1mm 2.5mm; border-radius: 2mm; margin-left: 2mm; vertical-align: middle;
+  }
+  .offer.feature .tag { color: #ffb380; background: rgba(255,179,128,.15); }
+  .offer p { font-size: 8pt; color: var(--muted); line-height: 1.4; margin-bottom: 1mm; }
+  .offer p:last-child { margin-bottom: 0; }
+  .offer strong { color: var(--ink); font-weight: 700; }
+  .offer.feature strong { color: #fff; }
+
+  .price-tag {
+    background: var(--ink); color: var(--gold-light);
+    padding: 1.8mm 3mm; border-radius: 2mm;
+    font-size: 7.5pt; font-weight: 700; letter-spacing: .1em;
+    text-transform: uppercase; white-space: nowrap;
+  }
+  .strike { text-decoration: line-through; opacity: .55; margin-right: 1.5mm; }
+
+  .value-stack {
+    width: 100%; background: var(--paper-2);
+    border: 1px solid rgba(184,150,62,.2); border-radius: 2mm;
+    margin-top: 1mm; border-collapse: collapse; font-size: 7.5pt;
+  }
+  .value-stack td {
+    padding: 1mm 2.5mm; border-bottom: 1px solid rgba(184,150,62,.12);
+    color: var(--ink);
+  }
+  .value-stack td:last-child { text-align: right; font-weight: 600; color: var(--gold-dark); }
+  .value-stack tr:last-child td { border-bottom: none; }
+  .value-stack .total td {
+    font-family: 'Playfair Display', serif; font-weight: 700; font-size: 9pt;
+    color: var(--gold-dark); padding-top: 2mm; padding-bottom: 2mm;
+  }
+
+  /* ---------- CTA ---------- */
+  .cta-block {
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+    color: var(--ink); padding: 4.5mm 14mm 4mm;
+    text-align: center; position: relative; overflow: hidden;
+  }
+  .cta-block::before {
+    content: ''; position: absolute; top: 0; right: 0; width: 40%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18)); pointer-events: none;
+  }
+  .cta-block .h {
+    font-family: 'Playfair Display', serif; font-size: 14pt;
+    font-weight: 700; margin-bottom: 1mm; letter-spacing: -.01em;
+  }
+  .cta-block .p { font-size: 8.5pt; margin-bottom: 3mm; opacity: .9; }
+  .cta-row { display: flex; justify-content: center; gap: 4mm; flex-wrap: wrap; }
+  .cta-btn {
+    background: var(--ink); color: var(--gold-light);
+    padding: 2.6mm 5mm; border-radius: 2mm;
+    font-weight: 700; font-size: 8pt; letter-spacing: .12em;
+    text-transform: uppercase; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 2mm;
+  }
+  .cta-btn.outline { background: transparent; color: var(--ink); border: 1.5px solid var(--ink); }
+
+  /* ---------- COMPANY DETAILS BAR ---------- */
+  .company-bar {
+    background: #fff; padding: 5mm 14mm 4mm;
+    display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 6mm; align-items: center;
+    border-top: 1px solid rgba(184,150,62,.2); border-bottom: 1px solid rgba(184,150,62,.2);
+  }
+  .col .lbl { font-size: 6.5pt; color: var(--gold-dark); letter-spacing: .22em; text-transform: uppercase; margin-bottom: 1mm; font-weight: 700; }
+  .col .val { font-size: 9pt; font-weight: 500; color: var(--ink); line-height: 1.4; }
+  .col .val.lg { font-size: 11pt; font-family: 'Playfair Display', serif; font-weight: 600; color: var(--ink); }
+  .col .small { font-size: 7pt; color: var(--muted); margin-top: 0.5mm; letter-spacing: .08em; }
+  .qr-box { width: 20mm; height: 20mm; background: #fff; padding: 1mm; border: 1px solid rgba(184,150,62,.3); border-radius: 2mm; }
+  .qr-box img { width: 100%; height: 100%; display: block; }
+
+  /* ---------- FOOTER ---------- */
+  .footer {
+    background: var(--ink); color: #c8b890;
+    padding: 2.8mm 14mm 2.5mm;
+    font-size: 6.5pt; text-align: center; letter-spacing: .08em;
+  }
+  .footer .top { color: var(--gold-light); font-weight: 600; letter-spacing: .18em; text-transform: uppercase; margin-bottom: 1mm; font-size: 7pt; }
+  .footer .small { color: #807a6e; font-size: 5.8pt; margin-top: 1mm; letter-spacing: .06em; line-height: 1.3; }
+
+  @page { size: A4 portrait; margin: 0; }
+  @media print {
+    html, body { background: #fff !important; }
+    .a4 { box-shadow: none !important; margin: 0 !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="a4">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-top">
+      <div class="brand">
+        <svg viewBox="0 0 80 80" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round">
+          <path d="M40 65 L40 30 L16 46 L40 14 L64 46 L40 30"/>
+          <line x1="40" y1="30" x2="40" y2="65"/>
+          <line x1="28" y1="65" x2="52" y2="65"/>
+        </svg>
+        <div>
+          <div class="name">Modern Space Styling</div>
+          <div class="sub">Geelong · Western Corridor · Bellarine</div>
+        </div>
+      </div>
+      <div class="contact-mini">
+        <div class="phone">0415 580 791</div>
+        <div class="small">Mini · Director</div>
+        <div class="phone" style="margin-top:1mm;">0421 237 861</div>
+        <div class="small">Sony · Operations</div>
+      </div>
+    </div>
+
+    <div class="eyebrow">For Real Estate Agents · Limited 2026 Offers</div>
+    <h1 class="headline">Win the listing. <span class="em">Stage the deal.</span></h1>
+    <p class="sub-text">
+      Five offers built to make you the easiest "yes" your vendor signs today —
+      and the most profitable partner Modern Space Styling has ever put on its books.
+    </p>
+  </section>
+
+  <!-- URGENCY -->
+  <div class="urgency">
+    🔥 <span>Founding cohort closes Friday 29 May 2026 — only 20 partner slots</span> 🔥
+  </div>
+
+  <!-- OFFERS -->
+  <section class="offers">
+    <div class="section-eyebrow">Five Offers · Pick One. Or All Five.</div>
+    <h2 class="section-title">Built for agents who write listings, not paperwork.</h2>
+
+    <!-- 1 — FEATURE -->
+    <div class="offer feature">
+      <div class="offer-num">1</div>
+      <div class="offer-body">
+        <div class="name">Agent Partner Program <span class="tag">20 slots only</span></div>
+        <p>Western Corridor + Geelong founding cohort. Lock it in once — every perk, every job, every quarter for the next 12 months.</p>
+        <table class="value-stack">
+          <tr><td>10% off every staging &amp; photo job for 12 months</td><td>$1,000+</td></tr>
+          <tr><td>Priority 24-hour booking lane (skip the queue)</td><td>priceless</td></tr>
+          <tr><td>1 free week of staging extension per quarter</td><td>$800</td></tr>
+          <tr><td>1 free Twilight shoot per quarter</td><td>$600</td></tr>
+          <tr><td>1 free Rental photo shoot per year</td><td>$179</td></tr>
+          <tr><td>Listed on modernspacestyling.com.au as Partner Agent (warm leads)</td><td>$$$</td></tr>
+          <tr class="total"><td>TOTAL STACKED VALUE</td><td>$2,500+</td></tr>
+        </table>
+        <p style="margin-top:2mm;"><strong>Sign-up fee: $0. Apply by Fri 29 May 2026.</strong></p>
+      </div>
+      <div class="price-tag">$0 / sign-up</div>
+    </div>
+
+    <!-- 2 -->
+    <div class="offer">
+      <div class="offer-num">2</div>
+      <div class="offer-body">
+        <div class="name">The "Sold in 30" Guarantee <span class="tag">Risk-reversed</span></div>
+        <p>If your staged property doesn't go under contract within 30 days, <strong>we stage your next listing FREE.</strong> No fine print. We back our work — 98% of our staged homes sell within 4 weeks.</p>
+      </div>
+      <div class="price-tag">Free re-stage</div>
+    </div>
+
+    <!-- 3 -->
+    <div class="offer">
+      <div class="offer-num">3</div>
+      <div class="offer-body">
+        <div class="name">First-Booking Welcome Pack <span class="tag">First job only</span></div>
+        <p>New to MSS? Book your first job and unlock all of this on the house:</p>
+        <p style="font-size:8pt;">✓ <strong>1 free week of staging extension</strong> ($200) &nbsp;·&nbsp; ✓ <strong>Free Drone shots</strong> on any photo package ($200) &nbsp;·&nbsp; ✓ <strong>Free Twilight add-on</strong> ($150) &nbsp;·&nbsp; ✓ <strong>10% off</strong> the package</p>
+        <p style="font-size:7.5pt;">Stacked value $550+. Valid until 31 July 2026. One per agent.</p>
+      </div>
+      <div class="price-tag">$550+ free</div>
+    </div>
+
+    <!-- 4 -->
+    <div class="offer">
+      <div class="offer-num">4</div>
+      <div class="offer-body">
+        <div class="name">The Pitch Package <span class="tag">Win the listing</span></div>
+        <p>Got an appraisal this week? <strong>Bring an MSS stylist along — free.</strong> 15-min vendor walkthrough · virtual mockup of one room · printed look-book to leave behind. Your unfair advantage at the kitchen table.</p>
+      </div>
+      <div class="price-tag">Free</div>
+    </div>
+
+    <!-- 5 -->
+    <div class="offer">
+      <div class="offer-num">5</div>
+      <div class="offer-body">
+        <div class="name">Refer an Agent — $250 cash credit <span class="tag">Stacks with all</span></div>
+        <p>Send us a fellow agent who books. <strong>1 referral = $250 credit. 3 referrals = 4 free weeks of staging extension</strong> ($800 value). Stacks with every other offer.</p>
+      </div>
+      <div class="price-tag">$250 each</div>
+    </div>
+  </section>
+
+  <!-- COMPANY DETAILS BAR -->
+  <section class="company-bar">
+    <div class="col">
+      <div class="lbl">Call / Text</div>
+      <div class="val lg">0415 580 791</div>
+      <div class="val small">Mini · Director</div>
+      <div class="val lg" style="margin-top:1.5mm;">0421 237 861</div>
+      <div class="val small">Sony · Operations</div>
+    </div>
+    <div class="col">
+      <div class="lbl">Email</div>
+      <div class="val">modrenspacestyling@gmail.com</div>
+      <div class="lbl" style="margin-top:3mm;">Website</div>
+      <div class="val">modernspacestyling.com.au</div>
+    </div>
+    <div class="col">
+      <div class="lbl">Service Area</div>
+      <div class="val">Geelong · Surf Coast · Bellarine · Western Melbourne · Tarneit · Werribee · Point Cook · Altona</div>
+      <div class="lbl" style="margin-top:2mm;">ABN</div>
+      <div class="val">75 685 915 495</div>
+    </div>
+    <div class="qr-box">
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=8&data=https%3A%2F%2Fwww.modernspacestyling.com.au%2Fbooking.html" alt="QR to booking">
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-block">
+    <div class="h">Claim your offer in 60 seconds.</div>
+    <div class="p">Call now, text "PARTNER" for the agent program, or scan to book online.</div>
+    <div class="cta-row">
+      <a class="cta-btn" href="tel:+61415580791">📞 0415 580 791</a>
+      <a class="cta-btn outline" href="https://wa.me/61415580791?text=Hi%20MSS%20-%20I%27d%20like%20to%20claim%20an%20agent%20offer">💬 WhatsApp PARTNER</a>
+      <a class="cta-btn" href="https://www.modernspacestyling.com.au/booking.html">🌐 Book Online →</a>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="top">Modern Space Styling Pty Ltd · ABN 75 685 915 495 · Geelong · Western Corridor · Bellarine</div>
+    <div>modernspacestyling.com.au · modrenspacestyling@gmail.com · 0415 580 791 · 0421 237 861</div>
+    <div class="small">All offers exclude GST. Founding cohort capped at 20 agents. Sold-in-30 guarantee applies to Full Staging packages staged per MSS guidelines. One first-booking welcome pack per agent. Refer-an-agent credit applied to next invoice.</div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photography Agent Program - Modern Pricing</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+            background: #fafafa;
+            color: #1a1a1a;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 4rem;
+            padding: 3rem 2rem;
+            background: white;
+            border-radius: 2px;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 300;
+            letter-spacing: -1px;
+            margin-bottom: 0.5rem;
+            color: #000;
+        }
+
+        .header-subtitle {
+            font-size: 1.1rem;
+            color: #666;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+        }
+
+        /* Intro Section */
+        .intro {
+            background: white;
+            padding: 2rem;
+            margin-bottom: 3rem;
+            border-radius: 2px;
+            border-top: 3px solid #000;
+        }
+
+        .intro h2 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        .intro p {
+            color: #555;
+            font-size: 1rem;
+            line-height: 1.8;
+        }
+
+        /* Bundles Grid */
+        .bundles-section {
+            margin-bottom: 3rem;
+        }
+
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 300;
+            margin-bottom: 2rem;
+            letter-spacing: -0.5px;
+            text-align: center;
+            color: #000;
+        }
+
+        .bundles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .bundle-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 2px;
+            border: 1px solid #e8e8e8;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .bundle-card:hover {
+            border-color: #000;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        }
+
+        .bundle-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+            letter-spacing: -0.5px;
+        }
+
+        .bundle-desc {
+            font-size: 0.9rem;
+            color: #888;
+            margin-bottom: 1.5rem;
+            font-weight: 400;
+        }
+
+        .includes {
+            font-size: 0.85rem;
+            color: #666;
+            padding: 1rem;
+            background: #fafafa;
+            border-radius: 2px;
+            margin-bottom: 1.5rem;
+            line-height: 1.7;
+        }
+
+        .includes strong {
+            color: #000;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .pricing-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .price-item {
+            text-align: center;
+        }
+
+        .price-label {
+            font-size: 0.75rem;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .price-amount {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #000;
+        }
+
+        .savings {
+            color: #10b981;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .discount-tag {
+            display: inline-block;
+            background: #f0f0f0;
+            color: #000;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+
+        /* À La Carte */
+        .ala-carte {
+            background: white;
+            padding: 2rem;
+            border-radius: 2px;
+            margin-bottom: 3rem;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+        }
+
+        .service-item {
+            padding: 1rem;
+            border: 1px solid #e8e8e8;
+            border-radius: 2px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .service-name {
+            font-weight: 500;
+            font-size: 0.95rem;
+            color: #333;
+        }
+
+        .service-price {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #000;
+        }
+
+        /* CTA Section */
+        .cta {
+            background: white;
+            padding: 3rem 2rem;
+            text-align: center;
+            border-radius: 2px;
+            border-top: 3px solid #000;
+            margin-bottom: 2rem;
+        }
+
+        .cta h2 {
+            font-size: 1.8rem;
+            font-weight: 300;
+            margin-bottom: 1rem;
+            letter-spacing: -0.5px;
+        }
+
+        .cta p {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 2rem;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-btn {
+            display: inline-block;
+            background: #000;
+            color: white;
+            padding: 1rem 2.5rem;
+            text-decoration: none;
+            border-radius: 2px;
+            font-weight: 600;
+            font-size: 1rem;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+        }
+
+        .cta-btn:hover {
+            background: #333;
+            transform: translateY(-2px);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            background: white;
+            border-radius: 2px;
+            border-top: 1px solid #e8e8e8;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .footer-contact {
+            font-weight: 600;
+            color: #000;
+            margin-bottom: 0.5rem;
+        }
+
+        @media print {
+            body { background: white; }
+            .bundle-card:hover { border-color: #e8e8e8; box-shadow: none; }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 { font-size: 2.2rem; }
+            .pricing-comparison { grid-template-columns: 1fr; }
+            .bundles-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📸 Photography Agent Program</h1>
+            <p class="header-subtitle">Lock in discounted pricing for 12 months</p>
+        </div>
+
+        <div class="intro">
+            <h2>Exclusive agent pricing — guaranteed</h2>
+            <p>Register today and lock in your discounted rates for a full year. No price increases, no surprises. Access professional photography services at locked-in rates with priority booking and direct support from the Modern Space Styling team.</p>
+        </div>
+
+        <div class="bundles-section">
+            <div class="section-title">Base Services + Build Your Package</div>
+
+            <div class="bundles-grid">
+                <!-- Rental Base -->
+                <div class="bundle-card">
+                    <div class="bundle-name">Rental Listings</div>
+                    <div class="bundle-desc">Property Photography</div>
+                    <div class="includes">
+                        <strong>Includes</strong>
+                        Rental Photo Shoot
+                    </div>
+                    <div class="pricing-comparison">
+                        <div class="price-item">
+                            <div class="price-label">Agent Rate</div>
+                            <div class="price-amount">$90 + GST</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- For Sale Base -->
+                <div class="bundle-card">
+                    <div class="bundle-name">For Sale Listings</div>
+                    <div class="bundle-desc">Property Photography</div>
+                    <div class="includes">
+                        <strong>Includes</strong>
+                        Day Time Photos
+                    </div>
+                    <div class="pricing-comparison">
+                        <div class="price-item">
+                            <div class="price-label">Agent Rate</div>
+                            <div class="price-amount">$120 + GST</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ala-carte">
+            <h2 style="font-size: 1.3rem; margin-bottom: 1.5rem; font-weight: 600;">À La Carte Services</h2>
+            <div class="services-grid">
+                <div class="service-item">
+                    <span class="service-name">Day Time Photos</span>
+                    <span class="service-price">$120 + GST</span>
+                </div>
+                <div class="service-item">
+                    <span class="service-name">Dusk Time Photos</span>
+                    <span class="service-price">$180 + GST</span>
+                </div>
+                <div class="service-item">
+                    <span class="service-name">Cinematic Video Tour</span>
+                    <span class="service-price">$450 + GST</span>
+                </div>
+                <div class="service-item">
+                    <span class="service-name">Twilight Video Shoot</span>
+                    <span class="service-price">$550 + GST</span>
+                </div>
+                <div class="service-item">
+                    <span class="service-name">Aerial Drone Photos</span>
+                    <span class="service-price">$140 + GST</span>
+                </div>
+                <div class="service-item">
+                    <span class="service-name">Floor Plan</span>
+                    <span class="service-price">$90 + GST</span>
+                </div>
+                <div class="service-item">
+                    <span class="service-name">Instagram Reels</span>
+                    <span class="service-price">$80 + GST</span>
+                </div>
+                <div class="service-item">
+                    <span class="service-name">Virtual Staging (per image)</span>
+                    <span class="service-price">$35 + GST</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="cta">
+            <h2>Ready to Secure Your Agent Pricing?</h2>
+            <p>Registration is free and takes 2 minutes. Lock in your discount code today and receive guaranteed pricing protection for 12 months.</p>
+            <a href="https://modernspacestyling.com.au/photography-agent-program.html" class="cta-btn">Register Now & Get Agent Code</a>
+        </div>
+
+        <div class="footer">
+            <div class="footer-contact">Modern Space Styling</div>
+            <div>Professional Property Photography</div>
+            <div style="margin-top: 1rem; color: #999;">📧 modernspacestyling@gmail.com  |  📞 0415 580 791</div>
+            <div style="margin-top: 0.5rem; font-size: 0.85rem; color: #ccc;">Agent pricing locked for 12 months from registration date.</div>
+        </div>
+    </div>
+</body>
+</html>

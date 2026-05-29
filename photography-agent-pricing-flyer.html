@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photography Agent Pricing - Modern Space Styling</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .flyer {
+            width: 100%;
+            max-width: 900px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2.5rem 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1rem;
+            opacity: 0.95;
+        }
+
+        .content {
+            padding: 2rem;
+        }
+
+        .intro-box {
+            background: #fef3c7;
+            border-left: 5px solid #f59e0b;
+            padding: 1.2rem;
+            margin-bottom: 2rem;
+            border-radius: 6px;
+        }
+
+        .intro-box h2 {
+            color: #b45309;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .intro-box p {
+            color: #92400e;
+            font-size: 0.95rem;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            color: #1f2937;
+            margin: 2rem 0 1.5rem;
+            font-weight: 700;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+
+        .bundles-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.2rem;
+            margin-bottom: 2rem;
+        }
+
+        .bundle-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1.5rem;
+            background: #f9fafb;
+            transition: all 0.2s;
+        }
+
+        .bundle-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+        }
+
+        .bundle-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .bundle-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .bundle-tag {
+            background: #dbeafe;
+            color: #0c4a6e;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .bundle-description {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .services-list {
+            background: white;
+            padding: 0.8rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            font-size: 0.85rem;
+            color: #374151;
+            line-height: 1.6;
+        }
+
+        .services-list strong {
+            color: #667eea;
+        }
+
+        .pricing-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .price-box {
+            text-align: center;
+            padding: 0.8rem;
+            border-radius: 6px;
+        }
+
+        .price-box.regular {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+        }
+
+        .price-box.agent {
+            background: #d1fae5;
+            border: 2px solid #10b981;
+        }
+
+        .price-label {
+            font-size: 0.75rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.4rem;
+            font-weight: 600;
+        }
+
+        .price-amount {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .price-box.agent .price-amount {
+            color: #10b981;
+        }
+
+        .savings-box {
+            text-align: center;
+        }
+
+        .savings-label {
+            font-size: 0.75rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.4rem;
+            font-weight: 600;
+        }
+
+        .savings-amount {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #10b981;
+        }
+
+        .savings-subtext {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 0.3rem;
+        }
+
+        .individual-services {
+            background: #f0f9ff;
+            border-left: 4px solid #3b82f6;
+            padding: 1.5rem;
+            border-radius: 6px;
+            margin-bottom: 2rem;
+        }
+
+        .individual-services h3 {
+            color: #1e40af;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .services-table {
+            width: 100%;
+            font-size: 0.9rem;
+        }
+
+        .services-table tr {
+            border-bottom: 1px solid #bfdbfe;
+        }
+
+        .services-table td {
+            padding: 0.6rem 0;
+        }
+
+        .services-table td:first-child {
+            color: #374151;
+            font-weight: 500;
+        }
+
+        .services-table td:last-child {
+            text-align: right;
+            color: #666;
+        }
+
+        .cta-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .cta-section h2 {
+            font-size: 1.4rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .cta-section p {
+            font-size: 0.95rem;
+            margin-bottom: 1.2rem;
+            opacity: 0.95;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: white;
+            color: #667eea;
+            padding: 0.9rem 2.2rem;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 1rem;
+            text-decoration: none;
+            transition: transform 0.2s;
+        }
+
+        .cta-button:hover {
+            transform: scale(1.05);
+        }
+
+        .footer {
+            background: #f9fafb;
+            padding: 1.5rem 2rem;
+            text-align: center;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .footer p {
+            color: #374151;
+            margin-bottom: 0.3rem;
+            font-size: 0.95rem;
+        }
+
+        .footer .highlight {
+            color: #667eea;
+            font-weight: 700;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .flyer {
+                box-shadow: none;
+                border-radius: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.6rem;
+            }
+            .pricing-row {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="flyer">
+        <div class="header">
+            <h1>📸 Photography Agent Pricing</h1>
+            <p>Exclusive locked-in rates for 12 months</p>
+        </div>
+
+        <div class="content">
+            <div class="intro-box">
+                <h2>🎁 Agent Program Benefits</h2>
+                <p>Lock in discounted pricing TODAY. Your rates are guaranteed for 12 months — no increases, no surprises. Register instantly and receive your unique agent code.</p>
+            </div>
+
+            <h2 class="section-title">📦 Base Services + Build Your Package</h2>
+
+            <div class="bundles-grid">
+                <!-- Rental Base -->
+                <div class="bundle-card">
+                    <div class="bundle-header">
+                        <div class="bundle-name">Rental Listings</div>
+                    </div>
+                    <div class="bundle-description">Property Photography</div>
+                    <div class="services-list">
+                        <strong>Includes:</strong> Rental Photo Shoot
+                    </div>
+                    <div class="pricing-row">
+                        <div class="price-box agent">
+                            <div class="price-label">Agent Rate</div>
+                            <div class="price-amount">$90 + GST</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- For Sale Base -->
+                <div class="bundle-card">
+                    <div class="bundle-header">
+                        <div class="bundle-name">For Sale Listings</div>
+                    </div>
+                    <div class="bundle-description">Property Photography</div>
+                    <div class="services-list">
+                        <strong>Includes:</strong> Day Time Photos
+                    </div>
+                    <div class="pricing-row">
+                        <div class="price-box agent">
+                            <div class="price-label">Agent Rate</div>
+                            <div class="price-amount">$120 + GST</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="individual-services">
+                <h3>🎬 À La Carte Services</h3>
+                <table class="services-table">
+                    <tr>
+                        <td>Day Time Photos</td>
+                        <td>$120 + GST</td>
+                    </tr>
+                    <tr>
+                        <td>Dusk Time Photos</td>
+                        <td>$180 + GST</td>
+                    </tr>
+                    <tr>
+                        <td>Cinematic Video Tour</td>
+                        <td>$450 + GST</td>
+                    </tr>
+                    <tr>
+                        <td>Twilight Video Shoot</td>
+                        <td>$550 + GST</td>
+                    </tr>
+                    <tr>
+                        <td>Aerial Drone Photos</td>
+                        <td>$140 + GST</td>
+                    </tr>
+                    <tr>
+                        <td>Floor Plan</td>
+                        <td>$90 + GST</td>
+                    </tr>
+                    <tr>
+                        <td>Instagram Reels</td>
+                        <td>$80 + GST</td>
+                    </tr>
+                    <tr>
+                        <td>Virtual Staging (per image)</td>
+                        <td>$35 + GST</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="cta-section">
+                <h2>Ready to Secure Your Agent Pricing?</h2>
+                <p>Registration is free and takes 2 minutes. Lock in your discount code today.</p>
+                <a href="https://modernspacestyling.com.au/photography-agent-program.html" class="cta-button">Register Now & Get Agent Code</a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><span class="highlight">Modern Space Styling</span> | Professional Property Photography</p>
+            <p>📧 modernspacestyling@gmail.com  |  📞 0415 580 791</p>
+            <p style="font-size: 0.85rem; margin-top: 0.8rem;">Agent pricing locked for 12 months from registration date.</p>
+        </div>
+    </div>
+</body>
+</html>

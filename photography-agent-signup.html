@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photography Agent Program - Sign Up</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 3rem 2rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: #1a1a1a;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            font-weight: 400;
+            font-size: 0.9rem;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .success-message {
+            display: none;
+            background: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .benefits {
+            background: #f0f9ff;
+            border-left: 4px solid #667eea;
+            padding: 1rem;
+            margin-top: 2rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: #333;
+        }
+
+        .benefits h3 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .benefits ul {
+            list-style: none;
+            padding-left: 1rem;
+        }
+
+        .benefits li {
+            margin-bottom: 0.4rem;
+        }
+
+        .benefits li:before {
+            content: "✓ ";
+            color: #10b981;
+            font-weight: bold;
+            margin-right: 0.3rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📸 Photography Agent Program</h1>
+        <p class="subtitle">Lock in your discounted rates for 12 months</p>
+
+        <div class="success-message" id="successMsg">
+            ✓ Thank you! We'll contact you within 24 hours with your agent code.
+        </div>
+
+        <form id="agentForm">
+            <div class="form-group">
+                <label for="name">Full Name *</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address *</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Phone Number *</label>
+                <input type="tel" id="phone" name="phone" required>
+            </div>
+
+            <div class="form-group">
+                <label for="agency">Real Estate Agency Name *</label>
+                <input type="text" id="agency" name="agency" required>
+            </div>
+
+            <div class="form-group">
+                <label for="location">Service Area / Location *</label>
+                <input type="text" id="location" name="location" placeholder="e.g., Geelong, Melbourne, Regional VIC" required>
+            </div>
+
+            <div class="form-group">
+                <label>Service Type *</label>
+                <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                    <label style="display: flex; align-items: center; font-weight: 400; margin: 0;">
+                        <input type="radio" name="serviceType" value="rental" required style="margin-right: 0.5rem;">
+                        Rental Listings ($90 + GST)
+                    </label>
+                    <label style="display: flex; align-items: center; font-weight: 400; margin: 0;">
+                        <input type="radio" name="serviceType" value="forsale" required style="margin-right: 0.5rem;">
+                        For Sale Listings ($120 + GST)
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Add-On Services (optional)</label>
+                <div style="background: #f9fafb; padding: 1rem; border-radius: 6px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; font-size: 0.9rem;">
+                        <label style="display: flex; align-items: center; font-weight: 400; margin: 0;">
+                            <input type="checkbox" name="addons" value="dusk" style="margin-right: 0.5rem;">
+                            Dusk Photos (+$180 + GST)
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: 400; margin: 0;">
+                            <input type="checkbox" name="addons" value="aerial" style="margin-right: 0.5rem;">
+                            Aerial Drone (+$140 + GST)
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: 400; margin: 0;">
+                            <input type="checkbox" name="addons" value="floorplan" style="margin-right: 0.5rem;">
+                            Floor Plan (+$90 + GST)
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: 400; margin: 0;">
+                            <input type="checkbox" name="addons" value="video" style="margin-right: 0.5rem;">
+                            Cinematic Video (+$450 + GST)
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: 400; margin: 0;">
+                            <input type="checkbox" name="addons" value="twilight" style="margin-right: 0.5rem;">
+                            Twilight Video (+$550 + GST)
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: 400; margin: 0;">
+                            <input type="checkbox" name="addons" value="reel" style="margin-right: 0.5rem;">
+                            Instagram Reel (+$80 + GST)
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: 400; margin: 0;">
+                            <input type="checkbox" name="addons" value="virtual" style="margin-right: 0.5rem;">
+                            Virtual Staging (+$35 + GST)
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: 400; margin: 0;">
+                            <input type="checkbox" name="addons" value="declutter" style="margin-right: 0.5rem;">
+                            Declutter (+$5 + GST)
+                        </label>
+                    </div>
+                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #ddd; font-weight: 600; color: #667eea;">
+                        Estimated package: <span id="packagePrice">$90–$120</span> + add-ons + GST
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="volume">Approximate listings per month *</label>
+                <select id="volume" name="volume" required>
+                    <option value="">-- Select --</option>
+                    <option value="5-10">5–10 listings</option>
+                    <option value="10-20">10–20 listings</option>
+                    <option value="20-50">20–50 listings</option>
+                    <option value="50+">50+ listings</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="message">Additional Notes (optional)</label>
+                <textarea id="message" name="message" placeholder="Any specific requirements or questions?"></textarea>
+            </div>
+
+            <div class="form-group checkbox-group">
+                <input type="checkbox" id="terms" name="terms" required>
+                <label for="terms">I agree to receive updates about agent pricing and promotions</label>
+            </div>
+
+            <button type="submit" class="submit-btn">Get My Agent Code</button>
+        </form>
+
+        <div class="benefits">
+            <h3>Why join?</h3>
+            <ul>
+                <li>Flexible pricing from $90 + GST (rental) or $120 + GST (for sale)</li>
+                <li>Build custom packages with add-on services</li>
+                <li>Rates locked for 12 months</li>
+                <li>Priority booking & direct support</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Price calculator
+        const addOnPrices = {
+            dusk: 180,
+            aerial: 140,
+            floorplan: 90,
+            video: 450,
+            twilight: 550,
+            reel: 80,
+            virtual: 35,
+            declutter: 5
+        };
+
+        function updatePrice() {
+            const serviceType = document.querySelector('input[name="serviceType"]:checked');
+            const basePrice = serviceType?.value === 'rental' ? 90 : 120;
+
+            const checked = document.querySelectorAll('input[name="addons"]:checked');
+            let addOnTotal = 0;
+            checked.forEach(cb => {
+                addOnTotal += addOnPrices[cb.value] || 0;
+            });
+
+            const total = basePrice + addOnTotal;
+            document.getElementById('packagePrice').textContent = `$${total}`;
+        }
+
+        // Update price on service type change
+        document.querySelectorAll('input[name="serviceType"]').forEach(radio => {
+            radio.addEventListener('change', updatePrice);
+        });
+
+        // Update price on add-on checkbox change
+        document.querySelectorAll('input[name="addons"]').forEach(checkbox => {
+            checkbox.addEventListener('change', updatePrice);
+        });
+
+        document.getElementById('agentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const serviceType = document.querySelector('input[name="serviceType"]:checked').value;
+            const selectedAddOns = Array.from(document.querySelectorAll('input[name="addons"]:checked'))
+                .map(cb => cb.value);
+
+            const formData = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                agency: document.getElementById('agency').value,
+                location: document.getElementById('location').value,
+                serviceType: serviceType,
+                addOns: selectedAddOns,
+                volume: document.getElementById('volume').value,
+                message: document.getElementById('message').value,
+                timestamp: new Date().toISOString()
+            };
+
+            // Log to console (can be replaced with API call)
+            console.log('Agent Signup:', formData);
+
+            // Show success message
+            document.getElementById('successMsg').style.display = 'block';
+            this.reset();
+            document.getElementById('packagePrice').textContent = '$90–$120';
+
+            // Hide success after 5 seconds
+            setTimeout(() => {
+                document.getElementById('successMsg').style.display = 'none';
+            }, 5000);
+        });
+    </script>
+</body>
+</html>

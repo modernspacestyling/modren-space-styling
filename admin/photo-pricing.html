@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photography Pricing | MSS Admin</title>
+    <link rel="stylesheet" href="../css/admin.css">
+</head>
+
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <div class="sidebar-logo-name">Modern Space Styling</div>
+                <div class="sidebar-logo-sub">Admin Panel</div>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Main</div>
+                <a class="sidebar-link" href="dashboard.html"><span class="sidebar-icon">📊</span> Dashboard</a>
+                <a class="sidebar-link" href="bookings.html"><span class="sidebar-icon">📋</span> Bookings</a>
+                <a class="sidebar-link" href="photo-bookings.html"><span class="sidebar-icon">📸</span> Photo Bookings</a>
+                <a class="sidebar-link" href="inventory.html"><span class="sidebar-icon">📦</span> Inventory</a>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Finance</div>
+                <a class="sidebar-link" href="invoices.html"><span class="sidebar-icon">🧾</span> Invoices</a>
+                <a class="sidebar-link" href="expenses.html"><span class="sidebar-icon">💸</span> Expenses</a>
+                <a class="sidebar-link" href="reports.html"><span class="sidebar-icon">📈</span> Reports</a>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Management</div>
+                <a class="sidebar-link" href="pricing.html"><span class="sidebar-icon">💰</span> Staging Pricing</a>
+                <a class="sidebar-link active" href="photo-pricing.html"><span class="sidebar-icon">📷</span> Photography Pricing</a>
+                <a class="sidebar-link" href="sms.html"><span class="sidebar-icon">💬</span> SMS Centre</a>
+                <a class="sidebar-link" href="team.html"><span class="sidebar-icon">👥</span> Team Contacts</a>
+                <a class="sidebar-link" href="agents.html"><span class="sidebar-icon">🏢</span> Agents</a>
+                <a class="sidebar-link" href="logs.html"><span class="sidebar-icon">📝</span> Activity Log</a>
+            </div>
+            <div class="sidebar-footer">
+                <a class="sidebar-link" href="/mobile/" style="padding:0"><span class="sidebar-icon">📱</span> Back to App</a>
+                <a class="sidebar-link" href="#" onclick="Auth.logout()"
+                    style="padding:0;margin-top:0.5rem;color:#F87171"><span class="sidebar-icon">🚪</span> Logout</a>
+            </div>
+        </aside>
+        <header class="topbar">
+            <div class="topbar-title">Photography Pricing Editor</div>
+            <div class="topbar-right">
+                <div class="topbar-user">
+                    <div class="user-avatar" id="userAvatar">A</div><span id="userName">Admin</span>
+                </div>
+            </div>
+        </header>
+        <main class="main-content">
+            <div style="max-width:900px">
+                <!-- SERVICES SECTION -->
+                <div class="panel" style="margin-bottom:1.25rem">
+                    <div class="panel-header"><span class="panel-title">📷 Individual Photography Services</span></div>
+                    <div class="panel-body">
+                        <div id="servicesContainer" style="max-height:400px;overflow-y:auto">
+                            <p style="color:var(--text-muted)">Loading services...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BUNDLES SECTION -->
+                <div class="panel" style="margin-bottom:1.25rem">
+                    <div class="panel-header"><span class="panel-title">📦 Photography Bundles</span></div>
+                    <div class="panel-body">
+                        <div id="bundlesContainer" style="max-height:400px;overflow-y:auto">
+                            <p style="color:var(--text-muted)">Loading bundles...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AGENT PRICING PREVIEW -->
+                <div class="panel" style="margin-bottom:1.25rem">
+                    <div class="panel-header"><span class="panel-title">🎁 Agent Pricing Preview</span></div>
+                    <div class="panel-body">
+                        <div id="agentPreview" style="font-size:0.85rem;color:var(--text-muted);line-height:1.8">
+                            <p>Agent pricing is calculated automatically based on the discounts set in each bundle.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:1rem;margin-top:1.25rem">
+                    <button class="ab ab-accent" style="padding:0.75rem 2rem" onclick="saveAllPricing()">💾 Save All Changes</button>
+                    <button class="ab ab-outline" onclick="loadPricing()">↺ Reset</button>
+                </div>
+            </div>
+        </main>
+    </div>
+    <div id="toast-container" class="toast-container"></div>
+    <script src="supabase.min.js"></script>
+    <script src="auth-supabase.js"></script>
+    <script src="../js/app.js"></script>
+    <script>
+        let services = [];
+        let bundles = [];
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await seedDatabase();
+            if (!Auth.requireAdmin()) return;
+            const u = Auth.current();
+            document.getElementById('userName').textContent = u.name;
+            document.getElementById('userAvatar').textContent = u.name.charAt(0);
+            await loadPricing();
+        });
+
+        async function loadPricing() {
+            try {
+                const [servicesRes, bundlesRes] = await Promise.all([
+                    supabase.from('photography_pricing').select('*').order('sort_order'),
+                    supabase.from('photography_bundles').select('*').order('sort_order')
+                ]);
+
+                if (servicesRes.error) throw servicesRes.error;
+                if (bundlesRes.error) throw bundlesRes.error;
+
+                services = servicesRes.data || [];
+                bundles = bundlesRes.data || [];
+
+                renderServices();
+                renderBundles();
+                updateAgentPreview();
+            } catch (err) {
+                console.error('Load error:', err);
+                toast('Error loading pricing: ' + err.message, 'error');
+            }
+        }
+
+        function renderServices() {
+            const container = document.getElementById('servicesContainer');
+            container.innerHTML = '';
+
+            if (services.length === 0) {
+                const p = document.createElement('p');
+                p.style.color = 'var(--text-muted)';
+                p.textContent = 'No services found';
+                container.appendChild(p);
+                return;
+            }
+
+            services.forEach(s => {
+                const div = document.createElement('div');
+                div.style.cssText = 'display:flex;gap:1rem;margin-bottom:1rem;padding:0.75rem;background:var(--bg-secondary);border-radius:0.5rem;align-items:center';
+
+                const info = document.createElement('div');
+                info.style.flex = '1';
+
+                const title = document.createElement('div');
+                title.style.fontWeight = '600';
+                title.textContent = s.service_name;
+
+                const desc = document.createElement('div');
+                desc.style.cssText = 'font-size:0.8rem;color:var(--text-muted)';
+                desc.textContent = s.description || '';
+
+                info.appendChild(title);
+                info.appendChild(desc);
+
+                const priceDiv = document.createElement('div');
+                priceDiv.style.cssText = 'display:flex;gap:0.5rem;align-items:center';
+
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.className = 'f-control';
+                input.style.cssText = 'width:120px;padding:0.5rem';
+                input.value = s.base_price;
+                input.dataset.id = s.id;
+                input.dataset.field = 'base_price';
+                input.step = '0.01';
+                input.min = '0';
+
+                const label = document.createElement('label');
+                label.style.cssText = 'font-size:0.85rem;white-space:nowrap;color:var(--text-muted)';
+                label.textContent = s.gst_included ? 'GST incl' : 'Plus GST';
+
+                priceDiv.appendChild(input);
+                priceDiv.appendChild(label);
+
+                div.appendChild(info);
+                div.appendChild(priceDiv);
+                container.appendChild(div);
+            });
+        }
+
+        function renderBundles() {
+            const container = document.getElementById('bundlesContainer');
+            container.innerHTML = '';
+
+            if (bundles.length === 0) {
+                const p = document.createElement('p');
+                p.style.color = 'var(--text-muted)';
+                p.textContent = 'No bundles found';
+                container.appendChild(p);
+                return;
+            }
+
+            bundles.forEach(b => {
+                const div = document.createElement('div');
+                div.style.cssText = 'display:flex;gap:1rem;margin-bottom:1rem;padding:1rem;background:var(--bg-secondary);border-radius:0.5rem';
+
+                const info = document.createElement('div');
+                info.style.flex = '1';
+
+                const title = document.createElement('div');
+                title.style.fontWeight = '600';
+                title.textContent = b.bundle_name;
+
+                const desc = document.createElement('div');
+                desc.style.cssText = 'font-size:0.8rem;color:var(--text-muted);margin-bottom:0.5rem';
+                desc.textContent = b.description || '';
+
+                const services = document.createElement('div');
+                services.style.cssText = 'font-size:0.8rem;color:var(--text-muted)';
+                services.textContent = 'Services: ' + (b.service_keys.join(', ') || 'none');
+
+                info.appendChild(title);
+                info.appendChild(desc);
+                info.appendChild(services);
+
+                const pricesDiv = document.createElement('div');
+                pricesDiv.style.cssText = 'display:flex;gap:1rem;flex-direction:column;align-items:flex-end;white-space:nowrap';
+
+                // Regular price
+                const regularDiv = document.createElement('div');
+                const regularLabel = document.createElement('div');
+                regularLabel.style.cssText = 'font-size:0.75rem;color:var(--text-muted)';
+                regularLabel.textContent = 'Regular';
+                const regularInput = document.createElement('input');
+                regularInput.type = 'number';
+                regularInput.className = 'f-control';
+                regularInput.style.cssText = 'width:120px;padding:0.5rem';
+                regularInput.value = b.regular_price;
+                regularInput.dataset.id = b.id;
+                regularInput.dataset.field = 'regular_price';
+                regularInput.step = '0.01';
+                regularInput.min = '0';
+                regularDiv.appendChild(regularLabel);
+                regularDiv.appendChild(regularInput);
+
+                // Agent price
+                const agentDiv = document.createElement('div');
+                const agentLabel = document.createElement('div');
+                agentLabel.style.cssText = 'font-size:0.75rem;color:var(--text-muted)';
+                agentLabel.textContent = 'Agent';
+                const agentInput = document.createElement('input');
+                agentInput.type = 'number';
+                agentInput.className = 'f-control';
+                agentInput.style.cssText = 'width:120px;padding:0.5rem';
+                agentInput.value = b.agent_price;
+                agentInput.dataset.id = b.id;
+                agentInput.dataset.field = 'agent_price';
+                agentInput.step = '0.01';
+                agentInput.min = '0';
+                agentDiv.appendChild(agentLabel);
+                agentDiv.appendChild(agentInput);
+
+                // Discount %
+                const discountDiv = document.createElement('div');
+                const discountLabel = document.createElement('div');
+                discountLabel.style.cssText = 'font-size:0.75rem;color:var(--text-muted)';
+                discountLabel.textContent = 'Discount %';
+                const discountInput = document.createElement('input');
+                discountInput.type = 'number';
+                discountInput.className = 'f-control';
+                discountInput.style.cssText = 'width:120px;padding:0.5rem';
+                discountInput.value = b.discount_pct;
+                discountInput.dataset.id = b.id;
+                discountInput.dataset.field = 'discount_pct';
+                discountInput.step = '0.01';
+                discountInput.min = '0';
+                discountInput.max = '100';
+                discountDiv.appendChild(discountLabel);
+                discountDiv.appendChild(discountInput);
+
+                pricesDiv.appendChild(regularDiv);
+                pricesDiv.appendChild(agentDiv);
+                pricesDiv.appendChild(discountDiv);
+
+                div.appendChild(info);
+                div.appendChild(pricesDiv);
+                container.appendChild(div);
+            });
+        }
+
+        function updateAgentPreview() {
+            const previewDiv = document.getElementById('agentPreview');
+            previewDiv.innerHTML = '';
+
+            if (bundles.length === 0) {
+                const p = document.createElement('p');
+                p.textContent = 'No bundles to preview';
+                previewDiv.appendChild(p);
+                return;
+            }
+
+            bundles.forEach(b => {
+                const line = document.createElement('div');
+                line.style.marginBottom = '0.5rem';
+                const strong = document.createElement('strong');
+                strong.textContent = b.bundle_name + ': ';
+                const regular = document.createElement('span');
+                regular.style.color = 'var(--text-muted)';
+                regular.textContent = `$${b.regular_price.toFixed(2)} → $${b.agent_price.toFixed(2)} (${b.discount_pct.toFixed(0)}% off)`;
+                line.appendChild(strong);
+                line.appendChild(regular);
+                previewDiv.appendChild(line);
+            });
+        }
+
+        async function saveAllPricing() {
+            try {
+                const serviceUpdates = [];
+                document.querySelectorAll('#servicesContainer input').forEach(input => {
+                    const id = input.dataset.id;
+                    const field = input.dataset.field;
+                    const value = parseFloat(input.value) || 0;
+                    const service = services.find(s => s.id === id);
+                    if (service && service[field] !== value) {
+                        serviceUpdates.push({ id, [field]: value });
+                    }
+                });
+
+                const bundleUpdates = [];
+                document.querySelectorAll('#bundlesContainer input').forEach(input => {
+                    const id = input.dataset.id;
+                    const field = input.dataset.field;
+                    const value = parseFloat(input.value) || 0;
+                    const bundle = bundles.find(b => b.id === id);
+                    if (bundle && bundle[field] !== value) {
+                        bundleUpdates.push({ id, [field]: value });
+                    }
+                });
+
+                for (const update of serviceUpdates) {
+                    const { id, ...data } = update;
+                    const res = await supabase.from('photography_pricing').update(data).eq('id', id);
+                    if (res.error) throw res.error;
+                }
+
+                for (const update of bundleUpdates) {
+                    const { id, ...data } = update;
+                    const res = await supabase.from('photography_bundles').update(data).eq('id', id);
+                    if (res.error) throw res.error;
+                }
+
+                logActivity('Photography pricing updated', Auth.current()?.name);
+                toast('Photography pricing saved successfully!', 'success');
+                await loadPricing();
+            } catch (err) {
+                console.error('Save error:', err);
+                toast('Error saving pricing: ' + err.message, 'error');
+            }
+        }
+    </script>
+</body>
+
+</html>

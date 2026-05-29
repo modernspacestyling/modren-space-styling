@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photography Agent Program Flyer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: #f5f5f5;
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .flyer {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            print-color-adjust: exact;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.95;
+            font-weight: 500;
+        }
+
+        .content {
+            padding: 3rem 2rem;
+        }
+
+        .value-prop {
+            background: #fef3c7;
+            border-left: 5px solid #f59e0b;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+        }
+
+        .value-prop h2 {
+            color: #b45309;
+            font-size: 1.3rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .value-prop p {
+            color: #92400e;
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 0.5rem;
+        }
+
+        .benefits {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .benefit-card {
+            background: #f0f9ff;
+            border: 2px solid #3b82f6;
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .benefit-card .icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .benefit-card h3 {
+            color: #1e40af;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .benefit-card p {
+            color: #1f2937;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .pricing-section {
+            background: #f3f4f6;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .pricing-section h3 {
+            color: #374151;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1rem;
+        }
+
+        .price-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .price-column {
+            padding: 1rem;
+        }
+
+        .price-column h4 {
+            color: #667eea;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .price-column .amount {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .price-column.locked {
+            background: #dbeafe;
+            border: 2px solid #3b82f6;
+            border-radius: 6px;
+        }
+
+        .price-column.locked .amount {
+            color: #667eea;
+        }
+
+        .cta-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .cta-section h2 {
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+        }
+
+        .cta-section p {
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+            opacity: 0.95;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: white;
+            color: #667eea;
+            padding: 1rem 2.5rem;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 1rem;
+            text-decoration: none;
+            transition: transform 0.2s;
+            margin-bottom: 1rem;
+        }
+
+        .cta-button:hover {
+            transform: scale(1.05);
+        }
+
+        .qr-section {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .qr-section p {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 1rem;
+        }
+
+        .contact-footer {
+            background: #f9fafb;
+            padding: 1.5rem 2rem;
+            text-align: center;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .contact-footer h4 {
+            color: #374151;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .contact-footer p {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .flyer {
+                box-shadow: none;
+                max-width: 100%;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .benefits {
+                grid-template-columns: 1fr;
+            }
+
+            .price-comparison {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="flyer">
+        <div class="header">
+            <h1>📸 Photography Agent Program</h1>
+            <p>Lock in discounted pricing for 12 months</p>
+        </div>
+
+        <div class="content">
+            <div class="value-prop">
+                <h2>💡 Why Join?</h2>
+                <p><strong>Exclusive agent pricing</strong> — access discounted rates that regular customers don't get</p>
+                <p><strong>Locked for a full year</strong> — no price increases during your registration period</p>
+                <p><strong>Up to 16% savings</strong> — bundle pricing with deeper discounts on our most popular packages</p>
+            </div>
+
+            <div class="benefits">
+                <div class="benefit-card">
+                    <div class="icon">🎯</div>
+                    <h3>Direct Access</h3>
+                    <p>Communicate directly with our MSS team for priority bookings</p>
+                </div>
+                <div class="benefit-card">
+                    <div class="icon">📅</div>
+                    <h3>12-Month Lock</h3>
+                    <p>Guaranteed pricing protection with no surprise increases</p>
+                </div>
+                <div class="benefit-card">
+                    <div class="icon">🚀</div>
+                    <h3>Flexible Packages</h3>
+                    <p>Choose from starter to full production — all at agent rates</p>
+                </div>
+                <div class="benefit-card">
+                    <div class="icon">✨</div>
+                    <h3>Premium Quality</h3>
+                    <p>Same professional photography service your clients expect</p>
+                </div>
+            </div>
+
+            <div class="pricing-section">
+                <h3>What You'll Save</h3>
+                <div class="price-comparison">
+                    <div class="price-column">
+                        <h4>Regular Pricing</h4>
+                        <div class="amount">$189–$915</div>
+                        <p style="font-size: 0.85rem; color: #666; margin-top: 0.5rem;">Per booking</p>
+                    </div>
+                    <div class="price-column locked">
+                        <h4>🎁 Agent Program</h4>
+                        <div class="amount">LOCKED</div>
+                        <p style="font-size: 0.85rem; color: #667eea; margin-top: 0.5rem;">For 12 months</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cta-section">
+                <h2>Ready to Lock In Your Discount?</h2>
+                <p>Registration takes 2 minutes. You'll receive your unique agent code instantly.</p>
+                <a href="https://modernspacestyling.com.au/photography-agent-program.html" class="cta-button">Register Now</a>
+                <div class="qr-section">
+                    <p>Or visit: modernspacestyling.com.au/photography-agent-program</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="contact-footer">
+            <h4>Questions?</h4>
+            <p>📧 modernspacestyling@gmail.com</p>
+            <p>📞 0415 580 791</p>
+        </div>
+    </div>
+</body>
+</html>
