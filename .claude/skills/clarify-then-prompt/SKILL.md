@@ -1,6 +1,6 @@
 ---
 name: clarify-then-prompt
-description: MANDATORY first step for EVERY command, task, bug report, or feature request the user gives, before touching any file or tool. The user often types quickly, on a phone, with typos and mixed English/Malay words (e.g. "atas" = top/above, "bawah" = bottom/below, "kiri" = left, "kanan" = right, "tengah" = centre). Restate what you understood, ask every clarifying question needed to remove ambiguity, wait for answers, then rewrite the request as a top-1% professional prompt (goal, context, exact scope, acceptance criteria, constraints) and confirm it before executing. Use this even for tasks that look obvious.
+description: MANDATORY first step for EVERY command, task, bug report, or feature request the user gives, before touching any file or tool. The user is a professional S&P 500 trader who types quickly, often from a phone, with typos. Product names may look like ordinary words (e.g. "ATAS" = the ATAS order flow trading platform, atas.net, NOT a layout word). Restate what you understood, ask every clarifying question needed to remove ambiguity, wait for answers, then rewrite the request as a top-1% professional prompt (goal, context, exact scope, acceptance criteria, constraints) and confirm it before executing. Use this even for tasks that look obvious.
 ---
 
 # Clarify, then prompt, then build
@@ -9,11 +9,10 @@ The user wants no guessing. Every task goes through three gates before any code,
 
 ## Gate 1: Understand and ask
 
-1. Read the request slowly. Expand typos and non-English words. Common ones:
-   - atas = top / above, bawah = bottom / below
-   - kiri = left, kanan = right, tengah = centre / middle
-   - besar = big, kecil = small, salah = wrong, betul = correct
-   - "on my phone" = the issue must be checked on a mobile viewport too
+1. Read the request slowly. Expand typos, and check whether a word is a product name before treating it as plain English. Known ones:
+   - ATAS = the ATAS order flow / footprint trading platform (atas.net), Windows-only. The user bought it and trades the S&P 500 with it.
+   - "on my phone" = the user is reading this chat on a phone; keep questions short and answerable with a letter.
+   - If a word is unfamiliar in context, ask "do you mean X the product, or X meaning Y?" instead of guessing.
 2. Write back, in one or two plain sentences, what you think they want.
 3. Ask clarifying questions. Ask as many as needed, but make each one cheap to answer: offer options or yes/no where possible, so the user can reply from a phone. Always cover:
    - **Where**: which page, screen, file, or URL. Name the candidates you found in the repo so they can just pick one.
