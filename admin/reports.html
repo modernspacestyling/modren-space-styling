@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="../css/admin.css">
     <style>
         .report-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.25rem}
+        #reportGrid{margin-bottom:1.25rem}
+        #reportGrid .report-card{margin-bottom:0}
         .report-card h3{font-size:1rem;margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem}
         .report-row{display:flex;justify-content:space-between;padding:0.6rem 0;border-bottom:1px solid var(--border);font-size:0.9rem}
         .report-row:last-child{border-bottom:none}
@@ -19,12 +21,33 @@
         .report-row .value.profit{color:var(--accent)}
         .bar-chart{display:flex;flex-direction:column;gap:0.5rem;margin-top:0.75rem}
         .bar-row{display:flex;align-items:center;gap:0.75rem;font-size:0.82rem}
-        .bar-label{width:120px;text-align:right;color:var(--text-muted);flex-shrink:0}
+        .bar-label{width:3.5rem;text-align:left;color:var(--text-muted);flex-shrink:0}
         .bar-track{flex:1;height:24px;background:var(--bg);border-radius:4px;overflow:hidden;position:relative}
         .bar-fill{height:100%;border-radius:4px;transition:width 0.5s ease}
         .bar-fill.income{background:var(--success)}
         .bar-fill.expense{background:var(--danger)}
-        .bar-amount{width:100px;text-align:right;font-weight:600;font-size:0.82rem}
+        .bar-amount{width:auto;min-width:100px;text-align:right;font-weight:600;font-size:0.82rem;flex-shrink:0}
+        .bar-legend{display:flex;flex-wrap:wrap;gap:1.5rem;margin-top:0.75rem;font-size:0.78rem;color:var(--text-muted)}
+        .bar-legend span{display:flex;align-items:center;gap:4px}
+        .bar-legend i{width:12px;height:12px;border-radius:2px;display:inline-block}
+        /* Phone layout: keep headings on one line and give the bars the room they need */
+        @media (max-width:860px){
+            .topbar{gap:0.75rem;padding:0 1rem}
+            .topbar-title{white-space:nowrap;font-size:0.95rem;min-width:0;overflow:hidden;text-overflow:ellipsis}
+            .topbar-right{flex:0 0 auto;gap:0.6rem}
+            .topbar-right #reportPeriod{width:auto !important;max-width:140px;font-size:0.85rem}
+            .main-content{padding:1rem}
+        }
+        @media (max-width:600px){
+            .topbar-user #userName{display:none}
+            #reportGrid{grid-template-columns:1fr !important}
+            .report-card{padding:1.1rem}
+            .report-card h3{flex-wrap:wrap;gap:0.25rem 0.5rem;margin-bottom:0.75rem}
+            .report-card h3 span{font-weight:500;color:var(--text-muted)}
+            .bar-row{gap:0.5rem}
+            .bar-label{width:2.75rem}
+            .bar-amount{min-width:5.25rem}
+        }
     </style>
 </head>
 
@@ -329,12 +352,12 @@
             });
 
             const legend = document.createElement('div');
-            legend.style.cssText = 'display:flex;gap:1.5rem;margin-top:0.75rem;font-size:0.78rem;color:var(--text-muted)';
-            const legInc = document.createElement('span'); legInc.textContent = 'Income'; legInc.style.cssText = 'display:flex;align-items:center;gap:4px';
-            const dotInc = document.createElement('span'); dotInc.style.cssText = 'width:12px;height:12px;background:var(--success);border-radius:2px;display:inline-block';
+            legend.className = 'bar-legend';
+            const legInc = document.createElement('span'); legInc.textContent = 'Income';
+            const dotInc = document.createElement('i'); dotInc.style.background = 'var(--success)';
             legInc.prepend(dotInc);
-            const legExp = document.createElement('span'); legExp.textContent = 'Expenses'; legExp.style.cssText = 'display:flex;align-items:center;gap:4px';
-            const dotExp = document.createElement('span'); dotExp.style.cssText = 'width:12px;height:12px;background:var(--danger);border-radius:2px;display:inline-block';
+            const legExp = document.createElement('span'); legExp.textContent = 'Expenses';
+            const dotExp = document.createElement('i'); dotExp.style.background = 'var(--danger)';
             legExp.prepend(dotExp);
             legend.append(legInc, legExp);
 
