@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hashtag Research | MSS Admin</title>
+    <link rel="stylesheet" href="../css/admin.css">
+    <style>
+        .ht-block { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 0.85rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; line-height: 1.6; word-break: break-word; white-space: pre-wrap; }
+        .ht-row { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; }
+        .ht-row h4 { margin: 0; font-size: 0.85rem; }
+        .ht-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+        .ht-chip { display: inline-flex; align-items: center; gap: 0.3rem; padding: 3px 9px; border-radius: 999px; font-size: 0.72rem; font-weight: 600; background: var(--accent-lt); color: var(--accent); cursor: pointer; border: 1px solid transparent; }
+        .ht-chip.selected { background: var(--accent); color: #fff; }
+        .ht-chip small { font-weight: 400; opacity: 0.75; }
+        .ht-meta { font-size: 0.75rem; color: var(--muted, #6b7280); margin-top: 0.4rem; }
+        .ht-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+        .ht-table th, .ht-table td { padding: 0.4rem 0.5rem; border-bottom: 1px solid var(--border); text-align: left; }
+        .ht-table th { font-weight: 600; color: var(--muted, #6b7280); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; }
+        .ht-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+        .ht-warn { background: #FEF3C7; color: #92400E; border-radius: 6px; padding: 0.6rem 0.8rem; font-size: 0.78rem; margin-top: 0.6rem; }
+        .ht-src { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 0.65rem; background: #EEF2FF; color: #3730A3; margin-right: 2px; }
+        .ht-src.instagram { background: #FCE7F3; color: #9D174D; }
+        .ht-src.tiktok { background: #111827; color: #fff; }
+        .ht-src.trends { background: #DCFCE7; color: #166534; }
+        .ht-src.youtube { background: #FEE2E2; color: #991B1B; }
+        .ht-src.curated { background: #F3F4F6; color: #374151; }
+        .ht-src.autocomplete { background: #FEF9C3; color: #854D0E; }
+        @media (max-width: 900px) { .grid-2a { grid-template-columns: 1fr; } }
+    </style>
+</head>
+
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <div class="sidebar-logo-name">Modern Space Styling</div>
+                <div class="sidebar-logo-sub">Admin Panel</div>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Main</div>
+                <a class="sidebar-link" href="dashboard.html"><span class="sidebar-icon">📊</span> Dashboard</a>
+                <a class="sidebar-link" href="bookings.html"><span class="sidebar-icon">📋</span> Bookings</a>
+                <a class="sidebar-link" href="photo-bookings.html"><span class="sidebar-icon">📸</span> Photo Bookings</a>
+                <a class="sidebar-link" href="inventory.html"><span class="sidebar-icon">📦</span> Inventory</a>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Finance</div>
+                <a class="sidebar-link" href="invoices.html"><span class="sidebar-icon">🧾</span> Invoices</a>
+                <a class="sidebar-link" href="expenses.html"><span class="sidebar-icon">💸</span> Expenses</a>
+                <a class="sidebar-link" href="reports.html"><span class="sidebar-icon">📈</span> Reports</a>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Management</div>
+                <a class="sidebar-link" href="pricing.html"><span class="sidebar-icon">💰</span> Pricing</a>
+                <a class="sidebar-link" href="sms.html"><span class="sidebar-icon">💬</span> SMS Centre</a>
+                <a class="sidebar-link active" href="hashtags.html"><span class="sidebar-icon">#️⃣</span> Hashtag Research</a>
+                <a class="sidebar-link" href="team.html"><span class="sidebar-icon">👥</span> Team Contacts</a>
+                <a class="sidebar-link" href="agents.html"><span class="sidebar-icon">🏢</span> Agents</a>
+                <a class="sidebar-link" href="admins.html"><span class="sidebar-icon">🛡</span> Admins</a>
+                <a class="sidebar-link" href="logs.html"><span class="sidebar-icon">📝</span> Activity Log</a>
+            </div>
+            <div class="sidebar-footer">
+                <a class="sidebar-link" href="/mobile/" style="padding:0"><span class="sidebar-icon">📱</span> Back to App</a>
+                <a class="sidebar-link" href="#" onclick="Auth.logout()"
+                    style="padding:0;margin-top:0.5rem;color:#F87171"><span class="sidebar-icon">🚪</span> Logout</a>
+            </div>
+        </aside>
+        <header class="topbar">
+            <div class="topbar-title">Hashtag Research</div>
+            <div class="topbar-right">
+                <div class="topbar-user">
+                    <div class="user-avatar" id="userAvatar">A</div><span id="userName">Admin</span>
+                </div>
+            </div>
+        </header>
+        <main class="main-content">
+            <div class="grid-2a">
+                <div>
+                    <div class="panel">
+                        <div class="panel-header">
+                            <span class="panel-title">🎯 Pick a niche</span>
+                            <span id="srcStatus" class="ht-meta"></span>
+                        </div>
+                        <div class="panel-body">
+                            <div class="ht-chips" id="nicheChips"></div>
+                            <div style="display:flex;gap:0.5rem;align-items:center;margin-top:0.9rem;flex-wrap:wrap">
+                                <select class="f-control" id="geo" style="width:120px">
+                                    <option value="AU" selected>🇦🇺 AU</option>
+                                    <option value="US">🇺🇸 US</option>
+                                    <option value="GB">🇬🇧 UK</option>
+                                    <option value="AE">🇦🇪 UAE</option>
+                                    <option value="IN">🇮🇳 IN</option>
+                                </select>
+                                <label class="ht-meta" style="display:flex;gap:0.3rem;align-items:center;margin:0">
+                                    <input type="checkbox" id="offline"> curated only (no API credits)
+                                </label>
+                                <button class="ab ab-accent" id="runBtn" onclick="run()">Run research</button>
+                            </div>
+                            <div class="ht-meta" id="runStatus"></div>
+                        </div>
+                    </div>
+
+                    <div class="panel" style="margin-top:1.25rem" id="setsPanel" hidden>
+                        <div class="panel-header"><span class="panel-title" id="setsTitle">Copy-paste sets</span></div>
+                        <div class="panel-body">
+                            <div class="ht-row"><h4>📸 Instagram / Reels — 30 tags</h4><button class="ab ab-outline" onclick="copyText('igBlock')">Copy</button></div>
+                            <div class="ht-block" id="igBlock"></div>
+                            <div class="ht-row" style="margin-top:1rem"><h4>🎵 TikTok — 5–8 tags</h4><button class="ab ab-outline" onclick="copyText('ttBlock')">Copy</button></div>
+                            <div class="ht-block" id="ttBlock"></div>
+                            <div id="risingWrap" hidden>
+                                <div class="ht-row" style="margin-top:1rem"><h4>🔥 Rising on Google Trends</h4></div>
+                                <div class="ht-chips" id="risingChips"></div>
+                            </div>
+                            <div id="errWrap"></div>
+                            <div class="ht-meta" id="setsMeta"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="panel">
+                        <div class="panel-header"><span class="panel-title">📊 Top tags by score</span></div>
+                        <div class="panel-body" style="max-height:80vh;overflow:auto" id="tableWrap">
+                            <div class="empty-state"><div class="icon">#️⃣</div><p>Run research to see scored tags</p></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="supabase.min.js"></script>
+    <script src="auth-supabase.js"></script>
+    <script src="../js/app.js"></script>
+    <script>
+        let selected = 'gwagon';
+        let niches = [];
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await seedDatabase();
+            if (!Auth.requireAdmin()) return;
+            const u = Auth.current();
+            document.getElementById('userName').textContent = u.name;
+            document.getElementById('userAvatar').textContent = u.name.charAt(0);
+            await loadNiches();
+        });
+
+        async function getToken() {
+            try {
+                const c = await MSSAuth.client();
+                const { data } = await c.auth.getSession();
+                if (data && data.session) return data.session.access_token;
+            } catch (_) { }
+            try {
+                const parsed = JSON.parse(localStorage.getItem('mss_sb_auth') || 'null');
+                return parsed && (parsed.access_token || (parsed.currentSession && parsed.currentSession.access_token)) || null;
+            } catch (_) { return null; }
+        }
+
+        async function api(params) {
+            const token = await getToken();
+            if (!token) throw new Error('Not signed in — please sign in again.');
+            const res = await fetch('/api/hashtag-research?' + new URLSearchParams(params), { headers: { Authorization: 'Bearer ' + token } });
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(json.error || ('HTTP ' + res.status));
+            return json;
+        }
+
+        async function loadNiches() {
+            try {
+                const j = await api({ list: 1 });
+                niches = j.niches;
+                document.getElementById('srcStatus').textContent =
+                    (j.serpapi ? '✅ SerpAPI' : '⚠️ SerpAPI key missing') + ' · ' + (j.apify ? '✅ Apify' : '⚠️ Apify token missing');
+            } catch (e) {
+                document.getElementById('srcStatus').textContent = '⚠️ ' + e.message;
+                niches = [
+                    { key: 'gwagon', label: 'Mercedes G-Wagon' }, { key: 'lamborghini', label: 'Lamborghini' },
+                    { key: 'defender', label: 'Land Rover Defender' }, { key: 'rangerover', label: 'Range Rover Autobiography' },
+                    { key: 'mustang', label: 'Ford Mustang' }, { key: 'businessclass', label: 'Business Class Travel' },
+                    { key: 'luxurylifestyle', label: 'Luxury Lifestyle' },
+                ];
+            }
+            renderChips();
+        }
+
+        function renderChips() {
+            document.getElementById('nicheChips').innerHTML = niches.map(n =>
+                `<span class="ht-chip ${n.key === selected ? 'selected' : ''}" onclick="selectNiche('${n.key}')">${n.label}</span>`).join('');
+        }
+        function selectNiche(k) { selected = k; renderChips(); }
+
+        function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+        async function run() {
+            const btn = document.getElementById('runBtn');
+            const status = document.getElementById('runStatus');
+            btn.disabled = true; btn.textContent = 'Researching…';
+            const offline = document.getElementById('offline').checked;
+            status.textContent = offline ? 'Building curated set…' : 'Calling SerpAPI + Apify — this can take 1–2 minutes…';
+            try {
+                const j = await api({ niche: selected, geo: document.getElementById('geo').value, offline: offline ? 1 : 0 });
+                render(j.report);
+                status.textContent = 'Done · ' + new Date(j.report.generatedAt).toLocaleString('en-AU');
+                toast('Hashtags ready', 'success');
+            } catch (e) {
+                status.textContent = '';
+                toast(e.message, 'error');
+            } finally {
+                btn.disabled = false; btn.textContent = 'Run research';
+            }
+        }
+
+        function render(r) {
+            const setsPanel = document.getElementById('setsPanel');
+            setsPanel.hidden = false;
+            document.getElementById('setsTitle').textContent = '📋 ' + r.label;
+            document.getElementById('igBlock').textContent = r.instagram.map(t => '#' + t).join(' ');
+            document.getElementById('ttBlock').textContent = r.tiktok.map(t => '#' + t).join(' ');
+            const rw = document.getElementById('risingWrap');
+            if (r.rising && r.rising.length) {
+                rw.hidden = false;
+                document.getElementById('risingChips').innerHTML = r.rising.map(x => `<span class="ht-chip">#${esc(x.tag)} <small>+${x.rising}%</small></span>`).join('');
+            } else rw.hidden = true;
+            document.getElementById('errWrap').innerHTML = (r.errors || []).map(e => `<div class="ht-warn">⚠️ ${esc(e)}</div>`).join('');
+            document.getElementById('setsMeta').textContent = `Sources: ${r.sourcesUsed.join(', ')} · ${r.totalEvidence} evidence rows` +
+                (r.meta && r.meta.instagram != null ? ` · ${r.meta.instagram} IG posts` : '') + (r.meta && r.meta.tiktok != null ? ` · ${r.meta.tiktok} TikToks` : '');
+
+            document.getElementById('tableWrap').innerHTML = `
+                <table class="ht-table">
+                    <thead><tr><th>#</th><th>Tag</th><th class="num">Score</th><th>Sources</th><th class="num">Seen</th><th class="num">Med. eng.</th><th class="num">Med. views</th></tr></thead>
+                    <tbody>${r.top.slice(0, 50).map((x, i) => `
+                        <tr>
+                            <td>${i + 1}</td>
+                            <td><b>#${esc(x.tag)}</b></td>
+                            <td class="num">${x.score}</td>
+                            <td>${x.sources.map(s => `<span class="ht-src ${s}">${s}</span>`).join('')}</td>
+                            <td class="num">${x.occurrences}</td>
+                            <td class="num">${x.medianEngagement ? x.medianEngagement.toLocaleString() : ''}</td>
+                            <td class="num">${x.medianViews ? x.medianViews.toLocaleString() : ''}</td>
+                        </tr>`).join('')}
+                    </tbody>
+                </table>`;
+        }
+
+        async function copyText(id) {
+            const txt = document.getElementById(id).textContent;
+            try { await navigator.clipboard.writeText(txt); toast('Copied to clipboard', 'success'); }
+            catch (_) { toast('Copy failed — select the text manually', 'error'); }
+        }
+    </script>
+</body>
+
+</html>
