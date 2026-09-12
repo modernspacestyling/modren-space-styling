@@ -5,6 +5,11 @@
       "schedule": "0 12 * * *"
     }
   ],
+  "functions": {
+    "api/hashtag-research.js": {
+      "maxDuration": 60
+    }
+  },
   "headers": [
     {
       "source": "/(.*)",
