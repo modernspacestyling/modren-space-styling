@@ -1,0 +1,404 @@
+//@version=5
+// ============================================================================
+//  SNIPE SETUP MARKER  v3  (TR2 / TC)  — Gold XAUUSD, 3m/5m/15m
+// ----------------------------------------------------------------------------
+//  Two-tier market structure (swing = external, internal = minor):
+//   TR2 sell:  swing HIGH swept (wick through, close back under)
+//              -> internal CHoCH (close under last internal low while internal bias bullish)
+//              -> internal BOS with displacement  (= consolidation break)
+//              -> zone = bearish order block of that BOS: the highest normal-range
+//                 candle between the broken internal low and the break bar
+//              -> fib: consolidation high (1.0) -> running low (0.0), zone must be
+//                 at / beyond 0.764 and the ultimate target >= 2R away
+//              -> entry: after the touch, a close back under the zone (reaction),
+//                 SL beyond the reaction wick, cap 28 pips.  Or limit at the edge.
+//   TC sell:   swing bias bearish + internal BOS (not CHoCH) -> same zone logic
+//   Bias filter: sells only in the premium half of the trailing swing range,
+//                buys only in the discount half.
+// ============================================================================
+indicator("Snipe Setup Marker v3 (TR2/TC)", "SNIPE", overlay = true, max_boxes_count = 250, max_lines_count = 500, max_labels_count = 500)
+
+// ---------------------------------------------------------------- inputs ----
+gS = "Structure"
+swingLen   = input.int(50, "Swing structure length (external)", minval = 10, group = gS)
+intLen     = input.int(5,  "Internal structure length", minval = 2, group = gS)
+strictSweep  = input.bool(true, "Sweep must close back inside the swing level", group = gS)
+sweepMaxBars = input.int(60, "Max bars: sweep -> internal CHoCH", minval = 3, group = gS)
+chochMaxBars = input.int(60, "Max bars: CHoCH -> consolidation break (BOS)", minval = 3, group = gS)
+dispMult   = input.float(1.2, "Break body >= x * avg body(10)", step = 0.1, group = gS)
+useTR2     = input.bool(true, "Mark TR2 (reversal) setups", group = gS)
+useTC      = input.bool(true, "Mark TC (continuation) setups", group = gS)
+
+gF = "Fibonacci / bias"
+fibLvl      = input.float(0.764, "Fib gate", step = 0.001, group = gF)
+fibLvl2     = input.float(0.705, "Second fib line (display)", step = 0.001, group = gF)
+minTargetRR = input.float(2.0, "Min reward to ultimate target (R)", step = 0.5, group = gF)
+biasFilter  = input.bool(true, "Sell only in premium / buy only in discount of the swing range", group = gF)
+trendFilter = input.bool(true, "Trade only with the higher-timeframe structure", group = gF)
+trendTF     = input.timeframe("60", "Trend timeframe", group = gF)
+trendLen    = input.int(10, "Trend swing length (bars of trend TF)", minval = 3, group = gF)
+showFib     = input.bool(true, "Draw fib band", group = gF)
+
+gZ = "Zone / risk"
+zoneMode   = input.string("Body", "Zone edge", options = ["Body", "Wick"], group = gZ)
+entryMode  = input.string("Reaction", "Entry", options = ["Reaction", "Limit"], tooltip = "Reaction: after the touch wait for a close back inside/beyond the zone, enter at that close, SL beyond the reaction wick. Limit: pending order at the zone edge.", group = gZ)
+reactMaxBars = input.int(6, "Reaction: max bars after touch", minval = 1, group = gZ)
+maxSLpips  = input.float(28, "Max SL (pips)", minval = 5, group = gZ)
+slBufPips  = input.float(3,  "SL buffer beyond wick (pips)", minval = 0, group = gZ)
+zoneLife   = input.int(100, "Zone expiry (bars)", minval = 10, group = gZ)
+cancelOnFlip = input.bool(true, "Cancel untested zone when structure flips against it", group = gZ)
+volMult    = input.float(2.0, "Ignore candles with range >= x * ATR(200) as zone candidates", step = 0.5, group = gZ)
+
+gT = "Session (UTC)"
+sessStart = input.int(7,  "Entry window start (UTC h)", minval = 0, maxval = 23, group = gT)
+sessEnd   = input.int(15, "Entry window end (UTC h)",   minval = 1, maxval = 24, group = gT)
+skipFriPM = input.bool(true, "Skip Friday from 13:00 UTC", group = gT)
+minScore  = input.int(5, "Min score to mark", minval = 4, maxval = 9, group = gT)
+
+gV = "Visual"
+colSup  = input.color(color.new(#ff5252, 72), "Supply",  group = gV)
+colDem  = input.color(color.new(#00e676, 72), "Demand",  group = gV)
+colFib  = input.color(color.new(#ffd54f, 85), "Fib band", group = gV)
+cleanMode  = input.bool(true,  "Clean chart (only armed zones + entry/SL/TP)", group = gV)
+showDebug  = input.bool(false, "Debug: structure labels, sweeps, bias midline", group = gV)
+showBoxes  = input.bool(false, "Show consolidation boxes", group = gV)
+showStruct = input.string("Both", "Show CHoCH / BOS", options = ["Both", "Swing only", "Internal only", "Off"], group = gV)
+colBull    = input.color(#089981, "Bullish structure", group = gV)
+colBearS   = input.color(#f23645, "Bearish structure", group = gV)
+
+pip = 0.10
+
+// ------------------------------------------------------------- helpers ----
+f_hh(int n) =>
+    float v = -1e9, int off = 0
+    for i = 0 to math.max(n - 1, 0)
+        if high[i] > v
+            v := high[i], off := i
+    [v, off]
+f_ll(int n) =>
+    float v = 1e9, int off = 0
+    for i = 0 to math.max(n - 1, 0)
+        if low[i] < v
+            v := low[i], off := i
+    [v, off]
+atr200 = ta.atr(200)
+// extreme "normal" candle (range < volMult*ATR) over the last n bars -> order block candidate
+f_obHigh(int n) =>
+    float v = -1e9, int off = na
+    for i = 1 to math.max(n, 1)
+        if (high[i] - low[i]) < volMult * nz(atr200[i], 1e9) and high[i] > v
+            v := high[i], off := i
+    [v, off]
+f_obLow(int n) =>
+    float v = 1e9, int off = na
+    for i = 1 to math.max(n, 1)
+        if (high[i] - low[i]) < volMult * nz(atr200[i], 1e9) and low[i] < v
+            v := low[i], off := i
+    [v, off]
+
+// ------------------------------------------------------------ sessions ----
+hUTC = hour(time, "UTC")
+dUTC = dayofweek(time, "UTC")
+inWindow = hUTC >= sessStart and hUTC < sessEnd and not (skipFriPM and dUTC == dayofweek.friday and hUTC >= 13)
+hiVol    = hUTC == 7 or (hUTC >= 12 and hUTC < 14)
+var float asiaH = na, var float asiaL = na, var float ldnH = na, var float ldnL = na
+var float pdH = na,  var float pdL = na,   var float dayH = na, var float dayL = na
+if ta.change(dayofmonth(time, "UTC")) != 0
+    pdH := dayH, pdL := dayL, dayH := high, dayL := low
+    asiaH := na, asiaL := na, ldnH := na, ldnL := na
+else
+    dayH := math.max(nz(dayH, high), high), dayL := math.min(nz(dayL, low), low)
+if hUTC < 7
+    asiaH := math.max(nz(asiaH, high), high), asiaL := math.min(nz(asiaL, low), low)
+if hUTC >= 7 and hUTC < 12
+    ldnH := math.max(nz(ldnH, high), high), ldnL := math.min(nz(ldnL, low), low)
+f_sessLevel(float lvl, bool isHigh) =>
+    tol = 2 * pip
+    isHigh ? (math.abs(lvl - nz(asiaH, -1e9)) <= tol or math.abs(lvl - nz(ldnH, -1e9)) <= tol or math.abs(lvl - nz(pdH, -1e9)) <= tol)
+           : (math.abs(lvl - nz(asiaL, -1e9)) <= tol or math.abs(lvl - nz(ldnL, -1e9)) <= tol or math.abs(lvl - nz(pdL, -1e9)) <= tol)
+
+// ------------------------------------------------ higher-timeframe trend ----
+// swing-structure bias (+1 after a bullish break of the last swing high, -1 after a bearish break of the last swing low)
+f_swingBias(int len) =>
+    var float sh = na, var bool shx = false, var float sl = na, var bool slx = false, var int b = 0, var int leg = 0
+    prevLeg = leg
+    if high[len] > ta.highest(high, len)
+        leg := -1
+    else if low[len] < ta.lowest(low, len)
+        leg := 1
+    if leg == -1 and prevLeg != -1
+        sh := high[len], shx := false
+    if leg == 1 and prevLeg != 1
+        sl := low[len], slx := false
+    if not na(sh) and not shx and close > sh
+        shx := true, b := 1
+    if not na(sl) and not slx and close < sl
+        slx := true, b := -1
+    b
+htfBias = request.security(syminfo.tickerid, trendTF, f_swingBias(trendLen)[1], lookahead = barmerge.lookahead_off)
+f_trendOK(bool bearish) => not trendFilter or (bearish ? htfBias == -1 : htfBias == 1)
+
+// ------------------------------------------------ swing detection (leg state) ----
+// The leg turns bearish when bar[size] is higher than the following `size` bars, bullish when lower.
+// A pivot is registered ONCE, on the bar the leg turns (LuxAlgo-style), so a swing never slides.
+f_leg(int size) =>
+    var int leg = 0
+    if high[size] > ta.highest(high, size)
+        leg := -1
+    else if low[size] < ta.lowest(low, size)
+        leg := 1
+    leg
+
+// ---- swing tier
+var float sHigh = na, var int sHighBar = na, var bool sHighX = false
+var float sLow  = na, var int sLowBar  = na, var bool sLowX  = false
+var int   sBias = 0
+var float trailTop = na, var float trailBot = na
+sLeg = f_leg(swingLen)
+if sLeg == -1 and sLeg[1] != -1
+    sHigh := high[swingLen], sHighBar := bar_index - swingLen, sHighX := false
+    trailTop := sHigh
+if sLeg == 1 and sLeg[1] != 1
+    sLow := low[swingLen], sLowBar := bar_index - swingLen, sLowX := false
+    trailBot := sLow
+trailTop := math.max(nz(trailTop, high), high)
+trailBot := math.min(nz(trailBot, low), low)
+biasMid = (trailTop + trailBot) / 2
+sBullBreak = not na(sHigh) and not sHighX and close > sHigh
+sBearBreak = not na(sLow)  and not sLowX  and close < sLow
+sBullCHoCH = sBullBreak and sBias == -1
+sBearCHoCH = sBearBreak and sBias == 1
+f_drawStruct(bool bullish, bool isChoch, float lvl, int fromBar, bool internal) =>
+    col = bullish ? colBull : colBearS
+    line.new(fromBar, lvl, bar_index, lvl, color = col, style = internal ? line.style_dashed : line.style_solid, width = internal ? 1 : 2)
+    label.new(math.round((fromBar + bar_index) / 2), lvl, isChoch ? "CHoCH" : "BOS", style = bullish ? label.style_label_down : label.style_label_up, color = color(na), textcolor = col, size = internal ? size.tiny : size.small)
+showSw = showStruct == "Both" or showStruct == "Swing only"
+showIn = showStruct == "Both" or showStruct == "Internal only"
+if sBullBreak
+    if showSw
+        f_drawStruct(true, sBullCHoCH, sHigh, sHighBar, false)
+    sHighX := true, sBias := 1
+if sBearBreak
+    if showSw
+        f_drawStruct(false, sBearCHoCH, sLow, sLowBar, false)
+    sLowX := true, sBias := -1
+// sweep of the swing level: wick through, close back inside (no structure break)
+sweepHi = not na(sHigh) and not sHighX and high > sHigh and (not strictSweep or close < sHigh) and not sBullBreak
+sweepLo = not na(sLow)  and not sLowX  and low  < sLow  and (not strictSweep or close > sLow)  and not sBearBreak
+var int sweepHiBar = na, var float sweepHiPx = na, var bool sweepHiSess = false
+var int sweepLoBar = na, var float sweepLoPx = na, var bool sweepLoSess = false
+if sweepHi
+    sweepHiBar := bar_index, sweepHiPx := high, sweepHiSess := f_sessLevel(sHigh, true)
+if sweepLo
+    sweepLoBar := bar_index, sweepLoPx := low, sweepLoSess := f_sessLevel(sLow, false)
+
+// ---- internal tier
+var float iHigh = na, var int iHighBar = na, var bool iHighX = false
+var float iLow  = na, var int iLowBar  = na, var bool iLowX  = false
+var int   iBias = 0
+iLeg = f_leg(intLen)
+if iLeg == -1 and iLeg[1] != -1
+    iHigh := high[intLen], iHighBar := bar_index - intLen, iHighX := false
+if iLeg == 1 and iLeg[1] != 1
+    iLow := low[intLen], iLowBar := bar_index - intLen, iLowX := false
+iBullBreak = not na(iHigh) and not iHighX and close > iHigh
+iBearBreak = not na(iLow)  and not iLowX  and close < iLow
+iBullCHoCH = iBullBreak and iBias == -1
+iBearCHoCH = iBearBreak and iBias == 1
+iBullBOS   = iBullBreak and iBias == 1
+iBearBOS   = iBearBreak and iBias == -1
+int brokenLowBar  = iBearBreak ? iLowBar  : na     // remember before flags update
+int brokenHighBar = iBullBreak ? iHighBar : na
+if iBullBreak
+    if showIn
+        f_drawStruct(true, iBullCHoCH, iHigh, iHighBar, true)
+    iHighX := true, iBias := 1
+if iBearBreak
+    if showIn
+        f_drawStruct(false, iBearCHoCH, iLow, iLowBar, true)
+    iLowX := true, iBias := -1
+
+var int chochBearBar = na, var bool chochBearSess = false
+var int chochBullBar = na, var bool chochBullSess = false
+if iBearCHoCH
+    chochBearBar := (not na(sweepHiBar) and bar_index - sweepHiBar <= sweepMaxBars) ? bar_index : na
+    chochBearSess := sweepHiSess
+if iBullCHoCH
+    chochBullBar := (not na(sweepLoBar) and bar_index - sweepLoBar <= sweepMaxBars) ? bar_index : na
+    chochBullSess := sweepLoSess
+
+// consolidation break with displacement
+body = math.abs(close - open)
+avgBody = ta.sma(body, 10)
+disp = body >= dispMult * avgBody
+tr2Bear = useTR2 and iBearBOS and disp and not na(chochBearBar) and bar_index - chochBearBar <= chochMaxBars
+tr2Bull = useTR2 and iBullBOS and disp and not na(chochBullBar) and bar_index - chochBullBar <= chochMaxBars
+tcBear  = useTC and iBearBOS and disp and sBias == -1 and not tr2Bear
+tcBull  = useTC and iBullBOS and disp and sBias == 1  and not tr2Bull
+
+// ------------------------------------------------------- active setup ----
+var bool  act = false, var bool aBear = false, var string aModel = ""
+var float aZT = na, var float aZB = na, var float aWT = na, var float aWB = na, var int aZbar = na
+var float aEntry = na, var float aSL = na, var float aTP1 = na, var float aExt = na, var float aAnchor = na
+var int   aScore = 0, var int aBorn = na, var bool aArmed = false, var bool aTouched = false
+var bool  aWaitReact = false, var int aTouchBar = na, var float aReactExt = na
+var box   zBox = na, var box fBox = na, var box bxBox = na
+var line  lnE = na, var line lnS = na, var line lnT1 = na, var line lnT2 = na
+var label lbl = na
+
+f_clearAll() =>
+    if not na(zBox)
+        box.delete(zBox)
+    if not na(fBox)
+        box.delete(fBox)
+    if not na(bxBox)
+        box.delete(bxBox)
+    if not na(lnE)
+        line.delete(lnE), line.delete(lnS), line.delete(lnT1), line.delete(lnT2)
+    if not na(lbl)
+        label.delete(lbl)
+
+newBear = tr2Bear or tcBear
+newBull = (tr2Bull or tcBull) and not newBear
+if newBear or newBull
+    bearish = newBear
+    model   = (bearish ? tr2Bear : tr2Bull) ? "TR2" : "TC"
+    sessLiq = bearish ? (tr2Bear and chochBearSess) : (tr2Bull and chochBullSess)
+    // consolidation = bars between the broken internal swing and this bar
+    lookN = math.max(nz(bearish ? bar_index - brokenLowBar : bar_index - brokenHighBar, 1), 1)
+    [obHiPx, obHiOff] = f_obHigh(lookN)
+    [obLoPx, obLoOff] = f_obLow(lookN)
+    int obOff = bearish ? obHiOff : obLoOff
+    [cH, _c1] = f_hh(lookN + 1)
+    [cL, _c2] = f_ll(lookN + 1)
+    ok = not na(obOff)
+    float zt = na, float zb = na, float wt = na, float wb = na, int zbar = na
+    float entry = na, float sl = na, float tp1 = na, int score = 0, bool fvg = false
+    if ok
+        zt := math.max(open[obOff], close[obOff]), zb := math.min(open[obOff], close[obOff])
+        wt := high[obOff], wb := low[obOff], zbar := bar_index - obOff
+        entry := bearish ? (zoneMode == "Body" ? zb : wb) : (zoneMode == "Body" ? zt : wt)
+        sl    := bearish ? wt + slBufPips * pip : wb - slBufPips * pip
+        slPips = math.abs(sl - entry) / pip
+        biasOK = (not biasFilter or (bearish ? entry >= biasMid : entry <= biasMid)) and f_trendOK(bearish)
+        fvg := obOff >= 2 ? (bearish ? high[obOff - 2] < low[obOff] : low[obOff - 2] > high[obOff]) : false
+        ok := slPips <= maxSLpips and biasOK
+        if ok
+            risk = math.abs(sl - entry)
+            tp1 := bearish ? entry - 2 * risk : entry + 2 * risk
+            score := 4 + (fvg ? 1 : 0) + (sessLiq ? 1 : 0) + (hiVol[obOff] ? 1 : 0) + (model == "TR2" ? 1 : 0) + (slPips <= 20 ? 1 : 0)
+            ok := score >= minScore
+    if ok
+        f_clearAll()
+        act := true, aBear := bearish, aModel := model
+        aZT := zt, aZB := zb, aWT := wt, aWB := wb, aZbar := zbar
+        aEntry := entry, aSL := sl, aTP1 := tp1
+        aAnchor := bearish ? cH : cL
+        aExt := bearish ? low : high
+        aScore := score, aBorn := bar_index, aArmed := false, aTouched := false, aWaitReact := false
+        zBox := na, fBox := na, bxBox := na, lnE := na, lnS := na, lnT1 := na, lnT2 := na, lbl := na
+        if showBoxes
+            bxBox := box.new(bar_index - lookN, cH, bar_index, cL, border_color = color.gray, bgcolor = color.new(color.gray, 88), text = "consolidation", text_size = size.tiny, text_color = color.new(color.white, 40))
+        if not cleanMode
+            zBox := box.new(zbar, zoneMode == "Body" ? zt : wt, bar_index + 5, zoneMode == "Body" ? zb : wb, border_color = color.gray, bgcolor = color.new(color.gray, 85))
+            lnE  := line.new(bar_index, entry, bar_index + 5, entry, color = color.white, style = line.style_dotted)
+            lnS  := line.new(bar_index, sl, bar_index + 5, sl, color = color.red, style = line.style_dashed)
+            lnT1 := line.new(bar_index, tp1, bar_index + 5, tp1, color = color.lime, style = line.style_dashed)
+            lnT2 := line.new(bar_index, aExt, bar_index + 5, aExt, color = color.aqua, style = line.style_dotted)
+            if showFib
+                fBox := box.new(bar_index, entry, bar_index + 5, entry, border_color = color.new(colFib, 0), bgcolor = colFib)
+            lbl  := label.new(bar_index, bearish ? wt : wb, (bearish ? "SELL " : "BUY ") + model + " " + str.tostring(score) + "/9  waiting fib", style = bearish ? label.style_label_down : label.style_label_up, color = color.new(color.gray, 30), textcolor = color.white, size = size.small)
+
+// ------------------------------------------- arm (fib gate) & touch ----
+if act and not aTouched and bar_index > aBorn
+    aExt := aBear ? math.min(aExt, low) : math.max(aExt, high)
+    rngF = math.abs(aAnchor - aExt)
+    gate  = aBear ? aExt + fibLvl  * rngF : aExt - fibLvl  * rngF
+    gate2 = aBear ? aExt + fibLvl2 * rngF : aExt - fibLvl2 * rngF
+    wasArmed = aArmed
+    rewardOK = math.abs(aExt - aEntry) >= minTargetRR * math.abs(aSL - aEntry)
+    aArmed := rewardOK and (aBear ? aEntry >= gate - pip : aEntry <= gate + pip)
+    if cleanMode and aArmed and not wasArmed and na(zBox)
+        zBox := box.new(aZbar, zoneMode == "Body" ? aZT : aWT, bar_index + 5, zoneMode == "Body" ? aZB : aWB, border_color = aBear ? color.new(colSup, 0) : color.new(colDem, 0), bgcolor = aBear ? colSup : colDem)
+        lnE  := line.new(bar_index, aEntry, bar_index + 5, aEntry, color = color.white, style = line.style_dotted)
+        lnS  := line.new(bar_index, aSL, bar_index + 5, aSL, color = color.red, style = line.style_dashed)
+        lnT1 := line.new(bar_index, aTP1, bar_index + 5, aTP1, color = color.lime, style = line.style_dashed)
+        lnT2 := line.new(bar_index, aExt, bar_index + 5, aExt, color = color.aqua, style = line.style_dotted)
+        lbl  := label.new(bar_index, aBear ? aWT : aWB, (aBear ? "SELL " : "BUY ") + aModel + " " + str.tostring(aScore) + "/9  SL " + str.tostring(math.abs(aSL - aEntry) / pip, "#") + "p", style = aBear ? label.style_label_down : label.style_label_up, color = aBear ? color.new(#ff1744, 20) : color.new(#00c853, 20), textcolor = color.white, size = size.small)
+    if not na(fBox) and showFib
+        box.set_top(fBox, math.max(gate, gate2)), box.set_bottom(fBox, math.min(gate, gate2))
+    if not na(lnT2)
+        line.set_y1(lnT2, aExt), line.set_y2(lnT2, aExt)
+    if not cleanMode and not na(zBox)
+        box.set_border_color(zBox, aArmed ? (aBear ? color.new(colSup, 0) : color.new(colDem, 0)) : color.gray)
+        box.set_bgcolor(zBox, aArmed ? (aBear ? colSup : colDem) : color.new(color.gray, 85))
+        label.set_text(lbl, (aBear ? "SELL " : "BUY ") + aModel + " " + str.tostring(aScore) + "/9  " + (aArmed ? "ARMED" : "waiting fib"))
+        label.set_color(lbl, aArmed ? (aBear ? color.new(#ff1744, 20) : color.new(#00c853, 20)) : color.new(color.gray, 30))
+
+touch = act and not aTouched and bar_index > aBorn and (aBear ? high >= aEntry : low <= aEntry)
+if touch
+    aTouched := true
+    if aArmed and inWindow
+        if entryMode == "Limit"
+            label.new(bar_index, aBear ? high : low, (aBear ? "▼ SELL " : "▲ BUY ") + str.tostring(aEntry, "#.##") + "\nSL " + str.tostring(aSL, "#.##") + "  TP " + str.tostring(aExt, "#.##"), style = aBear ? label.style_label_down : label.style_label_up, color = aBear ? #ff1744 : #00c853, textcolor = color.white, size = size.normal)
+            alert((aBear ? "SNIPE SELL " : "SNIPE BUY ") + aModel + " score " + str.tostring(aScore) + " entry " + str.tostring(aEntry, "#.##") + " SL " + str.tostring(aSL, "#.##") + " TP " + str.tostring(aExt, "#.##"), alert.freq_once_per_bar)
+        else
+            aWaitReact := true, aTouchBar := bar_index, aReactExt := aBear ? high : low
+    else if showDebug
+        label.new(bar_index, aBear ? high : low, aArmed ? "touch outside session" : "touch before fib gate", style = label.style_label_left, color = color.new(color.gray, 40), textcolor = color.white, size = size.tiny)
+
+// reaction entry
+if act and aWaitReact and bar_index > aTouchBar
+    aReactExt := aBear ? math.max(aReactExt, high) : math.min(aReactExt, low)
+    reacted = aBear ? (close < aZB and close < open) : (close > aZT and close > open)
+    failed  = aBear ? close > aWT : close < aWB
+    if reacted
+        rEntry = close
+        rSL = aBear ? aReactExt + slBufPips * pip : aReactExt - slBufPips * pip
+        rPips = math.abs(rSL - rEntry) / pip
+        rewardOK2 = math.abs(aExt - rEntry) >= minTargetRR * math.abs(rSL - rEntry)
+        if rPips <= maxSLpips and rewardOK2
+            aEntry := rEntry, aSL := rSL, aTP1 := aBear ? rEntry - 2 * (rSL - rEntry) : rEntry + 2 * (rEntry - rSL)
+            if not na(lnE)
+                line.set_y1(lnE, aEntry), line.set_y2(lnE, aEntry), line.set_y1(lnS, aSL), line.set_y2(lnS, aSL), line.set_y1(lnT1, aTP1), line.set_y2(lnT1, aTP1)
+            label.new(bar_index, aBear ? high : low, (aBear ? "▼ SELL " : "▲ BUY ") + str.tostring(aEntry, "#.##") + "\nSL " + str.tostring(aSL, "#.##") + " (" + str.tostring(rPips, "#") + "p)  TP " + str.tostring(aExt, "#.##"), style = aBear ? label.style_label_down : label.style_label_up, color = aBear ? #ff1744 : #00c853, textcolor = color.white, size = size.normal)
+            alert((aBear ? "SNIPE SELL " : "SNIPE BUY ") + aModel + " reaction, score " + str.tostring(aScore) + " entry " + str.tostring(aEntry, "#.##") + " SL " + str.tostring(aSL, "#.##") + " TP " + str.tostring(aExt, "#.##"), alert.freq_once_per_bar)
+        else if showDebug
+            label.new(bar_index, aBear ? high : low, "reaction rejected: SL " + str.tostring(rPips, "#") + "p / reward", style = label.style_label_left, color = color.new(color.gray, 40), textcolor = color.white, size = size.tiny)
+        aWaitReact := false
+    else if failed or bar_index - aTouchBar > reactMaxBars
+        aWaitReact := false
+        if showDebug
+            label.new(bar_index, aBear ? high : low, failed ? "no reaction: closed through zone" : "no reaction in time", style = label.style_label_left, color = color.new(color.gray, 40), textcolor = color.white, size = size.tiny)
+
+// invalidation / expiry / structure flip against an untested zone
+flipAgainst = cancelOnFlip and not aTouched and (aBear ? (iBullCHoCH or sBullBreak) : (iBearCHoCH or sBearBreak))
+if act and ((((aBear and close > aSL) or (not aBear and close < aSL)) and not aWaitReact) or bar_index - aBorn > zoneLife or flipAgainst)
+    if not na(zBox)
+        box.set_right(zBox, bar_index), box.set_border_color(zBox, color.gray)
+        if aTouched
+            box.set_bgcolor(zBox, color.new(color.gray, 90))
+    if not na(fBox)
+        box.set_right(fBox, bar_index)
+    act := false, aWaitReact := false, zBox := na, fBox := na, lnE := na, lnS := na, lnT1 := na, lnT2 := na, lbl := na
+if act and not na(zBox)
+    box.set_right(zBox, bar_index + 5)
+    if not na(fBox)
+        box.set_right(fBox, bar_index + 5)
+    line.set_x2(lnE, bar_index + 5), line.set_x2(lnS, bar_index + 5), line.set_x2(lnT1, bar_index + 5), line.set_x2(lnT2, bar_index + 5)
+
+// ------------------------------------------------------------- plots ----
+plotshape(showDebug and sweepHi, "Swing high swept", shape.xcross, location.abovebar, color.orange, size = size.small)
+plotshape(showDebug and sweepLo, "Swing low swept",  shape.xcross, location.belowbar, color.orange, size = size.small)
+plot(showDebug ? sHigh : na, "Swing high", color = color.new(#ff5252, 30), style = plot.style_linebr, linewidth = 2)
+plot(showDebug ? sLow : na,  "Swing low",  color = color.new(#00e676, 30), style = plot.style_linebr, linewidth = 2)
+plot(showDebug and biasFilter ? biasMid : na, "Swing range 50%", color = color.new(color.orange, 30), style = plot.style_linebr)
+bgcolor(showDebug and inWindow ? color.new(color.blue, 96) : na, title = "Entry window")
+bgcolor(showDebug and trendFilter ? (htfBias == 1 ? color.new(color.green, 94) : htfBias == -1 ? color.new(color.red, 94) : na) : na, title = "HTF trend")
+
+plot(act ? (aBear ? -1 : 1) : na, "ActiveDir",   display = display.data_window)
+plot(act ? aEntry : na,            "ActiveEntry", display = display.data_window)
+plot(act ? aSL : na,               "ActiveSL",    display = display.data_window)
+plot(act ? aExt : na,              "ActiveTP",    display = display.data_window)
+plot(act ? aScore : na,            "ActiveScore", display = display.data_window)
+plot(act and aArmed ? 1 : 0,       "Armed",       display = display.data_window)
