@@ -66,10 +66,13 @@ def _atr(h, l, c, n):
 def swing_bias(df: pd.DataFrame, length: int) -> np.ndarray:
     """+1 / -1 / 0 per bar: bias after the last swing break (one-sided pivot confirmation)."""
     h = df["high"].to_numpy(float); l = df["low"].to_numpy(float); c = df["close"].to_numpy(float); N = len(df)
-    out = np.zeros(N, int); sh = sl = np.nan; shx = slx = False; b = 0
+    out = np.zeros(N, int); sh = sl = np.nan; shx = slx = False; b = 0; leg = 0
     for i in range(length, N):
-        if h[i - length] > h[i - length + 1:i + 1].max(): sh, shx = h[i - length], False
-        if l[i - length] < l[i - length + 1:i + 1].min(): sl, slx = l[i - length], False
+        prev = leg
+        if h[i - length] > h[i - length + 1:i + 1].max(): leg = -1
+        elif l[i - length] < l[i - length + 1:i + 1].min(): leg = 1
+        if leg == -1 and prev != -1: sh, shx = h[i - length], False
+        if leg == 1 and prev != 1: sl, slx = l[i - length], False
         if not np.isnan(sh) and not shx and c[i] > sh: shx = True; b = 1
         if not np.isnan(sl) and not slx and c[i] < sl: slx = True; b = -1
         out[i] = b
@@ -121,16 +124,17 @@ def detect(df: pd.DataFrame, p: Params = Params(), htf_bias: Optional[np.ndarray
     iHigh = iLow = np.nan; iHighBar = iLowBar = -1; iHighX = iLowX = False; iBias = 0
     choch_bear_bar = choch_bull_bar = -1; choch_bear_sess = choch_bull_sess = False
     act: Optional[Setup] = None; react_state = (0, 0.0)
+    sLeg = iLeg = 0
 
     for i in range(p.swing_len + 1, N):
         # ---- swing tier
-        sb = i - p.swing_len
-        if h[sb] > roll_hi_S[i - 1] if i - 1 >= 0 else False:
-            pass
-        # one-sided confirmation: bar[i-size] higher than the following size bars (i-size+1 .. i)
-        if h[i - p.swing_len] > h[i - p.swing_len + 1:i + 1].max():
+        # leg state: pivot registered once, when the leg turns (never slides)
+        prevS = sLeg
+        if h[i - p.swing_len] > h[i - p.swing_len + 1:i + 1].max(): sLeg = -1
+        elif l[i - p.swing_len] < l[i - p.swing_len + 1:i + 1].min(): sLeg = 1
+        if sLeg == -1 and prevS != -1:
             sHigh, sHighBar, sHighX = h[i - p.swing_len], i - p.swing_len, False; trailTop = sHigh
-        if l[i - p.swing_len] < l[i - p.swing_len + 1:i + 1].min():
+        if sLeg == 1 and prevS != 1:
             sLow, sLowBar, sLowX = l[i - p.swing_len], i - p.swing_len, False; trailBot = sLow
         trailTop = h[i] if np.isnan(trailTop) else max(trailTop, h[i]); trailBot = l[i] if np.isnan(trailBot) else min(trailBot, l[i])
         bias_mid = (trailTop + trailBot) / 2
@@ -143,10 +147,11 @@ def detect(df: pd.DataFrame, p: Params = Params(), htf_bias: Optional[np.ndarray
         if sweepHi: sweep_hi_bar, sweep_hi_sess = i, sess_level(i, sHigh, True)
         if sweepLo: sweep_lo_bar, sweep_lo_sess = i, sess_level(i, sLow, False)
         # ---- internal tier
-        if i - p.int_len >= 0 and h[i - p.int_len] > h[i - p.int_len + 1:i + 1].max():
-            iHigh, iHighBar, iHighX = h[i - p.int_len], i - p.int_len, False
-        if i - p.int_len >= 0 and l[i - p.int_len] < l[i - p.int_len + 1:i + 1].min():
-            iLow, iLowBar, iLowX = l[i - p.int_len], i - p.int_len, False
+        prevI = iLeg
+        if h[i - p.int_len] > h[i - p.int_len + 1:i + 1].max(): iLeg = -1
+        elif l[i - p.int_len] < l[i - p.int_len + 1:i + 1].min(): iLeg = 1
+        if iLeg == -1 and prevI != -1: iHigh, iHighBar, iHighX = h[i - p.int_len], i - p.int_len, False
+        if iLeg == 1 and prevI != 1: iLow, iLowBar, iLowX = l[i - p.int_len], i - p.int_len, False
         iBullBreak = (not np.isnan(iHigh)) and (not iHighX) and c[i] > iHigh
         iBearBreak = (not np.isnan(iLow)) and (not iLowX) and c[i] < iLow
         iBullCHoCH = iBullBreak and iBias == -1; iBearCHoCH = iBearBreak and iBias == 1

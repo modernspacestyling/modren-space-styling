@@ -120,10 +120,15 @@ f_sessLevel(float lvl, bool isHigh) =>
 // ------------------------------------------------ higher-timeframe trend ----
 // swing-structure bias (+1 after a bullish break of the last swing high, -1 after a bearish break of the last swing low)
 f_swingBias(int len) =>
-    var float sh = na, var bool shx = false, var float sl = na, var bool slx = false, var int b = 0
+    var float sh = na, var bool shx = false, var float sl = na, var bool slx = false, var int b = 0, var int leg = 0
+    prevLeg = leg
     if high[len] > ta.highest(high, len)
+        leg := -1
+    else if low[len] < ta.lowest(low, len)
+        leg := 1
+    if leg == -1 and prevLeg != -1
         sh := high[len], shx := false
-    if low[len] < ta.lowest(low, len)
+    if leg == 1 and prevLeg != 1
         sl := low[len], slx := false
     if not na(sh) and not shx and close > sh
         shx := true, b := 1
@@ -133,20 +138,27 @@ f_swingBias(int len) =>
 htfBias = request.security(syminfo.tickerid, trendTF, f_swingBias(trendLen)[1], lookahead = barmerge.lookahead_off)
 f_trendOK(bool bearish) => not trendFilter or (bearish ? htfBias == -1 : htfBias == 1)
 
-// ------------------------------------------------ swing detection (one-sided) ----
-// a pivot at bar[size] is confirmed when the following `size` bars did not exceed it
-f_newHigh(int size) => high[size] > ta.highest(high, size)
-f_newLow(int size)  => low[size]  < ta.lowest(low, size)
+// ------------------------------------------------ swing detection (leg state) ----
+// The leg turns bearish when bar[size] is higher than the following `size` bars, bullish when lower.
+// A pivot is registered ONCE, on the bar the leg turns (LuxAlgo-style), so a swing never slides.
+f_leg(int size) =>
+    var int leg = 0
+    if high[size] > ta.highest(high, size)
+        leg := -1
+    else if low[size] < ta.lowest(low, size)
+        leg := 1
+    leg
 
 // ---- swing tier
 var float sHigh = na, var int sHighBar = na, var bool sHighX = false
 var float sLow  = na, var int sLowBar  = na, var bool sLowX  = false
 var int   sBias = 0
 var float trailTop = na, var float trailBot = na
-if f_newHigh(swingLen)
+sLeg = f_leg(swingLen)
+if sLeg == -1 and sLeg[1] != -1
     sHigh := high[swingLen], sHighBar := bar_index - swingLen, sHighX := false
     trailTop := sHigh
-if f_newLow(swingLen)
+if sLeg == 1 and sLeg[1] != 1
     sLow := low[swingLen], sLowBar := bar_index - swingLen, sLowX := false
     trailBot := sLow
 trailTop := math.max(nz(trailTop, high), high)
@@ -184,9 +196,10 @@ if sweepLo
 var float iHigh = na, var int iHighBar = na, var bool iHighX = false
 var float iLow  = na, var int iLowBar  = na, var bool iLowX  = false
 var int   iBias = 0
-if f_newHigh(intLen)
+iLeg = f_leg(intLen)
+if iLeg == -1 and iLeg[1] != -1
     iHigh := high[intLen], iHighBar := bar_index - intLen, iHighX := false
-if f_newLow(intLen)
+if iLeg == 1 and iLeg[1] != 1
     iLow := low[intLen], iLowBar := bar_index - intLen, iLowX := false
 iBullBreak = not na(iHigh) and not iHighX and close > iHigh
 iBearBreak = not na(iLow)  and not iLowX  and close < iLow

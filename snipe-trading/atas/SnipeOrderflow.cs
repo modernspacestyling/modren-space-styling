@@ -79,7 +79,7 @@ namespace SnipeTrading
 
         // --------------------------------------------------------- state ----
         private decimal? _sHigh, _sLow, _iHigh, _iLow; private int _sHighBar, _sLowBar, _iHighBar, _iLowBar; private bool _sHighX, _sLowX, _iHighX, _iLowX;
-        private int _sBias, _iBias; private decimal? _trailTop, _trailBot;
+        private int _sBias, _iBias, _sLeg, _iLeg, _hLeg; private decimal? _trailTop, _trailBot;
         private int _sweepHiBar = -1, _sweepLoBar = -1; private bool _sweepHiSess, _sweepLoSess;
         // higher-timeframe aggregation for the trend filter
         private readonly List<decimal[]> _htf = new(); private long _htfBucket = -1; private decimal[] _htfCur;
@@ -107,7 +107,7 @@ namespace SnipeTrading
 
         protected override void OnRecalculate()
         {
-            _sHigh = _sLow = _iHigh = _iLow = null; _sHighX = _sLowX = _iHighX = _iLowX = false; _sBias = _iBias = 0; _trailTop = _trailBot = null;
+            _sHigh = _sLow = _iHigh = _iLow = null; _sHighX = _sLowX = _iHighX = _iLowX = false; _sBias = _iBias = _sLeg = _iLeg = _hLeg = 0; _trailTop = _trailBot = null;
             _sweepHiBar = _sweepLoBar = _chochBearBar = _chochBullBar = -1; _act = null; _lastDay = -1;
             _htf.Clear(); _htfBucket = -1; _htfCur = null; _hSH = _hSL = null; _hSHX = _hSLX = false; _htfBias = 0;
             Rectangles.Clear(); Labels.Clear();
@@ -220,8 +220,9 @@ namespace SnipeTrading
             else { _htfCur[1] = Math.Max(_htfCur[1], c.High); _htfCur[2] = Math.Min(_htfCur[2], c.Low); _htfCur[3] = c.Close; }
 
             // ---- swing tier (one-sided confirmation)
-            if (NewHigh(bar, SwingLen)) { _sHigh = GetCandle(bar - SwingLen).High; _sHighBar = bar - SwingLen; _sHighX = false; _trailTop = _sHigh; }
-            if (NewLow(bar, SwingLen)) { _sLow = GetCandle(bar - SwingLen).Low; _sLowBar = bar - SwingLen; _sLowX = false; _trailBot = _sLow; }
+            int prevS = _sLeg; if (NewHigh(bar, SwingLen)) _sLeg = -1; else if (NewLow(bar, SwingLen)) _sLeg = 1;
+            if (_sLeg == -1 && prevS != -1) { _sHigh = GetCandle(bar - SwingLen).High; _sHighBar = bar - SwingLen; _sHighX = false; _trailTop = _sHigh; }
+            if (_sLeg == 1 && prevS != 1) { _sLow = GetCandle(bar - SwingLen).Low; _sLowBar = bar - SwingLen; _sLowX = false; _trailBot = _sLow; }
             _trailTop = _trailTop == null ? c.High : Math.Max(_trailTop.Value, c.High); _trailBot = _trailBot == null ? c.Low : Math.Min(_trailBot.Value, c.Low);
             decimal biasMid = (_trailTop.Value + _trailBot.Value) / 2;
             bool sBullBreak = _sHigh != null && !_sHighX && c.Close > _sHigh, sBearBreak = _sLow != null && !_sLowX && c.Close < _sLow;
@@ -231,8 +232,9 @@ namespace SnipeTrading
             if (_sHigh != null && !_sHighX && c.High > _sHigh && (!StrictSweep || c.Close < _sHigh)) { _sweepHiBar = bar; _sweepHiSess = Near(_sHigh.Value, _asiaH, tol) || Near(_sHigh.Value, _ldnH, tol) || Near(_sHigh.Value, _pdH, tol); }
             if (_sLow != null && !_sLowX && c.Low < _sLow && (!StrictSweep || c.Close > _sLow)) { _sweepLoBar = bar; _sweepLoSess = Near(_sLow.Value, _asiaL, tol) || Near(_sLow.Value, _ldnL, tol) || Near(_sLow.Value, _pdL, tol); }
             // ---- internal tier
-            if (NewHigh(bar, IntLen)) { _iHigh = GetCandle(bar - IntLen).High; _iHighBar = bar - IntLen; _iHighX = false; }
-            if (NewLow(bar, IntLen)) { _iLow = GetCandle(bar - IntLen).Low; _iLowBar = bar - IntLen; _iLowX = false; }
+            int prevI = _iLeg; if (NewHigh(bar, IntLen)) _iLeg = -1; else if (NewLow(bar, IntLen)) _iLeg = 1;
+            if (_iLeg == -1 && prevI != -1) { _iHigh = GetCandle(bar - IntLen).High; _iHighBar = bar - IntLen; _iHighX = false; }
+            if (_iLeg == 1 && prevI != 1) { _iLow = GetCandle(bar - IntLen).Low; _iLowBar = bar - IntLen; _iLowX = false; }
             bool iBullBreak = _iHigh != null && !_iHighX && c.Close > _iHigh, iBearBreak = _iLow != null && !_iLowX && c.Close < _iLow;
             bool iBullCHoCH = iBullBreak && _iBias == -1, iBearCHoCH = iBearBreak && _iBias == 1, iBullBOS = iBullBreak && _iBias == 1, iBearBOS = iBearBreak && _iBias == -1;
             int brokenLowBar = iBearBreak ? _iLowBar : -1, brokenHighBar = iBullBreak ? _iHighBar : -1;
@@ -305,8 +307,9 @@ namespace SnipeTrading
             int i = n - 1; var piv = _htf[i - L];
             bool newHigh = true, newLow = true;
             for (int k = i - L + 1; k <= i; k++) { if (_htf[k][1] >= piv[1]) newHigh = false; if (_htf[k][2] <= piv[2]) newLow = false; }
-            if (newHigh) { _hSH = piv[1]; _hSHX = false; }
-            if (newLow) { _hSL = piv[2]; _hSLX = false; }
+            int prev = _hLeg; if (newHigh) _hLeg = -1; else if (newLow) _hLeg = 1;
+            if (_hLeg == -1 && prev != -1) { _hSH = piv[1]; _hSHX = false; }
+            if (_hLeg == 1 && prev != 1) { _hSL = piv[2]; _hSLX = false; }
             decimal close = _htf[i][3];
             if (_hSH != null && !_hSHX && close > _hSH) { _hSHX = true; _htfBias = 1; }
             if (_hSL != null && !_hSLX && close < _hSL) { _hSLX = true; _htfBias = -1; }
