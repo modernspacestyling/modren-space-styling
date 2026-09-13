@@ -25,7 +25,7 @@ gS = "Structure"
 pivLen       = input.int(5,  "Swing length (bars each side)", minval = 2, group = gS)
 sweepMaxBars = input.int(40, "Max bars: sweep -> CHOCH",        minval = 3, group = gS)
 strictSweep  = input.bool(true, "Sweep must close back inside the level", group = gS)
-chochMaxBars = input.int(60, "Max bars: CHOCH -> box break",   minval = 3, group = gS)
+extLookback  = input.int(60, "Swept level must be the extreme of the last N bars", minval = 10, group = gS)
 useTR2       = input.bool(true, "Mark TR2 (reversal) setups",  group = gS)
 useTC        = input.bool(true, "Mark TC (continuation) setups", group = gS)
 
@@ -38,8 +38,8 @@ dispMult = input.float(1.3, "Breakout body >= x * avg body(10)", step = 0.1, gro
 gF = "Fibonacci"
 fibLvl  = input.float(0.764, "Fib gate", step = 0.001, group = gF)
 minTargetRR = input.float(2.0, "Min reward to ultimate target (R)", step = 0.5, group = gF)
-htfFilter   = input.bool(true, "Bigger picture: buy only in discount / sell only in premium of the major leg", group = gF)
-htfMult     = input.int(4, "Major swing length = x * swing length", minval = 2, group = gF)
+htfFilter   = input.bool(true, "Bigger picture: buy only in lower half / sell only in upper half of recent range", group = gF)
+htfLookback = input.int(240, "Recent range lookback (bars)", minval = 20, group = gF)
 fibLvl2 = input.float(0.705, "Second fib line (display)", step = 0.001, group = gF)
 showFib = input.bool(true, "Draw fib band", group = gF)
 
@@ -79,17 +79,12 @@ if not na(ph)
 if not na(pl)
     prevSL := lastSL, lastSL := pl, lastSLb := bar_index - pivLen
 
-// major swings for the bigger-picture premium/discount filter
-mph = ta.pivothigh(high, pivLen * htfMult, pivLen * htfMult)
-mpl = ta.pivotlow(low,  pivLen * htfMult, pivLen * htfMult)
-var float majorHigh = na, var float majorLow = na
-if not na(mph)
-    majorHigh := mph
-if not na(mpl)
-    majorLow := mpl
-majorMid = (nz(majorHigh, high) + nz(majorLow, low)) / 2
+// bigger-picture premium / discount: rolling range of the last htfLookback bars
+majorHigh = ta.highest(high, htfLookback)
+majorLow  = ta.lowest(low, htfLookback)
+majorMid  = (majorHigh + majorLow) / 2
 f_htfOK(bool bearish, float price) =>
-    not htfFilter or na(majorHigh) or na(majorLow) or (bearish ? price >= majorMid : price <= majorMid)
+    not htfFilter or (bearish ? price >= majorMid : price <= majorMid)
 
 // ------------------------------------------------------------- sessions ----
 hUTC = hour(time, "UTC")
@@ -181,9 +176,12 @@ var int sweepHiBar = na, var float sweepHiPx = na, var bool sweepHiSess = false
 var int sweepLoBar = na, var float sweepLoPx = na, var bool sweepLoSess = false
 extHigh = nz(structHigh, lastSH)
 extLow  = nz(structLow,  lastSL)
-if not na(extHigh) and high > extHigh and (not strictSweep or close < extHigh)
+// the swept level must be the extreme of the recent window (real external liquidity, not a bounce top)
+[lbHigh, _o1] = f_hh(extLookback)
+[lbLow,  _o2] = f_ll(extLookback)
+if not na(extHigh) and high > extHigh and (not strictSweep or close < extHigh) and extHigh >= lbHigh[1] - 1 * pip
     sweepHiBar := bar_index, sweepHiPx := high, sweepHiSess := f_sessLevel(extHigh, true)
-if not na(extLow) and low < extLow and (not strictSweep or close > extLow)
+if not na(extLow) and low < extLow and (not strictSweep or close > extLow) and extLow <= lbLow[1] + 1 * pip
     sweepLoBar := bar_index, sweepLoPx := low, sweepLoSess := f_sessLevel(extLow, false)
 
 var int   chochBearBar = na, var int chochBullBar = na
@@ -197,24 +195,44 @@ upTrend   = trend == 1
 downTrend = trend == -1
 
 // -------------------------------------------------- consolidation box ----
+// The box is the range that forms AFTER the structure event (CHOCH for TR2, BOS for TC):
+// bars [eventBar+1 .. bar-1], at least boxMin bars, height <= boxMult * ATR measured at the event bar.
 atr = ta.atr(14)
 avgBody = ta.sma(math.abs(close - open), 10)
-// Largest n in [boxMin, boxMax] such that range(high/low over bars 1..n) <= boxMult*ATR
-f_box() =>
+f_boxSince(int eventBar) =>
+    // largest window of bars [bar-n .. bar-1], starting after eventBar, with height <= boxMult * ATR at the event
     float bh = na, float bl = na, int n = 0
-    float rh = -1e9, float rl = 1e9
-    for i = 1 to boxMax
-        rh := math.max(rh, high[i]), rl := math.min(rl, low[i])
-        if rh - rl <= boxMult * atr
-            if i >= boxMin
-                bh := rh, bl := rl, n := i
-        else
-            break
+    if not na(eventBar)
+        maxN = math.min(boxMax, bar_index - eventBar - 1)
+        atrRef = atr[bar_index - eventBar]
+        float rh = -1e9, float rl = 1e9
+        if maxN >= boxMin
+            for i = 1 to maxN
+                rh := math.max(rh, high[i]), rl := math.min(rl, low[i])
+                if rh - rl <= boxMult * atrRef
+                    if i >= boxMin
+                        bh := rh, bl := rl, n := i
+                else
+                    break
     [bh, bl, n]
-[bxH, bxL, bxN] = f_box()
+// candidate event bars: for a bearish setup the last bearish CHOCH (TR2) or bearish BOS (TC); mirror for bullish
+var int lastBearEvent = na, var int lastBullEvent = na, var string lastBearKind = "", var string lastBullKind = ""
+if bearCHOCH
+    lastBearEvent := bar_index, lastBearKind := "TR2"
+if bosDn
+    lastBearEvent := bar_index, lastBearKind := "TC"
+if bullCHOCH
+    lastBullEvent := bar_index, lastBullKind := "TR2"
+if bosUp
+    lastBullEvent := bar_index, lastBullKind := "TC"
+[bxHd, bxLd, bxNd] = f_boxSince(lastBearEvent)
+[bxHu, bxLu, bxNu] = f_boxSince(lastBullEvent)
 body = math.abs(close - open)
-breakDn = not na(bxH) and close < bxL and body >= dispMult * avgBody and close < open
-breakUp = not na(bxH) and close > bxH and body >= dispMult * avgBody and close > open
+breakDn = bxNd > 0 and close < bxLd and body >= dispMult * avgBody and close < open
+breakUp = bxNu > 0 and close > bxHu and body >= dispMult * avgBody and close > open
+bxH = breakDn ? bxHd : bxHu
+bxL = breakDn ? bxLd : bxLu
+bxN = breakDn ? bxNd : bxNu
 
 // ---------------------------------------------------------- zone pick ----
 // returns [zoneTop, zoneBot, wickTop, wickBot, barIdx, hasFVG]
@@ -272,10 +290,10 @@ f_eval(bool bearish, string model, bool sessLiq) =>
     [ok and score >= minScore, zt, zb, wt, wb, zbar, entry, sl, tp1, score]
 
 // --------------------------------------------------------- triggers ----
-tr2Bear = useTR2 and breakDn and not na(chochBearBar) and bar_index - chochBearBar <= chochMaxBars and chochBearBar < bar_index
-tr2Bull = useTR2 and breakUp and not na(chochBullBar) and bar_index - chochBullBar <= chochMaxBars and chochBullBar < bar_index
-tcBear  = useTC and breakDn and downTrend and not tr2Bear
-tcBull  = useTC and breakUp and upTrend   and not tr2Bull
+tr2Bear = useTR2 and breakDn and lastBearKind == "TR2" and not na(chochBearBar) and chochBearBar == lastBearEvent
+tr2Bull = useTR2 and breakUp and lastBullKind == "TR2" and not na(chochBullBar) and chochBullBar == lastBullEvent
+tcBear  = useTC and breakDn and lastBearKind == "TC" and downTrend
+tcBull  = useTC and breakUp and lastBullKind == "TC" and upTrend
 
 newBear = tr2Bear or tcBear
 newBull = (tr2Bull or tcBull) and not newBear
@@ -371,7 +389,7 @@ plotshape(showDebug and bosDn, "Bear BOS", shape.labeldown, location.abovebar, c
 plotshape(showDebug and bosUp, "Bull BOS", shape.labelup,   location.belowbar, color.new(#00e676, 70), text = "BOS", textcolor = color.white, size = size.tiny)
 plot(showDebug ? protLow : na,  "Protected low",  color = color.new(#00e676, 40), style = plot.style_linebr, linewidth = 1)
 plot(showDebug ? protHigh : na, "Protected high", color = color.new(#ff5252, 40), style = plot.style_linebr, linewidth = 1)
-plot(showDebug and htfFilter ? majorMid : na, "Major leg 50%", color = color.new(color.orange, 30), style = plot.style_linebr, linewidth = 1)
+plot(showDebug and htfFilter ? majorMid : na, "Recent range 50%", color = color.new(color.orange, 30), style = plot.style_linebr, linewidth = 1)
 plotshape(showDebug and not na(sweepHiBar) and sweepHiBar == bar_index, "Sweep High", shape.xcross, location.abovebar, color.orange, size = size.tiny)
 plotshape(showDebug and not na(sweepLoBar) and sweepLoBar == bar_index, "Sweep Low",  shape.xcross, location.belowbar, color.orange, size = size.tiny)
 plotshape(showDebug and breakDn, "Box break down", shape.arrowdown, location.abovebar, color.new(color.fuchsia, 30), size = size.tiny)

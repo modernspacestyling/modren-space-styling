@@ -19,7 +19,6 @@ import pandas as pd
 class Params:
     piv_len: int = 5
     sweep_max_bars: int = 40
-    choch_max_bars: int = 60
     use_tr2: bool = True
     use_tc: bool = True
     box_min: int = 6
@@ -42,7 +41,8 @@ class Params:
     strict_sweep: bool = True
     min_target_rr: float = 2.0
     htf_filter: bool = True
-    htf_mult: int = 4
+    htf_lookback: int = 240
+    ext_lookback: int = 60
 
 @dataclass
 class Setup:
@@ -98,8 +98,8 @@ def detect(df: pd.DataFrame, p: Params = Params()) -> List[Setup]:
     atr = _atr(h, l, c, 14)
     body = np.abs(c - o); avg_body = pd.Series(body).rolling(10).mean().to_numpy()
     ph, pl = _pivots(h, l, p.piv_len)
-    mph, mpl = _pivots(h, l, p.piv_len * p.htf_mult)
-    major_high = major_low = np.nan
+    roll_hi = pd.Series(h).rolling(p.htf_lookback, min_periods=1).max().to_numpy(); roll_lo = pd.Series(l).rolling(p.htf_lookback, min_periods=1).min().to_numpy()
+    ext_hi = pd.Series(h).rolling(p.ext_lookback, min_periods=1).max().shift(1).to_numpy(); ext_lo = pd.Series(l).rolling(p.ext_lookback, min_periods=1).min().shift(1).to_numpy()
     hours = t.hour.to_numpy(); dows = t.dayofweek.to_numpy(); days = t.normalize()
     in_window = (hours >= p.sess_start) & (hours < p.sess_end)
     if p.skip_fri_pm: in_window &= ~((dows == 4) & (hours >= 13))
@@ -129,13 +129,11 @@ def detect(df: pd.DataFrame, p: Params = Params()) -> List[Setup]:
     sweep_lo_bar = -1; sweep_lo_px = np.nan; sweep_lo_sess = False
     choch_bear_bar = -1; choch_bull_bar = -1; choch_bear_sess = False; choch_bull_sess = False
     act: Optional[Setup] = None
+    last_bear_event = last_bull_event = -1; last_bear_kind = last_bull_kind = ''
     trend = 0; prot_low = prot_high = 0.0; prot_low_bar = prot_high_bar = 0; struct_high = struct_low = None; struct_high_bar = struct_low_bar = 0
 
     for i in range(p.piv_len * 2 + 20, N):
         pb = i - p.piv_len
-        mb = i - p.piv_len * p.htf_mult
-        if mb >= 0 and not np.isnan(mph[mb]): major_high = mph[mb]
-        if mb >= 0 and not np.isnan(mpl[mb]): major_low = mpl[mb]
         if not np.isnan(ph[pb]): sh.append(ph[pb]); shb.append(pb)
         if not np.isnan(pl[pb]): sl_.append(pl[pb]); slb.append(pb)
         if len(sh) < 2 or len(sl_) < 2: continue
@@ -153,24 +151,24 @@ def detect(df: pd.DataFrame, p: Params = Params()) -> List[Setup]:
             struct_low, struct_low_bar = pl[pb], pb
         if trend == 1:
             if c[i] < prot_low:
-                bear_choch = True; trend = -1
+                bear_choch = True; trend = -1; last_bear_event, last_bear_kind = i, 'TR2'
                 seg = h[prot_low_bar:i + 1]; prot_high = seg.max(); prot_high_bar = prot_low_bar + int(seg.argmax())
                 struct_low = struct_high = None
             elif struct_high is not None and c[i] > struct_high:
-                seg = l[struct_high_bar:i + 1]; prot_low = seg.min(); prot_low_bar = struct_high_bar + int(seg.argmin()); struct_high = None
+                seg = l[struct_high_bar:i + 1]; prot_low = seg.min(); prot_low_bar = struct_high_bar + int(seg.argmin()); struct_high = None; last_bull_event, last_bull_kind = i, 'TC'
         elif trend == -1:
             if c[i] > prot_high:
-                bull_choch = True; trend = 1
+                bull_choch = True; trend = 1; last_bull_event, last_bull_kind = i, 'TR2'
                 seg = l[prot_high_bar:i + 1]; prot_low = seg.min(); prot_low_bar = prot_high_bar + int(seg.argmin())
                 struct_high = struct_low = None
             elif struct_low is not None and c[i] < struct_low:
-                seg = h[struct_low_bar:i + 1]; prot_high = seg.max(); prot_high_bar = struct_low_bar + int(seg.argmax()); struct_low = None
+                seg = h[struct_low_bar:i + 1]; prot_high = seg.max(); prot_high_bar = struct_low_bar + int(seg.argmax()); struct_low = None; last_bear_event, last_bear_kind = i, 'TC'
         # sweeps of external liquidity (structural HH / LL)
         ext_high = struct_high if struct_high is not None else lastSH
         ext_low = struct_low if struct_low is not None else lastSL
-        if h[i] > ext_high and (not p.strict_sweep or c[i] < ext_high):
+        if h[i] > ext_high and (not p.strict_sweep or c[i] < ext_high) and ext_high >= ext_hi[i] - p.pip:
             sweep_hi_bar, sweep_hi_px, sweep_hi_sess = i, h[i], sess_level(i, ext_high, True)
-        if l[i] < ext_low and (not p.strict_sweep or c[i] > ext_low):
+        if l[i] < ext_low and (not p.strict_sweep or c[i] > ext_low) and ext_low <= ext_lo[i] + p.pip:
             sweep_lo_bar, sweep_lo_px, sweep_lo_sess = i, l[i], sess_level(i, ext_low, False)
         if bear_choch and sweep_hi_bar >= 0 and i - sweep_hi_bar <= p.sweep_max_bars:
             choch_bear_bar, choch_bear_sess = i, sweep_hi_sess
@@ -179,23 +177,26 @@ def detect(df: pd.DataFrame, p: Params = Params()) -> List[Setup]:
         up_trend = trend == 1
         down_trend = trend == -1
 
-        # consolidation box ending at i-1
-        bxH = bxL = np.nan; bxN = 0
-        if not np.isnan(atr[i]) and atr[i] > 0:
-            rh, rl = -np.inf, np.inf
-            for k in range(1, p.box_max + 1):
-                if i - k < 0: break
+        # consolidation box = range formed after the structure event (CHOCH for TR2, BOS for TC)
+        def box_since(ev):
+            if ev < 0: return (np.nan, np.nan, 0)
+            max_n = min(p.box_max, i - ev - 1); a = atr[ev]
+            if max_n < p.box_min or np.isnan(a) or a <= 0: return (np.nan, np.nan, 0)
+            rh, rl, best = -np.inf, np.inf, (np.nan, np.nan, 0)
+            for k in range(1, max_n + 1):
                 rh = max(rh, h[i - k]); rl = min(rl, l[i - k])
-                if rh - rl <= p.box_mult * atr[i]:
-                    if k >= p.box_min: bxH, bxL, bxN = rh, rl, k
-                else:
-                    break
-        break_dn = bxN > 0 and c[i] < bxL and body[i] >= p.disp_mult * avg_body[i] and c[i] < o[i]
-        break_up = bxN > 0 and c[i] > bxH and body[i] >= p.disp_mult * avg_body[i] and c[i] > o[i]
-        tr2_bear = p.use_tr2 and break_dn and choch_bear_bar >= 0 and i - choch_bear_bar <= p.choch_max_bars and choch_bear_bar < i
-        tr2_bull = p.use_tr2 and break_up and choch_bull_bar >= 0 and i - choch_bull_bar <= p.choch_max_bars and choch_bull_bar < i
-        tc_bear = p.use_tc and break_dn and down_trend and not tr2_bear
-        tc_bull = p.use_tc and break_up and up_trend and not tr2_bull
+                if rh - rl <= p.box_mult * a:
+                    if k >= p.box_min: best = (rh, rl, k)
+                else: break
+            return best
+        bxHd, bxLd, bxNd = box_since(last_bear_event); bxHu, bxLu, bxNu = box_since(last_bull_event)
+        break_dn = bxNd > 0 and c[i] < bxLd and body[i] >= p.disp_mult * avg_body[i] and c[i] < o[i]
+        break_up = bxNu > 0 and c[i] > bxHu and body[i] >= p.disp_mult * avg_body[i] and c[i] > o[i]
+        bxH, bxL, bxN = (bxHd, bxLd, bxNd) if break_dn else (bxHu, bxLu, bxNu)
+        tr2_bear = p.use_tr2 and break_dn and last_bear_kind == 'TR2' and choch_bear_bar == last_bear_event
+        tr2_bull = p.use_tr2 and break_up and last_bull_kind == 'TR2' and choch_bull_bar == last_bull_event
+        tc_bear = p.use_tc and break_dn and last_bear_kind == 'TC' and down_trend
+        tc_bull = p.use_tc and break_up and last_bull_kind == 'TC' and up_trend
 
         new = None
         if tr2_bear or tc_bear: new = (True, "TR2" if tr2_bear else "TC", tr2_bear and choch_bear_sess)
@@ -218,8 +219,8 @@ def detect(df: pd.DataFrame, p: Params = Params()) -> List[Setup]:
                 entry = (zb if p.entry_body else wb) if bear else (zt if p.entry_body else wt)
                 sl = wt + p.sl_buf_pips * p.pip if bear else wb - p.sl_buf_pips * p.pip
                 sl_pips = abs(sl - entry) / p.pip
-                mid = (major_high + major_low) / 2 if not (np.isnan(major_high) or np.isnan(major_low)) else np.nan
-                htf_ok = (not p.htf_filter) or np.isnan(mid) or (entry >= mid if bear else entry <= mid)
+                mid = (roll_hi[i] + roll_lo[i]) / 2
+                htf_ok = (not p.htf_filter) or (entry >= mid if bear else entry <= mid)
                 if sl_pips <= p.max_sl_pips and htf_ok:
                     score = 4 + int(fvg) + int(sess_liq) + int(hi_vol[zbar]) + int(model == "TR2") + int(sl_pips <= 20)
                     if score >= p.min_score:

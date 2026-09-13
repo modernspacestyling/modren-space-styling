@@ -33,7 +33,7 @@ namespace SnipeTrading
         // ------------------------------------------------------ settings ----
         [Display(Name = "Swing length", GroupName = "Structure", Order = 10)] public int PivLen { get; set; } = 5;
         [Display(Name = "Max bars sweep->CHOCH", GroupName = "Structure", Order = 11)] public int SweepMaxBars { get; set; } = 40;
-        [Display(Name = "Max bars CHOCH->box break", GroupName = "Structure", Order = 12)] public int ChochMaxBars { get; set; } = 60;
+        [Display(Name = "Swept level must be extreme of last N bars", GroupName = "Structure", Order = 12)] public int ExtLookback { get; set; } = 60;
         [Display(Name = "Sweep must close back inside", GroupName = "Structure", Order = 12)] public bool StrictSweep { get; set; } = true;
         [Display(Name = "Mark TR2", GroupName = "Structure", Order = 13)] public bool UseTR2 { get; set; } = true;
         [Display(Name = "Mark TC", GroupName = "Structure", Order = 14)] public bool UseTC { get; set; } = true;
@@ -46,7 +46,7 @@ namespace SnipeTrading
         [Display(Name = "Fib gate", GroupName = "Fibonacci", Order = 30)] public decimal FibLvl { get; set; } = 0.764m;
         [Display(Name = "Min reward to ultimate target (R)", GroupName = "Fibonacci", Order = 31)] public decimal MinTargetRR { get; set; } = 2m;
         [Display(Name = "Bigger picture premium/discount filter", GroupName = "Fibonacci", Order = 32)] public bool HtfFilter { get; set; } = true;
-        [Display(Name = "Major swing length = x * swing length", GroupName = "Fibonacci", Order = 33)] public int HtfMult { get; set; } = 4;
+        [Display(Name = "Recent range lookback (bars)", GroupName = "Fibonacci", Order = 33)] public int HtfLookback { get; set; } = 240;
 
         [Display(Name = "Zone pick (0=freshest,1=extreme)", GroupName = "Zone", Order = 40)] public int ZonePick { get; set; } = 0;
         [Display(Name = "Entry on body (else wick)", GroupName = "Zone", Order = 41)] public bool EntryBody { get; set; } = true;
@@ -83,7 +83,7 @@ namespace SnipeTrading
         private int _chochBearBar = -1, _chochBullBar = -1;
         private int _trend; private decimal _protLow, _protHigh; private int _protLowBar, _protHighBar;
         private decimal? _structHigh, _structLow; private int _structHighBar, _structLowBar;
-        private decimal? _majorHigh, _majorLow;
+        private int _lastBearEvent = -1, _lastBullEvent = -1; private string _lastBearKind = "", _lastBullKind = "";
         private decimal _asiaH, _asiaL, _ldnH, _ldnL, _pdH, _pdL, _dayH, _dayL; private int _lastDay = -1;
         private bool _sweepHiSess, _sweepLoSess, _chochBearSess, _chochBullSess;
 
@@ -108,7 +108,7 @@ namespace SnipeTrading
         protected override void OnRecalculate()
         {
             _sh.Clear(); _shBar.Clear(); _sl_.Clear(); _slBar.Clear();
-            _sweepHiBar = _sweepLoBar = _chochBearBar = _chochBullBar = -1; _act = null; _lastDay = -1; _trend = 0; _structHigh = _structLow = null;
+            _sweepHiBar = _sweepLoBar = _chochBearBar = _chochBullBar = -1; _act = null; _lastDay = -1; _trend = 0; _structHigh = _structLow = null; _lastBearEvent = _lastBullEvent = -1;
             Rectangles.Clear(); Labels.Clear();
         }
 
@@ -146,17 +146,17 @@ namespace SnipeTrading
         }
         private static bool HiVol(DateTime tUtc) => tUtc.Hour == 7 || (tUtc.Hour >= 12 && tUtc.Hour < 14);
 
-        // (boxHigh, boxLow, n) for bars [bar-n .. bar-1]
-        private (decimal, decimal, int) FindBox(int bar)
+        // (boxHigh, boxLow, n): largest window [bar-n .. bar-1] starting after ev with height <= BoxMult * ATR(ev)
+        private (decimal, decimal, int) BoxSince(int bar, int ev)
         {
-            decimal atr = Atr(bar, 14); if (atr <= 0) return (0, 0, 0);
+            if (ev < 0) return (0, 0, 0);
+            int maxN = Math.Min(BoxMax, bar - ev - 1); if (maxN < BoxMin) return (0, 0, 0);
+            decimal atr = Atr(ev, 14); if (atr <= 0) return (0, 0, 0);
             decimal rh = decimal.MinValue, rl = decimal.MaxValue, bh = 0, bl = 0; int n = 0;
-            for (int i = 1; i <= BoxMax && bar - i >= 0; i++)
+            for (int k = 1; k <= maxN; k++)
             {
-                var c = GetCandle(bar - i);
-                rh = Math.Max(rh, c.High); rl = Math.Min(rl, c.Low);
-                if (rh - rl <= BoxMult * atr) { if (i >= BoxMin) { bh = rh; bl = rl; n = i; } }
-                else break;
+                var x = GetCandle(bar - k); rh = Math.Max(rh, x.High); rl = Math.Min(rl, x.Low);
+                if (rh - rl <= BoxMult * atr) { if (k >= BoxMin) { bh = rh; bl = rl; n = k; } } else break;
             }
             return (bh, bl, n);
         }
@@ -237,14 +237,6 @@ namespace SnipeTrading
             }
             if (isPH && (_shBar.Count == 0 || _shBar[^1] != pb)) { _sh.Add(pc.High); _shBar.Add(pb); }
             if (isPL && (_slBar.Count == 0 || _slBar[^1] != pb)) { _sl_.Add(pc.Low); _slBar.Add(pb); }
-            // major pivots for the bigger-picture filter
-            int mL = PivLen * HtfMult, mb = bar - mL;
-            if (mb - mL >= 0)
-            {
-                var mc = GetCandle(mb); bool mH = true, mLo = true;
-                for (int i = mb - mL; i <= mb + mL; i++) { if (i == mb) continue; var x = GetCandle(i); if (x.High >= mc.High) mH = false; if (x.Low <= mc.Low) mLo = false; }
-                if (mH) _majorHigh = mc.High; if (mLo) _majorLow = mc.Low;
-            }
             if (_sh.Count < 2 || _sl_.Count < 2) return;
             decimal lastSH = _sh[^1], prevSH = _sh[^2], lastSL = _sl_[^1], prevSL = _sl_[^2];
             int lastSHb = _shBar[^1], lastSLb = _slBar[^1];
@@ -260,32 +252,33 @@ namespace SnipeTrading
             if (isPL && _trend == -1 && (_structLow == null || pc.Low < _structLow)) { _structLow = pc.Low; _structLowBar = pb; }
             if (_trend == 1)
             {
-                if (c.Close < _protLow) { bearCHOCH = true; _trend = -1; (_protHigh, _protHighBar) = HighestSince(_protLowBar, bar); _structHigh = _structLow = null; }
-                else if (_structHigh != null && c.Close > _structHigh) { (_protLow, _protLowBar) = LowestSince(_structHighBar, bar); _structHigh = null; }
+                if (c.Close < _protLow) { bearCHOCH = true; _trend = -1; (_protHigh, _protHighBar) = HighestSince(_protLowBar, bar); _structHigh = _structLow = null; _lastBearEvent = bar; _lastBearKind = "TR2"; }
+                else if (_structHigh != null && c.Close > _structHigh) { (_protLow, _protLowBar) = LowestSince(_structHighBar, bar); _structHigh = null; _lastBullEvent = bar; _lastBullKind = "TC"; }
             }
             else if (_trend == -1)
             {
-                if (c.Close > _protHigh) { bullCHOCH = true; _trend = 1; (_protLow, _protLowBar) = LowestSince(_protHighBar, bar); _structHigh = _structLow = null; }
-                else if (_structLow != null && c.Close < _structLow) { (_protHigh, _protHighBar) = HighestSince(_structLowBar, bar); _structLow = null; }
+                if (c.Close > _protHigh) { bullCHOCH = true; _trend = 1; (_protLow, _protLowBar) = LowestSince(_protHighBar, bar); _structHigh = _structLow = null; _lastBullEvent = bar; _lastBullKind = "TR2"; }
+                else if (_structLow != null && c.Close < _structLow) { (_protHigh, _protHighBar) = HighestSince(_structLowBar, bar); _structLow = null; _lastBearEvent = bar; _lastBearKind = "TC"; }
             }
             // sweeps of external liquidity (structural HH / LL)
             decimal tol = 2 * Pip; decimal extHigh = _structHigh ?? lastSH, extLow = _structLow ?? lastSL;
-            if (c.High > extHigh && (!StrictSweep || c.Close < extHigh)) { _sweepHiBar = bar; _sweepHiPx = c.High; _sweepHiSess = Near(extHigh, _asiaH, tol) || Near(extHigh, _ldnH, tol) || Near(extHigh, _pdH, tol); }
-            if (c.Low < extLow && (!StrictSweep || c.Close > extLow)) { _sweepLoBar = bar; _sweepLoPx = c.Low; _sweepLoSess = Near(extLow, _asiaL, tol) || Near(extLow, _ldnL, tol) || Near(extLow, _pdL, tol); }
+            var (lbHi, _) = HighestSince(Math.Max(0, bar - ExtLookback), bar - 1); var (lbLo, _) = LowestSince(Math.Max(0, bar - ExtLookback), bar - 1);
+            if (c.High > extHigh && (!StrictSweep || c.Close < extHigh) && extHigh >= lbHi - Pip) { _sweepHiBar = bar; _sweepHiPx = c.High; _sweepHiSess = Near(extHigh, _asiaH, tol) || Near(extHigh, _ldnH, tol) || Near(extHigh, _pdH, tol); }
+            if (c.Low < extLow && (!StrictSweep || c.Close > extLow) && extLow <= lbLo + Pip) { _sweepLoBar = bar; _sweepLoPx = c.Low; _sweepLoSess = Near(extLow, _asiaL, tol) || Near(extLow, _ldnL, tol) || Near(extLow, _pdL, tol); }
             if (bearCHOCH && _sweepHiBar >= 0 && bar - _sweepHiBar <= SweepMaxBars) { _chochBearBar = bar; _chochBearSess = _sweepHiSess; }
             if (bullCHOCH && _sweepLoBar >= 0 && bar - _sweepLoBar <= SweepMaxBars) { _chochBullBar = bar; _chochBullSess = _sweepLoSess; }
             bool upTrend = _trend == 1, downTrend = _trend == -1;
 
-            // box + break
-            var (bxH, bxL, bxN) = FindBox(bar);
+            // consolidation box = range formed after the structure event (CHOCH for TR2, BOS for TC)
+            var (bxHd, bxLd, bxNd) = BoxSince(bar, _lastBearEvent); var (bxHu, bxLu, bxNu) = BoxSince(bar, _lastBullEvent);
             decimal body = Math.Abs(c.Close - c.Open), ab = AvgBody(bar, 10);
-            bool breakDn = bxN > 0 && c.Close < bxL && body >= DispMult * ab && c.Close < c.Open;
-            bool breakUp = bxN > 0 && c.Close > bxH && body >= DispMult * ab && c.Close > c.Open;
+            bool breakDn = bxNd > 0 && c.Close < bxLd && body >= DispMult * ab && c.Close < c.Open;
+            bool breakUp = bxNu > 0 && c.Close > bxHu && body >= DispMult * ab && c.Close > c.Open;
+            var (bxH, bxL, bxN) = breakDn ? (bxHd, bxLd, bxNd) : (bxHu, bxLu, bxNu);
             _boxBreak[bar] = breakDn ? -1 : breakUp ? 1 : 0;
-
-            bool tr2Bear = UseTR2 && breakDn && _chochBearBar >= 0 && bar - _chochBearBar <= ChochMaxBars && _chochBearBar < bar;
-            bool tr2Bull = UseTR2 && breakUp && _chochBullBar >= 0 && bar - _chochBullBar <= ChochMaxBars && _chochBullBar < bar;
-            bool tcBear = UseTC && breakDn && downTrend && !tr2Bear, tcBull = UseTC && breakUp && upTrend && !tr2Bull;
+            bool tr2Bear = UseTR2 && breakDn && _lastBearKind == "TR2" && _chochBearBar == _lastBearEvent;
+            bool tr2Bull = UseTR2 && breakUp && _lastBullKind == "TR2" && _chochBullBar == _lastBullEvent;
+            bool tcBear = UseTC && breakDn && _lastBearKind == "TC" && downTrend, tcBull = UseTC && breakUp && _lastBullKind == "TC" && upTrend;
 
             if (bar != _lastBar) // create only once per bar
             {
@@ -341,9 +334,10 @@ namespace SnipeTrading
             decimal sl = bearish ? wt + SLBufPips * Pip : wb - SLBufPips * Pip;
             decimal slPips = Math.Abs(sl - entry) / Pip;
             if (slPips > MaxSLPips) return;
-            if (HtfFilter && _majorHigh != null && _majorLow != null)
+            if (HtfFilter)
             {
-                decimal mid = (_majorHigh.Value + _majorLow.Value) / 2;
+                var (rh, _) = HighestSince(Math.Max(0, bar - HtfLookback + 1), bar); var (rl, _) = LowestSince(Math.Max(0, bar - HtfLookback + 1), bar);
+                decimal mid = (rh + rl) / 2;
                 if (bearish ? entry < mid : entry > mid) return;
             }
             int score = 4 + (fvg ? 1 : 0) + (sessLiq ? 1 : 0) + (HiVol(GetCandle(zbar).Time.ToUniversalTime()) ? 1 : 0) + (model == "TR2" ? 1 : 0) + (slPips <= 20 ? 1 : 0);
