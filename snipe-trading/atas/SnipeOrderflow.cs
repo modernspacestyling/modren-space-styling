@@ -78,6 +78,8 @@ namespace SnipeTrading
         private readonly List<decimal> _sl_ = new(); private readonly List<int> _slBar = new();
         private int _sweepHiBar = -1, _sweepLoBar = -1; private decimal _sweepHiPx, _sweepLoPx;
         private int _chochBearBar = -1, _chochBullBar = -1;
+        private int _trend; private decimal _protLow, _protHigh; private int _protLowBar, _protHighBar;
+        private decimal? _structHigh, _structLow; private int _structHighBar, _structLowBar;
         private decimal _asiaH, _asiaL, _ldnH, _ldnL, _pdH, _pdL, _dayH, _dayL; private int _lastDay = -1;
         private bool _sweepHiSess, _sweepLoSess, _chochBearSess, _chochBullSess;
 
@@ -102,7 +104,7 @@ namespace SnipeTrading
         protected override void OnRecalculate()
         {
             _sh.Clear(); _shBar.Clear(); _sl_.Clear(); _slBar.Clear();
-            _sweepHiBar = _sweepLoBar = _chochBearBar = _chochBullBar = -1; _act = null; _lastDay = -1;
+            _sweepHiBar = _sweepLoBar = _chochBearBar = _chochBullBar = -1; _act = null; _lastDay = -1; _trend = 0; _structHigh = _structLow = null;
             Rectangles.Clear(); Labels.Clear();
         }
 
@@ -235,18 +237,32 @@ namespace SnipeTrading
             decimal lastSH = _sh[^1], prevSH = _sh[^2], lastSL = _sl_[^1], prevSL = _sl_[^2];
             int lastSHb = _shBar[^1], lastSLb = _slBar[^1];
 
-            // sweeps
-            decimal tol = 2 * Pip;
-            if (c.High > lastSH && bar > lastSHb + PivLen && (!StrictSweep || c.Close < lastSH)) { _sweepHiBar = bar; _sweepHiPx = c.High; _sweepHiSess = Near(lastSH, _asiaH, tol) || Near(lastSH, _ldnH, tol) || Near(lastSH, _pdH, tol); }
-            if (c.Low < lastSL && bar > lastSLb + PivLen && (!StrictSweep || c.Close > lastSL)) { _sweepLoBar = bar; _sweepLoPx = c.Low; _sweepLoSess = Near(lastSL, _asiaL, tol) || Near(lastSL, _ldnL, tol) || Near(lastSL, _pdL, tol); }
-
-            // CHOCH
-            var p1 = GetCandle(bar - 1);
-            bool bearCHOCH = c.Close < lastSL && p1.Close >= lastSL;
-            bool bullCHOCH = c.Close > lastSH && p1.Close <= lastSH;
+            // --- market structure state machine (mirrors Pine) ---
+            bool bearCHOCH = false, bullCHOCH = false;
+            if (_trend == 0)
+            {
+                _trend = lastSH > prevSH ? 1 : -1; _protLow = lastSL; _protLowBar = lastSLb; _protHigh = lastSH; _protHighBar = lastSHb;
+                _structHigh = lastSH; _structHighBar = lastSHb; _structLow = lastSL; _structLowBar = lastSLb;
+            }
+            if (isPH && _trend == 1 && (_structHigh == null || pc.High > _structHigh)) { _structHigh = pc.High; _structHighBar = pb; }
+            if (isPL && _trend == -1 && (_structLow == null || pc.Low < _structLow)) { _structLow = pc.Low; _structLowBar = pb; }
+            if (_trend == 1)
+            {
+                if (c.Close < _protLow) { bearCHOCH = true; _trend = -1; (_protHigh, _protHighBar) = HighestSince(_protLowBar, bar); _structHigh = _structLow = null; }
+                else if (_structHigh != null && c.Close > _structHigh) { (_protLow, _protLowBar) = LowestSince(_structHighBar, bar); _structHigh = null; }
+            }
+            else if (_trend == -1)
+            {
+                if (c.Close > _protHigh) { bullCHOCH = true; _trend = 1; (_protLow, _protLowBar) = LowestSince(_protHighBar, bar); _structHigh = _structLow = null; }
+                else if (_structLow != null && c.Close < _structLow) { (_protHigh, _protHighBar) = HighestSince(_structLowBar, bar); _structLow = null; }
+            }
+            // sweeps of external liquidity (structural HH / LL)
+            decimal tol = 2 * Pip; decimal extHigh = _structHigh ?? lastSH, extLow = _structLow ?? lastSL;
+            if (c.High > extHigh && (!StrictSweep || c.Close < extHigh)) { _sweepHiBar = bar; _sweepHiPx = c.High; _sweepHiSess = Near(extHigh, _asiaH, tol) || Near(extHigh, _ldnH, tol) || Near(extHigh, _pdH, tol); }
+            if (c.Low < extLow && (!StrictSweep || c.Close > extLow)) { _sweepLoBar = bar; _sweepLoPx = c.Low; _sweepLoSess = Near(extLow, _asiaL, tol) || Near(extLow, _ldnL, tol) || Near(extLow, _pdL, tol); }
             if (bearCHOCH && _sweepHiBar >= 0 && bar - _sweepHiBar <= SweepMaxBars) { _chochBearBar = bar; _chochBearSess = _sweepHiSess; }
             if (bullCHOCH && _sweepLoBar >= 0 && bar - _sweepLoBar <= SweepMaxBars) { _chochBullBar = bar; _chochBullSess = _sweepLoSess; }
-            bool upTrend = lastSH > prevSH && lastSL > prevSL, downTrend = lastSH < prevSH && lastSL < prevSL;
+            bool upTrend = _trend == 1, downTrend = _trend == -1;
 
             // box + break
             var (bxH, bxL, bxN) = FindBox(bar);
@@ -300,6 +316,8 @@ namespace SnipeTrading
             }
         }
 
+        private (decimal, int) HighestSince(int from, int to) { decimal m = decimal.MinValue; int b = from; for (int i = from; i <= to; i++) { var x = GetCandle(i).High; if (x > m) { m = x; b = i; } } return (m, b); }
+        private (decimal, int) LowestSince(int from, int to) { decimal m = decimal.MaxValue; int b = from; for (int i = from; i <= to; i++) { var x = GetCandle(i).Low; if (x < m) { m = x; b = i; } } return (m, b); }
         private decimal MaxDeltaSince(int from, int to) { decimal m = decimal.MinValue; for (int i = from; i < to; i++) m = Math.Max(m, GetCandle(i).MaxDelta); return m; }
         private decimal MinDeltaSince(int from, int to) { decimal m = decimal.MaxValue; for (int i = from; i < to; i++) m = Math.Min(m, GetCandle(i).MinDelta); return m; }
 

@@ -124,6 +124,7 @@ def detect(df: pd.DataFrame, p: Params = Params()) -> List[Setup]:
     sweep_lo_bar = -1; sweep_lo_px = np.nan; sweep_lo_sess = False
     choch_bear_bar = -1; choch_bull_bar = -1; choch_bear_sess = False; choch_bull_sess = False
     act: Optional[Setup] = None
+    trend = 0; prot_low = prot_high = 0.0; prot_low_bar = prot_high_bar = 0; struct_high = struct_low = None; struct_high_bar = struct_low_bar = 0
 
     for i in range(p.piv_len * 2 + 20, N):
         pb = i - p.piv_len
@@ -132,19 +133,43 @@ def detect(df: pd.DataFrame, p: Params = Params()) -> List[Setup]:
         if len(sh) < 2 or len(sl_) < 2: continue
         lastSH, prevSH, lastSL, prevSL = sh[-1], sh[-2], sl_[-1], sl_[-2]
         lastSHb, lastSLb = shb[-1], slb[-1]
-        # sweeps
-        if h[i] > lastSH and i > lastSHb + p.piv_len and (not p.strict_sweep or c[i] < lastSH):
-            sweep_hi_bar, sweep_hi_px, sweep_hi_sess = i, h[i], sess_level(i, lastSH, True)
-        if l[i] < lastSL and i > lastSLb + p.piv_len and (not p.strict_sweep or c[i] > lastSL):
-            sweep_lo_bar, sweep_lo_px, sweep_lo_sess = i, l[i], sess_level(i, lastSL, False)
-        bear_choch = c[i] < lastSL and c[i - 1] >= lastSL
-        bull_choch = c[i] > lastSH and c[i - 1] <= lastSH
+        # --- market structure state machine (mirrors Pine) ---
+        bear_choch = bull_choch = False
+        if trend == 0:
+            trend = 1 if lastSH > prevSH else -1
+            prot_low, prot_low_bar, prot_high, prot_high_bar = lastSL, lastSLb, lastSH, lastSHb
+            struct_high, struct_high_bar, struct_low, struct_low_bar = lastSH, lastSHb, lastSL, lastSLb
+        if not np.isnan(ph[pb]) and trend == 1 and (struct_high is None or ph[pb] > struct_high):
+            struct_high, struct_high_bar = ph[pb], pb
+        if not np.isnan(pl[pb]) and trend == -1 and (struct_low is None or pl[pb] < struct_low):
+            struct_low, struct_low_bar = pl[pb], pb
+        if trend == 1:
+            if c[i] < prot_low:
+                bear_choch = True; trend = -1
+                seg = h[prot_low_bar:i + 1]; prot_high = seg.max(); prot_high_bar = prot_low_bar + int(seg.argmax())
+                struct_low = struct_high = None
+            elif struct_high is not None and c[i] > struct_high:
+                seg = l[struct_high_bar:i + 1]; prot_low = seg.min(); prot_low_bar = struct_high_bar + int(seg.argmin()); struct_high = None
+        elif trend == -1:
+            if c[i] > prot_high:
+                bull_choch = True; trend = 1
+                seg = l[prot_high_bar:i + 1]; prot_low = seg.min(); prot_low_bar = prot_high_bar + int(seg.argmin())
+                struct_high = struct_low = None
+            elif struct_low is not None and c[i] < struct_low:
+                seg = h[struct_low_bar:i + 1]; prot_high = seg.max(); prot_high_bar = struct_low_bar + int(seg.argmax()); struct_low = None
+        # sweeps of external liquidity (structural HH / LL)
+        ext_high = struct_high if struct_high is not None else lastSH
+        ext_low = struct_low if struct_low is not None else lastSL
+        if h[i] > ext_high and (not p.strict_sweep or c[i] < ext_high):
+            sweep_hi_bar, sweep_hi_px, sweep_hi_sess = i, h[i], sess_level(i, ext_high, True)
+        if l[i] < ext_low and (not p.strict_sweep or c[i] > ext_low):
+            sweep_lo_bar, sweep_lo_px, sweep_lo_sess = i, l[i], sess_level(i, ext_low, False)
         if bear_choch and sweep_hi_bar >= 0 and i - sweep_hi_bar <= p.sweep_max_bars:
             choch_bear_bar, choch_bear_sess = i, sweep_hi_sess
         if bull_choch and sweep_lo_bar >= 0 and i - sweep_lo_bar <= p.sweep_max_bars:
             choch_bull_bar, choch_bull_sess = i, sweep_lo_sess
-        up_trend = lastSH > prevSH and lastSL > prevSL
-        down_trend = lastSH < prevSH and lastSL < prevSL
+        up_trend = trend == 1
+        down_trend = trend == -1
 
         # consolidation box ending at i-1
         bxH = bxL = np.nan; bxN = 0

@@ -98,27 +98,88 @@ f_sessLevel(float lvl, bool isHigh) =>
     isHigh ? (math.abs(lvl - nz(asiaH, -1e9)) <= tol or math.abs(lvl - nz(ldnH, -1e9)) <= tol or math.abs(lvl - nz(pdH, -1e9)) <= tol)
            : (math.abs(lvl - nz(asiaL, -1e9)) <= tol or math.abs(lvl - nz(ldnL, -1e9)) <= tol or math.abs(lvl - nz(pdL, -1e9)) <= tol)
 
-// ------------------------------------------------------ sweeps & CHOCH ----
+// highest / lowest over the last n bars via loop (safe inside conditional scopes)
+f_hh(int n) =>
+    float v = -1e9, int off = 0
+    for i = 0 to math.max(n - 1, 0)
+        if high[i] > v
+            v := high[i], off := i
+    [v, off]
+f_ll(int n) =>
+    float v = 1e9, int off = 0
+    for i = 0 to math.max(n - 1, 0)
+        if low[i] < v
+            v := low[i], off := i
+    [v, off]
+
+// ----------------------------------------------- market structure ----
+// Structure state machine on confirmed swings:
+//   bull: protLow = last higher low (the low that started the leg which made the last HH)
+//         BOS   = close above structHigh (last HH)          -> new protLow = retrace low
+//         CHoCH = close below protLow                        -> trend flips bear
+//   bear: mirror (protHigh = last lower high, BOS = close below structLow)
+var int   trend = 0
+var float protLow = na,   var int protLowBar = na
+var float protHigh = na,  var int protHighBar = na
+var float structHigh = na, var int structHighBar = na     // last HH (bull) — na while waiting for the pivot after a BOS
+var float structLow = na,  var int structLowBar = na      // last LL (bear)
+var int   lastBOSbar = na, var int lastCHOCHbar = na
+bool bearCHOCH = false, bool bullCHOCH = false, bool bosUp = false, bool bosDn = false
+
+if trend == 0 and not na(prevSH) and not na(prevSL)
+    trend := lastSH > prevSH ? 1 : -1
+    protLow := lastSL, protLowBar := lastSLb, protHigh := lastSH, protHighBar := lastSHb
+    structHigh := lastSH, structHighBar := lastSHb, structLow := lastSL, structLowBar := lastSLb
+
+// newly confirmed pivots refresh the structural swing after a BOS
+if not na(ph) and trend == 1 and (na(structHigh) or ph > structHigh)
+    structHigh := ph, structHighBar := bar_index - pivLen
+if not na(pl) and trend == -1 and (na(structLow) or pl < structLow)
+    structLow := pl, structLowBar := bar_index - pivLen
+
+if trend == 1
+    if close < protLow
+        bearCHOCH := true, trend := -1, lastCHOCHbar := bar_index
+        [hv, ho] = f_hh(bar_index - protLowBar + 1)
+        protHigh := hv, protHighBar := bar_index - ho
+        structLow := na, structHigh := na
+    else if not na(structHigh) and close > structHigh
+        bosUp := true, lastBOSbar := bar_index
+        [lv, lo] = f_ll(bar_index - structHighBar + 1)
+        protLow := lv, protLowBar := bar_index - lo
+        structHigh := na
+else if trend == -1
+    if close > protHigh
+        bullCHOCH := true, trend := 1, lastCHOCHbar := bar_index
+        [lv, lo] = f_ll(bar_index - protHighBar + 1)
+        protLow := lv, protLowBar := bar_index - lo
+        structHigh := na, structLow := na
+    else if not na(structLow) and close < structLow
+        bosDn := true, lastBOSbar := bar_index
+        [hv, ho] = f_hh(bar_index - structLowBar + 1)
+        protHigh := hv, protHighBar := bar_index - ho
+        structLow := na
+
+// ------------------------------------------------------ sweeps ----
+// external liquidity = the structural high (HH) in a bull trend / structural low (LL) in a bear trend
 var int sweepHiBar = na, var float sweepHiPx = na, var bool sweepHiSess = false
 var int sweepLoBar = na, var float sweepLoPx = na, var bool sweepLoSess = false
-if not na(lastSH) and high > lastSH and bar_index > lastSHb + pivLen and (not strictSweep or close < lastSH)
-    sweepHiBar := bar_index, sweepHiPx := high, sweepHiSess := f_sessLevel(lastSH, true)
-if not na(lastSL) and low < lastSL and bar_index > lastSLb + pivLen and (not strictSweep or close > lastSL)
-    sweepLoBar := bar_index, sweepLoPx := low, sweepLoSess := f_sessLevel(lastSL, false)
+extHigh = nz(structHigh, lastSH)
+extLow  = nz(structLow,  lastSL)
+if not na(extHigh) and high > extHigh and (not strictSweep or close < extHigh)
+    sweepHiBar := bar_index, sweepHiPx := high, sweepHiSess := f_sessLevel(extHigh, true)
+if not na(extLow) and low < extLow and (not strictSweep or close > extLow)
+    sweepLoBar := bar_index, sweepLoPx := low, sweepLoSess := f_sessLevel(extLow, false)
 
-bearCHOCH = not na(lastSL) and close < lastSL and close[1] >= lastSL
-bullCHOCH = not na(lastSH) and close > lastSH and close[1] <= lastSH
 var int   chochBearBar = na, var int chochBullBar = na
-var float chochBearExt = na, var float chochBullExt = na   // sweep extreme that started the reversal
 var bool  chochBearSess = false, var bool chochBullSess = false
 if bearCHOCH and not na(sweepHiBar) and bar_index - sweepHiBar <= sweepMaxBars
-    chochBearBar := bar_index, chochBearExt := sweepHiPx, chochBearSess := sweepHiSess
+    chochBearBar := bar_index, chochBearSess := sweepHiSess
 if bullCHOCH and not na(sweepLoBar) and bar_index - sweepLoBar <= sweepMaxBars
-    chochBullBar := bar_index, chochBullExt := sweepLoPx, chochBullSess := sweepLoSess
+    chochBullBar := bar_index, chochBullSess := sweepLoSess
 
-// trend (for TC)
-upTrend   = not na(prevSH) and not na(prevSL) and lastSH > prevSH and lastSL > prevSL
-downTrend = not na(prevSH) and not na(prevSL) and lastSH < prevSH and lastSL < prevSL
+upTrend   = trend == 1
+downTrend = trend == -1
 
 // -------------------------------------------------- consolidation box ----
 atr = ta.atr(14)
@@ -290,6 +351,10 @@ plotshape(showSwings and not na(ph), "Swing High", shape.triangledown, location.
 plotshape(showSwings and not na(pl), "Swing Low",  shape.triangleup,   location.belowbar, color.new(color.gray, 50), size = size.tiny, offset = -pivLen)
 plotshape(showDebug and bearCHOCH, "Bear CHOCH", shape.labeldown, location.abovebar, color.new(#ff5252, 40), text = "CHoCH", textcolor = color.white, size = size.tiny)
 plotshape(showDebug and bullCHOCH, "Bull CHOCH", shape.labelup,   location.belowbar, color.new(#00e676, 40), text = "CHoCH", textcolor = color.white, size = size.tiny)
+plotshape(showDebug and bosDn, "Bear BOS", shape.labeldown, location.abovebar, color.new(#ff5252, 70), text = "BOS", textcolor = color.white, size = size.tiny)
+plotshape(showDebug and bosUp, "Bull BOS", shape.labelup,   location.belowbar, color.new(#00e676, 70), text = "BOS", textcolor = color.white, size = size.tiny)
+plot(showDebug ? protLow : na,  "Protected low",  color = color.new(#00e676, 40), style = plot.style_linebr, linewidth = 1)
+plot(showDebug ? protHigh : na, "Protected high", color = color.new(#ff5252, 40), style = plot.style_linebr, linewidth = 1)
 plotshape(showDebug and not na(sweepHiBar) and sweepHiBar == bar_index, "Sweep High", shape.xcross, location.abovebar, color.orange, size = size.tiny)
 plotshape(showDebug and not na(sweepLoBar) and sweepLoBar == bar_index, "Sweep Low",  shape.xcross, location.belowbar, color.orange, size = size.tiny)
 plotshape(showDebug and breakDn, "Box break down", shape.arrowdown, location.abovebar, color.new(color.fuchsia, 30), size = size.tiny)
