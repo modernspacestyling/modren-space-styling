@@ -30,8 +30,15 @@ def run_detector(m1: pd.DataFrame, tf: int, p: Params, ladder: Ladder, levels=No
         row = s.to_row(); row["tf"] = tf
         if s.valid_signal:
             # simulate on M1 from the first M1 bar after the touch bar opens (limit fill at entry)
-            t_touch = s.time_touch; pos = m1_index.searchsorted(t_touch)
-            res = simulate(m1, pos, s.bear, s.entry, s.sl, s.tp2, ladder, wait_fill_bars=max(tf, 1) * 2)
+            t_touch = s.time_touch
+            if s.entry_mode == 'reaction':
+                # market entry at the open of the first M1 bar after the reaction candle closes
+                pos = m1_index.searchsorted(s.time_signal + pd.Timedelta(minutes=tf))
+                if pos >= len(m1): continue
+                fill = float(m1["open"].iloc[pos]); res = simulate(m1, pos, s.bear, fill, s.sl, s.tp2, ladder)
+            else:
+                pos = m1_index.searchsorted(t_touch)
+                res = simulate(m1, pos, s.bear, s.entry, s.sl, s.tp2, ladder, wait_fill_bars=max(tf, 1) * 2)
             row.update({"r": res.r_multiple, "pips": res.pips, "outcome": res.outcome, "bars_held": res.bars_held, "mfe_rr": res.max_rr, "mae_rr": res.min_rr,
                         "hit_1r": res.hit_1r, "hit_2r": res.hit_2r, "hit_3r": res.hit_3r, "hit_target": res.hit_target})
             if res.outcome == "NOFILL": row["valid_signal"] = False; row["reason"] = "no M1 fill"
@@ -64,7 +71,7 @@ def main():
     ap.add_argument("--tz-offset", type=float, default=0.0, help="hours to subtract from file time to get UTC")
     ap.add_argument("--out", default="results"); ap.add_argument("--synthetic", action="store_true"); ap.add_argument("--replay-only", action="store_true")
     ap.add_argument("--min-score", type=int, default=5); ap.add_argument("--max-sl", type=float, default=28); ap.add_argument("--no-tc", action="store_true")
-    ap.add_argument("--be-rr", type=float, default=1.0); ap.add_argument("--spread", type=float, default=2.0)
+    ap.add_argument("--entry", default="reaction", choices=["reaction", "limit"]); ap.add_argument("--be-rr", type=float, default=1.0); ap.add_argument("--spread", type=float, default=2.0)
     a = ap.parse_args(); os.makedirs(a.out, exist_ok=True)
     if a.synthetic: m1 = synthetic_gold(); levels = None; src = "SYNTHETIC random walk (no edge expected)"
     else:
@@ -73,7 +80,7 @@ def main():
     ladder = Ladder(be_rr=a.be_rr, spread_pips=a.spread)
     md = [f"# Snipe backtest report\n\nSource: `{src}`  \nBars: {len(m1)} M1 from {m1.index[0]} to {m1.index[-1]} (UTC)  \nLadder: BE at {ladder.be_rr}R, partials {ladder.partials}, runner to target, spread {ladder.spread_pips} pips\n"]
     if not a.replay_only:
-        p = Params(min_score=a.min_score, max_sl_pips=a.max_sl, use_tc=not a.no_tc)
+        p = Params(min_score=a.min_score, max_sl_pips=a.max_sl, use_tc=not a.no_tc, entry_mode=a.entry)
         df, bars = run_detector(m1, a.tf, p, ladder, levels)
         df.to_csv(os.path.join(a.out, f"setups_tf{a.tf}.csv"), index=False)
         sig = df[df.get("valid_signal", pd.Series(dtype=bool)) == True] if len(df) else df

@@ -38,6 +38,8 @@ class Params:
     skip_fri_pm: bool = True
     min_score: int = 5
     require_armed: bool = True
+    entry_mode: str = 'reaction'   # or 'limit'
+    react_max_bars: int = 6
     strict_sweep: bool = True
     min_target_rr: float = 2.0
     htf_filter: bool = True
@@ -75,6 +77,8 @@ class Setup:
     reason: str = ""
     tp2: float = 0.0
     sl_pips: float = 0.0
+    entry_mode: str = 'limit'
+    time_signal: Optional[pd.Timestamp] = None
 
     def to_row(self):
         d = asdict(self); return d
@@ -129,6 +133,7 @@ def detect(df: pd.DataFrame, p: Params = Params()) -> List[Setup]:
     sweep_lo_bar = -1; sweep_lo_px = np.nan; sweep_lo_sess = False
     choch_bear_bar = -1; choch_bull_bar = -1; choch_bear_sess = False; choch_bull_sess = False
     act: Optional[Setup] = None
+    react_state = (0, 0.0)
     last_bear_event = last_bull_event = -1; last_bear_kind = last_bull_kind = ''
     trend = 0; prot_low = prot_high = 0.0; prot_low_bar = prot_high_bar = 0; struct_high = struct_low = None; struct_high_bar = struct_low_bar = 0
 
@@ -243,10 +248,28 @@ def detect(df: pd.DataFrame, p: Params = Params()) -> List[Setup]:
                 if touch:
                     a.touched = True; a.idx_touch = i; a.time_touch = t[i]; a.in_window = bool(in_window[i]); a.tp2 = a.ext
                     if (a.armed or not p.require_armed) and a.in_window:
-                        a.valid_signal = True; a.reason = "signal"
+                        if p.entry_mode == 'limit':
+                            a.valid_signal = True; a.reason = 'signal'; a.entry_mode = 'limit'; a.time_signal = t[i]
+                        else:
+                            a.reason = 'waiting reaction'; react_state = (i, h[i] if a.bear else l[i])
                     else:
-                        a.reason = "touch before fib gate" if not a.armed else "outside session"
-            invalid = (c[i] > a.sl if a.bear else c[i] < a.sl) or i - a.idx_born > p.zone_life
+                        a.reason = 'touch before fib gate' if not a.armed else 'outside session'
+            elif a.touched and a.reason == 'waiting reaction' and i > a.idx_touch:
+                tb, rext = react_state
+                rext = max(rext, h[i]) if a.bear else min(rext, l[i]); react_state = (tb, rext)
+                reacted = (c[i] < a.zone_bot and c[i] < o[i]) if a.bear else (c[i] > a.zone_top and c[i] > o[i])
+                failed = (c[i] > a.wick_top) if a.bear else (c[i] < a.wick_bot)
+                if reacted:
+                    r_entry = c[i]; r_sl = rext + p.sl_buf_pips * p.pip if a.bear else rext - p.sl_buf_pips * p.pip
+                    r_pips = abs(r_sl - r_entry) / p.pip
+                    if r_pips <= p.max_sl_pips and abs(a.ext - r_entry) >= p.min_target_rr * abs(r_sl - r_entry):
+                        a.entry, a.sl, a.sl_pips = r_entry, r_sl, r_pips; a.valid_signal = True; a.reason = 'signal'; a.entry_mode = 'reaction'; a.time_signal = t[i]
+                    else:
+                        a.reason = 'reaction rejected (SL/reward)'
+                elif failed or i - tb > p.react_max_bars:
+                    a.reason = 'no reaction'
+            waiting = a.reason == 'waiting reaction'
+            invalid = ((c[i] > a.sl if a.bear else c[i] < a.sl) and not waiting) or i - a.idx_born > p.zone_life
             if invalid:
                 if not a.touched: a.reason = a.reason or ("invalidated" if i - a.idx_born <= p.zone_life else "expired")
                 act = None

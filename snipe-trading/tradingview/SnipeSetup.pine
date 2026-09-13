@@ -45,7 +45,9 @@ showFib = input.bool(true, "Draw fib band", group = gF)
 
 gZ = "Zone / risk"
 zonePick   = input.string("Freshest", "Zone inside box", options = ["Freshest", "Extreme"], group = gZ)
-zoneMode   = input.string("Body", "Entry edge", options = ["Body", "Wick"], group = gZ)
+zoneMode   = input.string("Body", "Zone edge", options = ["Body", "Wick"], group = gZ)
+entryMode  = input.string("Reaction", "Entry", options = ["Reaction", "Limit"], tooltip = "Reaction: after the touch wait for a close back inside/beyond the zone, enter at that close, SL beyond the reaction wick. Limit: pending order at the zone edge.", group = gZ)
+reactMaxBars = input.int(6, "Reaction: max bars after touch", minval = 1, group = gZ)
 maxSLpips  = input.float(28, "Max SL (pips)", minval = 5, group = gZ)
 slBufPips  = input.float(3,  "SL buffer beyond wick (pips)", minval = 0, group = gZ)
 zoneLife   = input.int(200, "Zone expiry (bars)", minval = 10, group = gZ)
@@ -264,6 +266,7 @@ var float aBoxH = na, var float aBoxL = na, var int aBoxStart = na
 var float aEntry = na, var float aSL = na, var float aTP1 = na, var float aExt = na   // aExt = running leg extreme (fib 0)
 var float aAnchor = na          // fib 1.0 anchor (box edge)
 var int   aScore = 0, var int aBorn = na, var bool aArmed = false, var bool aTouched = false, var bool aSess = false
+var bool  aWaitReact = false, var int aTouchBar = na, var float aReactExt = na
 var box   bxBox = na, var box zBox = na, var box fBox = na
 var line  lnE = na, var line lnS = na, var line lnT1 = na, var line lnT2 = na
 var label lbl = na
@@ -360,20 +363,49 @@ touch = act and not aTouched and bar_index > aBorn and (aBear ? high >= aEntry :
 if touch
     aTouched := true
     if aArmed and inWindow
-        label.new(bar_index, aBear ? high : low, (aBear ? "▼ SELL " : "▲ BUY ") + str.tostring(aEntry, "#.##") + "\nSL " + str.tostring(aSL, "#.##") + "  TP " + str.tostring(aExt, "#.##"), style = aBear ? label.style_label_down : label.style_label_up, color = aBear ? #ff1744 : #00c853, textcolor = color.white, size = size.normal)
-        alert((aBear ? "SNIPE SELL " : "SNIPE BUY ") + aModel + " score " + str.tostring(aScore) + " entry " + str.tostring(aEntry, "#.##") + " SL " + str.tostring(aSL, "#.##") + " TP " + str.tostring(aExt, "#.##"), alert.freq_once_per_bar)
+        if entryMode == "Limit"
+            label.new(bar_index, aBear ? high : low, (aBear ? "▼ SELL " : "▲ BUY ") + str.tostring(aEntry, "#.##") + "\nSL " + str.tostring(aSL, "#.##") + "  TP " + str.tostring(aExt, "#.##"), style = aBear ? label.style_label_down : label.style_label_up, color = aBear ? #ff1744 : #00c853, textcolor = color.white, size = size.normal)
+            alert((aBear ? "SNIPE SELL " : "SNIPE BUY ") + aModel + " score " + str.tostring(aScore) + " entry " + str.tostring(aEntry, "#.##") + " SL " + str.tostring(aSL, "#.##") + " TP " + str.tostring(aExt, "#.##"), alert.freq_once_per_bar)
+        else
+            aWaitReact := true, aTouchBar := bar_index, aReactExt := aBear ? high : low
+            if showDebug
+                label.new(bar_index, aBear ? high : low, "touch, waiting reaction", style = label.style_label_left, color = color.new(color.gray, 40), textcolor = color.white, size = size.tiny)
     else if showDebug
         label.new(bar_index, aBear ? high : low, aArmed ? "touch outside session" : "touch before fib gate", style = label.style_label_left, color = color.new(color.gray, 40), textcolor = color.white, size = size.tiny)
 
+// reaction entry: close back inside / beyond the zone after the touch
+if act and aWaitReact and bar_index > aTouchBar
+    aReactExt := aBear ? math.max(aReactExt, high) : math.min(aReactExt, low)
+    reacted = aBear ? (close < aZB and close < open) : (close > aZT and close > open)
+    failed  = aBear ? close > aWT : close < aWB
+    if reacted
+        rEntry = close
+        rSL = aBear ? aReactExt + slBufPips * pip : aReactExt - slBufPips * pip
+        rPips = math.abs(rSL - rEntry) / pip
+        rewardOK2 = math.abs(aExt - rEntry) >= minTargetRR * math.abs(rSL - rEntry)
+        if rPips <= maxSLpips and rewardOK2
+            aEntry := rEntry, aSL := rSL, aTP1 := aBear ? rEntry - 2 * (rSL - rEntry) : rEntry + 2 * (rEntry - rSL)
+            if not na(lnE)
+                line.set_y1(lnE, aEntry), line.set_y2(lnE, aEntry), line.set_y1(lnS, aSL), line.set_y2(lnS, aSL), line.set_y1(lnT1, aTP1), line.set_y2(lnT1, aTP1)
+            label.new(bar_index, aBear ? high : low, (aBear ? "▼ SELL " : "▲ BUY ") + str.tostring(aEntry, "#.##") + "\nSL " + str.tostring(aSL, "#.##") + " (" + str.tostring(rPips, "#") + "p)  TP " + str.tostring(aExt, "#.##"), style = aBear ? label.style_label_down : label.style_label_up, color = aBear ? #ff1744 : #00c853, textcolor = color.white, size = size.normal)
+            alert((aBear ? "SNIPE SELL " : "SNIPE BUY ") + aModel + " reaction, score " + str.tostring(aScore) + " entry " + str.tostring(aEntry, "#.##") + " SL " + str.tostring(aSL, "#.##") + " TP " + str.tostring(aExt, "#.##"), alert.freq_once_per_bar)
+        else if showDebug
+            label.new(bar_index, aBear ? high : low, "reaction but SL " + str.tostring(rPips, "#") + "p / reward too small", style = label.style_label_left, color = color.new(color.gray, 40), textcolor = color.white, size = size.tiny)
+        aWaitReact := false
+    else if failed or bar_index - aTouchBar > reactMaxBars
+        aWaitReact := false
+        if showDebug
+            label.new(bar_index, aBear ? high : low, failed ? "no reaction: closed through zone" : "no reaction in time", style = label.style_label_left, color = color.new(color.gray, 40), textcolor = color.white, size = size.tiny)
+
 // invalidation / expiry
-if act and ((aBear and close > aSL) or (not aBear and close < aSL) or bar_index - aBorn > zoneLife)
+if act and (((aBear and close > aSL) or (not aBear and close < aSL)) and not aWaitReact or bar_index - aBorn > zoneLife)
     if not na(zBox)
         box.set_right(zBox, bar_index), box.set_border_color(zBox, color.gray)
         if aTouched
             box.set_bgcolor(zBox, color.new(color.gray, 90))
     if not na(fBox)
         box.set_right(fBox, bar_index)
-    act := false, zBox := na, fBox := na, lnE := na, lnS := na, lnT1 := na, lnT2 := na, lbl := na
+    act := false, aWaitReact := false, zBox := na, fBox := na, lnE := na, lnS := na, lnT1 := na, lnT2 := na, lbl := na
 if act and not na(zBox)
     box.set_right(zBox, bar_index + 5)
     if not na(fBox)

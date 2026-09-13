@@ -50,6 +50,8 @@ namespace SnipeTrading
 
         [Display(Name = "Zone pick (0=freshest,1=extreme)", GroupName = "Zone", Order = 40)] public int ZonePick { get; set; } = 0;
         [Display(Name = "Entry on body (else wick)", GroupName = "Zone", Order = 41)] public bool EntryBody { get; set; } = true;
+        [Display(Name = "Reaction entry (close back inside zone)", GroupName = "Zone", Order = 47)] public bool ReactionEntry { get; set; } = true;
+        [Display(Name = "Reaction: max bars after touch", GroupName = "Zone", Order = 48)] public int ReactMaxBars { get; set; } = 6;
         [Display(Name = "Max SL pips (pip=0.10)", GroupName = "Zone", Order = 42)] public decimal MaxSLPips { get; set; } = 28m;
         [Display(Name = "SL buffer pips", GroupName = "Zone", Order = 43)] public decimal SLBufPips { get; set; } = 3m;
         [Display(Name = "Zone expiry bars", GroupName = "Zone", Order = 44)] public int ZoneLife { get; set; } = 200;
@@ -91,7 +93,7 @@ namespace SnipeTrading
         {
             public bool Bear; public string Model; public decimal ZT, ZB, WT, WB; public int ZBar;
             public decimal BoxH, BoxL; public int BoxStart, Born; public decimal Entry, SL, Ext, Anchor;
-            public int Score; public bool Armed, Touched, Fvg, SessLiq;
+            public int Score; public bool Armed, Touched, Fvg, SessLiq, WaitReact; public int TouchBar; public decimal ReactExt;
             public DrawingRectangle ZoneRect, BoxRect; public string LabelTag;
         }
         private Setup _act;
@@ -302,21 +304,29 @@ namespace SnipeTrading
                     if (touch)
                     {
                         a.Touched = true;
-                        int of = OrderflowScore(bar, a.Bear, a.Bear ? MaxDeltaSince(a.Born, bar) : MinDeltaSince(a.Born, bar));
-                        _ofScore[bar] = of;
-                        bool ok = a.Armed && InWindow(tUtc) && (!RequireOF || of >= 2);
-                        if (ok)
+                        if (a.Armed && InWindow(tUtc))
                         {
-                            if (a.Bear) _sell[bar] = c.High + Pip * 5; else _buy[bar] = c.Low - Pip * 5;
-                            _score[bar] = a.Score + of; _entry[bar] = a.Entry; _sl[bar] = a.SL; _tp[bar] = a.Ext;
-                            AddText("sig" + bar, (a.Bear ? "SELL " : "BUY ") + a.Model + " " + (a.Score + of) + "/13\nE " + a.Entry.ToString("F2") + " SL " + a.SL.ToString("F2") + " TP " + a.Ext.ToString("F2") + "\nOF " + of + "/4",
-                                !a.Bear, bar, a.Bear ? c.High : c.Low, a.Bear ? Colors.White : Colors.Black, a.Bear ? Colors.Red : Colors.Lime, 10f, DrawingText.TextAlign.Center);
+                            if (ReactionEntry) { a.WaitReact = true; a.TouchBar = bar; a.ReactExt = a.Bear ? c.High : c.Low; }
+                            else EmitSignal(bar, a, c, tUtc);
                         }
-                        else
-                            AddText("sig" + bar, a.Armed ? (InWindow(tUtc) ? "OF weak" : "outside session") : "touch before fib", !a.Bear, bar, a.Bear ? c.High : c.Low, Colors.White, Colors.Gray, 8f, DrawingText.TextAlign.Center);
+                        else AddText("sig" + bar, a.Armed ? "outside session" : "touch before fib", !a.Bear, bar, a.Bear ? c.High : c.Low, Colors.White, Colors.Gray, 8f, DrawingText.TextAlign.Center);
                     }
                 }
-                bool invalid = (a.Bear && c.Close > a.SL) || (!a.Bear && c.Close < a.SL) || bar - a.Born > ZoneLife;
+                else if (a.WaitReact && bar > a.TouchBar)
+                {
+                    a.ReactExt = a.Bear ? Math.Max(a.ReactExt, c.High) : Math.Min(a.ReactExt, c.Low);
+                    bool reacted = a.Bear ? (c.Close < a.ZB && c.Close < c.Open) : (c.Close > a.ZT && c.Close > c.Open);
+                    bool failed = a.Bear ? c.Close > a.WT : c.Close < a.WB;
+                    if (reacted)
+                    {
+                        decimal rSL = a.Bear ? a.ReactExt + SLBufPips * Pip : a.ReactExt - SLBufPips * Pip; decimal rPips = Math.Abs(rSL - c.Close) / Pip;
+                        if (rPips <= MaxSLPips && Math.Abs(a.Ext - c.Close) >= MinTargetRR * Math.Abs(rSL - c.Close)) { a.Entry = c.Close; a.SL = rSL; EmitSignal(bar, a, c, tUtc); }
+                        else AddText("sig" + bar, "reaction rejected (SL " + rPips.ToString("F0") + "p)", !a.Bear, bar, a.Bear ? c.High : c.Low, Colors.White, Colors.Gray, 8f, DrawingText.TextAlign.Center);
+                        a.WaitReact = false;
+                    }
+                    else if (failed || bar - a.TouchBar > ReactMaxBars) a.WaitReact = false;
+                }
+                bool invalid = (((a.Bear && c.Close > a.SL) || (!a.Bear && c.Close < a.SL)) && !a.WaitReact) || bar - a.Born > ZoneLife;
                 if (invalid) { if (a.ZoneRect != null) a.ZoneRect.SecondBar = bar; _act = null; }
                 else if (a.ZoneRect != null) a.ZoneRect.SecondBar = bar + 3;
             }
@@ -324,6 +334,17 @@ namespace SnipeTrading
 
         private (decimal, int) HighestSince(int from, int to) { decimal m = decimal.MinValue; int b = from; for (int i = from; i <= to; i++) { var x = GetCandle(i).High; if (x > m) { m = x; b = i; } } return (m, b); }
         private (decimal, int) LowestSince(int from, int to) { decimal m = decimal.MaxValue; int b = from; for (int i = from; i <= to; i++) { var x = GetCandle(i).Low; if (x < m) { m = x; b = i; } } return (m, b); }
+        private void EmitSignal(int bar, Setup a, IndicatorCandle c, DateTime tUtc)
+        {
+            int of = OrderflowScore(bar, a.Bear, a.Bear ? MaxDeltaSince(a.Born, bar) : MinDeltaSince(a.Born, bar));
+            _ofScore[bar] = of;
+            if (RequireOF && of < 2) { AddText("sig" + bar, "OF weak (" + of + "/4)", !a.Bear, bar, a.Bear ? c.High : c.Low, Colors.White, Colors.Gray, 8f, DrawingText.TextAlign.Center); return; }
+            if (a.Bear) _sell[bar] = c.High + Pip * 5; else _buy[bar] = c.Low - Pip * 5;
+            _score[bar] = a.Score + of; _entry[bar] = a.Entry; _sl[bar] = a.SL; _tp[bar] = a.Ext;
+            AddText("sig" + bar, (a.Bear ? "SELL " : "BUY ") + a.Model + " " + (a.Score + of) + "/13\nE " + a.Entry.ToString("F2") + " SL " + a.SL.ToString("F2") + " TP " + a.Ext.ToString("F2") + "\nOF " + of + "/4",
+                !a.Bear, bar, a.Bear ? c.High : c.Low, a.Bear ? Colors.White : Colors.Black, a.Bear ? Colors.Red : Colors.Lime, 10f, DrawingText.TextAlign.Center);
+        }
+
         private decimal MaxDeltaSince(int from, int to) { decimal m = decimal.MinValue; for (int i = from; i < to; i++) m = Math.Max(m, GetCandle(i).MaxDelta); return m; }
         private decimal MinDeltaSince(int from, int to) { decimal m = decimal.MaxValue; for (int i = from; i < to; i++) m = Math.Min(m, GetCandle(i).MinDelta); return m; }
 
