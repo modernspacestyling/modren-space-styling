@@ -40,6 +40,9 @@ class Params:
     min_score: int = 5
     require_armed: bool = True
     strict_sweep: bool = True
+    min_target_rr: float = 2.0
+    htf_filter: bool = True
+    htf_mult: int = 4
 
 @dataclass
 class Setup:
@@ -95,6 +98,8 @@ def detect(df: pd.DataFrame, p: Params = Params()) -> List[Setup]:
     atr = _atr(h, l, c, 14)
     body = np.abs(c - o); avg_body = pd.Series(body).rolling(10).mean().to_numpy()
     ph, pl = _pivots(h, l, p.piv_len)
+    mph, mpl = _pivots(h, l, p.piv_len * p.htf_mult)
+    major_high = major_low = np.nan
     hours = t.hour.to_numpy(); dows = t.dayofweek.to_numpy(); days = t.normalize()
     in_window = (hours >= p.sess_start) & (hours < p.sess_end)
     if p.skip_fri_pm: in_window &= ~((dows == 4) & (hours >= 13))
@@ -128,6 +133,9 @@ def detect(df: pd.DataFrame, p: Params = Params()) -> List[Setup]:
 
     for i in range(p.piv_len * 2 + 20, N):
         pb = i - p.piv_len
+        mb = i - p.piv_len * p.htf_mult
+        if mb >= 0 and not np.isnan(mph[mb]): major_high = mph[mb]
+        if mb >= 0 and not np.isnan(mpl[mb]): major_low = mpl[mb]
         if not np.isnan(ph[pb]): sh.append(ph[pb]); shb.append(pb)
         if not np.isnan(pl[pb]): sl_.append(pl[pb]); slb.append(pb)
         if len(sh) < 2 or len(sl_) < 2: continue
@@ -210,7 +218,9 @@ def detect(df: pd.DataFrame, p: Params = Params()) -> List[Setup]:
                 entry = (zb if p.entry_body else wb) if bear else (zt if p.entry_body else wt)
                 sl = wt + p.sl_buf_pips * p.pip if bear else wb - p.sl_buf_pips * p.pip
                 sl_pips = abs(sl - entry) / p.pip
-                if sl_pips <= p.max_sl_pips:
+                mid = (major_high + major_low) / 2 if not (np.isnan(major_high) or np.isnan(major_low)) else np.nan
+                htf_ok = (not p.htf_filter) or np.isnan(mid) or (entry >= mid if bear else entry <= mid)
+                if sl_pips <= p.max_sl_pips and htf_ok:
                     score = 4 + int(fvg) + int(sess_liq) + int(hi_vol[zbar]) + int(model == "TR2") + int(sl_pips <= 20)
                     if score >= p.min_score:
                         if act is not None and not act.touched:
@@ -226,7 +236,8 @@ def detect(df: pd.DataFrame, p: Params = Params()) -> List[Setup]:
                 a.ext = min(a.ext, l[i]) if a.bear else max(a.ext, h[i])
                 rngF = abs(a.anchor - a.ext)
                 gate = a.ext + p.fib * rngF if a.bear else a.ext - p.fib * rngF
-                a.armed = (a.entry >= gate - p.pip) if a.bear else (a.entry <= gate + p.pip)
+                reward_ok = abs(a.ext - a.entry) >= p.min_target_rr * abs(a.sl - a.entry)
+                a.armed = reward_ok and ((a.entry >= gate - p.pip) if a.bear else (a.entry <= gate + p.pip))
                 touch = h[i] >= a.entry if a.bear else l[i] <= a.entry
                 if touch:
                     a.touched = True; a.idx_touch = i; a.time_touch = t[i]; a.in_window = bool(in_window[i]); a.tp2 = a.ext

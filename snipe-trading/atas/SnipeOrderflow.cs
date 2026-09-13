@@ -44,6 +44,9 @@ namespace SnipeTrading
         [Display(Name = "Break body >= x*avgBody10", GroupName = "Consolidation", Order = 23)] public decimal DispMult { get; set; } = 1.3m;
 
         [Display(Name = "Fib gate", GroupName = "Fibonacci", Order = 30)] public decimal FibLvl { get; set; } = 0.764m;
+        [Display(Name = "Min reward to ultimate target (R)", GroupName = "Fibonacci", Order = 31)] public decimal MinTargetRR { get; set; } = 2m;
+        [Display(Name = "Bigger picture premium/discount filter", GroupName = "Fibonacci", Order = 32)] public bool HtfFilter { get; set; } = true;
+        [Display(Name = "Major swing length = x * swing length", GroupName = "Fibonacci", Order = 33)] public int HtfMult { get; set; } = 4;
 
         [Display(Name = "Zone pick (0=freshest,1=extreme)", GroupName = "Zone", Order = 40)] public int ZonePick { get; set; } = 0;
         [Display(Name = "Entry on body (else wick)", GroupName = "Zone", Order = 41)] public bool EntryBody { get; set; } = true;
@@ -80,6 +83,7 @@ namespace SnipeTrading
         private int _chochBearBar = -1, _chochBullBar = -1;
         private int _trend; private decimal _protLow, _protHigh; private int _protLowBar, _protHighBar;
         private decimal? _structHigh, _structLow; private int _structHighBar, _structLowBar;
+        private decimal? _majorHigh, _majorLow;
         private decimal _asiaH, _asiaL, _ldnH, _ldnL, _pdH, _pdL, _dayH, _dayL; private int _lastDay = -1;
         private bool _sweepHiSess, _sweepLoSess, _chochBearSess, _chochBullSess;
 
@@ -233,6 +237,14 @@ namespace SnipeTrading
             }
             if (isPH && (_shBar.Count == 0 || _shBar[^1] != pb)) { _sh.Add(pc.High); _shBar.Add(pb); }
             if (isPL && (_slBar.Count == 0 || _slBar[^1] != pb)) { _sl_.Add(pc.Low); _slBar.Add(pb); }
+            // major pivots for the bigger-picture filter
+            int mL = PivLen * HtfMult, mb = bar - mL;
+            if (mb - mL >= 0)
+            {
+                var mc = GetCandle(mb); bool mH = true, mLo = true;
+                for (int i = mb - mL; i <= mb + mL; i++) { if (i == mb) continue; var x = GetCandle(i); if (x.High >= mc.High) mH = false; if (x.Low <= mc.Low) mLo = false; }
+                if (mH) _majorHigh = mc.High; if (mLo) _majorLow = mc.Low;
+            }
             if (_sh.Count < 2 || _sl_.Count < 2) return;
             decimal lastSH = _sh[^1], prevSH = _sh[^2], lastSL = _sl_[^1], prevSL = _sl_[^2];
             int lastSHb = _shBar[^1], lastSLb = _slBar[^1];
@@ -291,7 +303,8 @@ namespace SnipeTrading
                     a.Ext = a.Bear ? Math.Min(a.Ext, c.Low) : Math.Max(a.Ext, c.High);
                     decimal rngF = Math.Abs(a.Anchor - a.Ext);
                     decimal gate = a.Bear ? a.Ext + FibLvl * rngF : a.Ext - FibLvl * rngF;
-                    a.Armed = a.Bear ? a.Entry >= gate - Pip : a.Entry <= gate + Pip;
+                    bool rewardOk = Math.Abs(a.Ext - a.Entry) >= MinTargetRR * Math.Abs(a.SL - a.Entry);
+                    a.Armed = rewardOk && (a.Bear ? a.Entry >= gate - Pip : a.Entry <= gate + Pip);
                     bool touch = a.Bear ? c.High >= a.Entry : c.Low <= a.Entry;
                     if (touch)
                     {
@@ -328,6 +341,11 @@ namespace SnipeTrading
             decimal sl = bearish ? wt + SLBufPips * Pip : wb - SLBufPips * Pip;
             decimal slPips = Math.Abs(sl - entry) / Pip;
             if (slPips > MaxSLPips) return;
+            if (HtfFilter && _majorHigh != null && _majorLow != null)
+            {
+                decimal mid = (_majorHigh.Value + _majorLow.Value) / 2;
+                if (bearish ? entry < mid : entry > mid) return;
+            }
             int score = 4 + (fvg ? 1 : 0) + (sessLiq ? 1 : 0) + (HiVol(GetCandle(zbar).Time.ToUniversalTime()) ? 1 : 0) + (model == "TR2" ? 1 : 0) + (slPips <= 20 ? 1 : 0);
             if (score < MinScore) return;
             var c = GetCandle(bar);
