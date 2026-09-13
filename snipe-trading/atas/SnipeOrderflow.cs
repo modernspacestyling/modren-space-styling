@@ -50,7 +50,8 @@ namespace SnipeTrading
         [Display(Name = "Reaction: max bars after touch", GroupName = "Zone", Order = 48)] public int ReactMaxBars { get; set; } = 6;
         [Display(Name = "Max SL pips (pip=0.10)", GroupName = "Zone", Order = 42)] public decimal MaxSLPips { get; set; } = 28m;
         [Display(Name = "SL buffer pips", GroupName = "Zone", Order = 43)] public decimal SLBufPips { get; set; } = 3m;
-        [Display(Name = "Zone expiry bars", GroupName = "Zone", Order = 44)] public int ZoneLife { get; set; } = 200;
+        [Display(Name = "Zone expiry bars", GroupName = "Zone", Order = 44)] public int ZoneLife { get; set; } = 100;
+        [Display(Name = "Cancel untested zone on structure flip", GroupName = "Zone", Order = 45)] public bool CancelOnFlip { get; set; } = true;
         [Display(Name = "Pip size", GroupName = "Zone", Order = 46)] public decimal Pip { get; set; } = 0.10m;
 
         [Display(Name = "Session start (UTC h)", GroupName = "Session", Order = 50)] public int SessStart { get; set; } = 7;
@@ -274,7 +275,8 @@ namespace SnipeTrading
                     }
                     else if (failed || bar - a.TouchBar > ReactMaxBars) a.WaitReact = false;
                 }
-                bool invalid = (((a.Bear && c.Close > a.SL) || (!a.Bear && c.Close < a.SL)) && !a.WaitReact) || bar - a.Born > ZoneLife;
+                bool flip = CancelOnFlip && !a.Touched && (a.Bear ? (iBullCHoCH || sBullBreak) : (iBearCHoCH || sBearBreak));
+                bool invalid = (((a.Bear && c.Close > a.SL) || (!a.Bear && c.Close < a.SL)) && !a.WaitReact) || bar - a.Born > ZoneLife || flip;
                 if (invalid) { if (a.ZoneRect != null) a.ZoneRect.SecondBar = bar; _act = null; }
                 else if (a.ZoneRect != null) a.ZoneRect.SecondBar = bar + 3;
             }

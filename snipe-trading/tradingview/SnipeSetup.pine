@@ -42,7 +42,8 @@ entryMode  = input.string("Reaction", "Entry", options = ["Reaction", "Limit"], 
 reactMaxBars = input.int(6, "Reaction: max bars after touch", minval = 1, group = gZ)
 maxSLpips  = input.float(28, "Max SL (pips)", minval = 5, group = gZ)
 slBufPips  = input.float(3,  "SL buffer beyond wick (pips)", minval = 0, group = gZ)
-zoneLife   = input.int(200, "Zone expiry (bars)", minval = 10, group = gZ)
+zoneLife   = input.int(100, "Zone expiry (bars)", minval = 10, group = gZ)
+cancelOnFlip = input.bool(true, "Cancel untested zone when structure flips against it", group = gZ)
 volMult    = input.float(2.0, "Ignore candles with range >= x * ATR(200) as zone candidates", step = 0.5, group = gZ)
 
 gT = "Session (UTC)"
@@ -319,8 +320,9 @@ if act and aWaitReact and bar_index > aTouchBar
         if showDebug
             label.new(bar_index, aBear ? high : low, failed ? "no reaction: closed through zone" : "no reaction in time", style = label.style_label_left, color = color.new(color.gray, 40), textcolor = color.white, size = size.tiny)
 
-// invalidation / expiry
-if act and ((((aBear and close > aSL) or (not aBear and close < aSL)) and not aWaitReact) or bar_index - aBorn > zoneLife)
+// invalidation / expiry / structure flip against an untested zone
+flipAgainst = cancelOnFlip and not aTouched and (aBear ? (iBullCHoCH or sBullBreak) : (iBearCHoCH or sBearBreak))
+if act and ((((aBear and close > aSL) or (not aBear and close < aSL)) and not aWaitReact) or bar_index - aBorn > zoneLife or flipAgainst)
     if not na(zBox)
         box.set_right(zBox, bar_index), box.set_border_color(zBox, color.gray)
         if aTouched

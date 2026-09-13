@@ -34,7 +34,8 @@ class Params:
     react_max_bars: int = 6
     max_sl_pips: float = 28.0
     sl_buf_pips: float = 3.0
-    zone_life: int = 200
+    zone_life: int = 100
+    cancel_on_flip: bool = True
     vol_mult: float = 2.0
     pip: float = 0.10
     sess_start: int = 7
@@ -192,8 +193,9 @@ def detect(df: pd.DataFrame, p: Params = Params()) -> List[Setup]:
                     else: a.reason = "reaction rejected (SL/reward)"
                 elif failed or i - tb > p.react_max_bars: a.reason = "no reaction"
             waiting = a.reason == "waiting reaction"
-            invalid = ((c[i] > a.sl if a.bear else c[i] < a.sl) and not waiting) or i - a.idx_born > p.zone_life
+            flip = p.cancel_on_flip and not a.touched and ((iBullCHoCH or sBullBreak) if a.bear else (iBearCHoCH or sBearBreak))
+            invalid = ((c[i] > a.sl if a.bear else c[i] < a.sl) and not waiting) or i - a.idx_born > p.zone_life or flip
             if invalid:
-                if not a.touched: a.reason = a.reason or ("invalidated" if i - a.idx_born <= p.zone_life else "expired")
+                if not a.touched: a.reason = a.reason or ("structure flipped" if flip else ("invalidated" if i - a.idx_born <= p.zone_life else "expired"))
                 act = None
     return setups
