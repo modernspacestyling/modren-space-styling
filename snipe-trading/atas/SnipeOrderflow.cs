@@ -31,31 +31,26 @@ namespace SnipeTrading
     public class SnipeOrderflow : Indicator
     {
         // ------------------------------------------------------ settings ----
-        [Display(Name = "Swing length", GroupName = "Structure", Order = 10)] public int PivLen { get; set; } = 5;
-        [Display(Name = "Max bars sweep->CHOCH", GroupName = "Structure", Order = 11)] public int SweepMaxBars { get; set; } = 40;
-        [Display(Name = "Swept level must be extreme of last N bars", GroupName = "Structure", Order = 12)] public int ExtLookback { get; set; } = 60;
+        [Display(Name = "Swing structure length (external)", GroupName = "Structure", Order = 10)] public int SwingLen { get; set; } = 50;
+        [Display(Name = "Internal structure length", GroupName = "Structure", Order = 11)] public int IntLen { get; set; } = 5;
         [Display(Name = "Sweep must close back inside", GroupName = "Structure", Order = 12)] public bool StrictSweep { get; set; } = true;
-        [Display(Name = "Mark TR2", GroupName = "Structure", Order = 13)] public bool UseTR2 { get; set; } = true;
-        [Display(Name = "Mark TC", GroupName = "Structure", Order = 14)] public bool UseTC { get; set; } = true;
-
-        [Display(Name = "Box min bars", GroupName = "Consolidation", Order = 20)] public int BoxMin { get; set; } = 6;
-        [Display(Name = "Box max bars", GroupName = "Consolidation", Order = 21)] public int BoxMax { get; set; } = 40;
-        [Display(Name = "Box height <= x*ATR14", GroupName = "Consolidation", Order = 22)] public decimal BoxMult { get; set; } = 2.2m;
-        [Display(Name = "Break body >= x*avgBody10", GroupName = "Consolidation", Order = 23)] public decimal DispMult { get; set; } = 1.3m;
+        [Display(Name = "Max bars sweep->CHoCH", GroupName = "Structure", Order = 13)] public int SweepMaxBars { get; set; } = 60;
+        [Display(Name = "Max bars CHoCH->BOS", GroupName = "Structure", Order = 14)] public int ChochMaxBars { get; set; } = 60;
+        [Display(Name = "Break body >= x*avgBody10", GroupName = "Structure", Order = 15)] public decimal DispMult { get; set; } = 1.2m;
+        [Display(Name = "Mark TR2", GroupName = "Structure", Order = 16)] public bool UseTR2 { get; set; } = true;
+        [Display(Name = "Mark TC", GroupName = "Structure", Order = 17)] public bool UseTC { get; set; } = true;
+        [Display(Name = "Ignore candles with range >= x*ATR200 as zone", GroupName = "Zone", Order = 49)] public decimal VolMult { get; set; } = 2.0m;
 
         [Display(Name = "Fib gate", GroupName = "Fibonacci", Order = 30)] public decimal FibLvl { get; set; } = 0.764m;
         [Display(Name = "Min reward to ultimate target (R)", GroupName = "Fibonacci", Order = 31)] public decimal MinTargetRR { get; set; } = 2m;
-        [Display(Name = "Bigger picture premium/discount filter", GroupName = "Fibonacci", Order = 32)] public bool HtfFilter { get; set; } = true;
-        [Display(Name = "Recent range lookback (bars)", GroupName = "Fibonacci", Order = 33)] public int HtfLookback { get; set; } = 240;
+        [Display(Name = "Sell only in premium / buy only in discount of swing range", GroupName = "Fibonacci", Order = 32)] public bool BiasFilter { get; set; } = true;
 
-        [Display(Name = "Zone pick (0=freshest,1=extreme)", GroupName = "Zone", Order = 40)] public int ZonePick { get; set; } = 0;
         [Display(Name = "Entry on body (else wick)", GroupName = "Zone", Order = 41)] public bool EntryBody { get; set; } = true;
         [Display(Name = "Reaction entry (close back inside zone)", GroupName = "Zone", Order = 47)] public bool ReactionEntry { get; set; } = true;
         [Display(Name = "Reaction: max bars after touch", GroupName = "Zone", Order = 48)] public int ReactMaxBars { get; set; } = 6;
         [Display(Name = "Max SL pips (pip=0.10)", GroupName = "Zone", Order = 42)] public decimal MaxSLPips { get; set; } = 28m;
         [Display(Name = "SL buffer pips", GroupName = "Zone", Order = 43)] public decimal SLBufPips { get; set; } = 3m;
         [Display(Name = "Zone expiry bars", GroupName = "Zone", Order = 44)] public int ZoneLife { get; set; } = 200;
-        [Display(Name = "Indecision body <= x*range", GroupName = "Zone", Order = 45)] public decimal IndecBody { get; set; } = 0.45m;
         [Display(Name = "Pip size", GroupName = "Zone", Order = 46)] public decimal Pip { get; set; } = 0.10m;
 
         [Display(Name = "Session start (UTC h)", GroupName = "Session", Order = 50)] public int SessStart { get; set; } = 7;
@@ -79,15 +74,11 @@ namespace SnipeTrading
         private readonly ValueDataSeries _boxBreak = new("BoxBreak") { VisualType = VisualMode.Hide };
 
         // --------------------------------------------------------- state ----
-        private readonly List<decimal> _sh = new(); private readonly List<int> _shBar = new();
-        private readonly List<decimal> _sl_ = new(); private readonly List<int> _slBar = new();
-        private int _sweepHiBar = -1, _sweepLoBar = -1; private decimal _sweepHiPx, _sweepLoPx;
-        private int _chochBearBar = -1, _chochBullBar = -1;
-        private int _trend; private decimal _protLow, _protHigh; private int _protLowBar, _protHighBar;
-        private decimal? _structHigh, _structLow; private int _structHighBar, _structLowBar;
-        private int _lastBearEvent = -1, _lastBullEvent = -1; private string _lastBearKind = "", _lastBullKind = "";
+        private decimal? _sHigh, _sLow, _iHigh, _iLow; private int _sHighBar, _sLowBar, _iHighBar, _iLowBar; private bool _sHighX, _sLowX, _iHighX, _iLowX;
+        private int _sBias, _iBias; private decimal? _trailTop, _trailBot;
+        private int _sweepHiBar = -1, _sweepLoBar = -1; private bool _sweepHiSess, _sweepLoSess;
+        private int _chochBearBar = -1, _chochBullBar = -1; private bool _chochBearSess, _chochBullSess;
         private decimal _asiaH, _asiaL, _ldnH, _ldnL, _pdH, _pdL, _dayH, _dayL; private int _lastDay = -1;
-        private bool _sweepHiSess, _sweepLoSess, _chochBearSess, _chochBullSess;
 
         private class Setup
         {
@@ -109,8 +100,8 @@ namespace SnipeTrading
 
         protected override void OnRecalculate()
         {
-            _sh.Clear(); _shBar.Clear(); _sl_.Clear(); _slBar.Clear();
-            _sweepHiBar = _sweepLoBar = _chochBearBar = _chochBullBar = -1; _act = null; _lastDay = -1; _trend = 0; _structHigh = _structLow = null; _lastBearEvent = _lastBullEvent = -1;
+            _sHigh = _sLow = _iHigh = _iLow = null; _sHighX = _sLowX = _iHighX = _iLowX = false; _sBias = _iBias = 0; _trailTop = _trailBot = null;
+            _sweepHiBar = _sweepLoBar = _chochBearBar = _chochBullBar = -1; _act = null; _lastDay = -1;
             Rectangles.Clear(); Labels.Clear();
         }
 
@@ -148,40 +139,21 @@ namespace SnipeTrading
         }
         private static bool HiVol(DateTime tUtc) => tUtc.Hour == 7 || (tUtc.Hour >= 12 && tUtc.Hour < 14);
 
-        // (boxHigh, boxLow, n): largest window [bar-n .. bar-1] starting after ev with height <= BoxMult * ATR(ev)
-        private (decimal, decimal, int) BoxSince(int bar, int ev)
+        // extreme normal-range candle among bars [bar-n .. bar-1] (order block candidate); returns bar index or -1
+        private int OrderBlockBar(int bar, int n, bool bearish)
         {
-            if (ev < 0) return (0, 0, 0);
-            int maxN = Math.Min(BoxMax, bar - ev - 1); if (maxN < BoxMin) return (0, 0, 0);
-            decimal atr = Atr(ev, 14); if (atr <= 0) return (0, 0, 0);
-            decimal rh = decimal.MinValue, rl = decimal.MaxValue, bh = 0, bl = 0; int n = 0;
-            for (int k = 1; k <= maxN; k++)
+            int best = -1; decimal atr = Atr(bar, 200);
+            for (int k = 1; k <= n && bar - k >= 0; k++)
             {
-                var x = GetCandle(bar - k); rh = Math.Max(rh, x.High); rl = Math.Min(rl, x.Low);
-                if (rh - rl <= BoxMult * atr) { if (k >= BoxMin) { bh = rh; bl = rl; n = k; } } else break;
+                var c = GetCandle(bar - k); if (atr > 0 && c.High - c.Low >= VolMult * atr) continue;
+                if (best < 0) { best = bar - k; continue; }
+                var b = GetCandle(best);
+                if (bearish ? c.High > b.High : c.Low < b.Low) best = bar - k;
             }
-            return (bh, bl, n);
+            return best;
         }
-
-        // zone inside the box: last (freshest) or extreme opposite/indecision candle
-        private bool FindZone(int bar, int n, bool bearish, out decimal zt, out decimal zb, out decimal wt, out decimal wb, out int zbar, out bool fvg)
-        {
-            zt = zb = wt = wb = 0; zbar = -1; fvg = false; decimal best = bearish ? decimal.MinValue : decimal.MaxValue; bool found = false;
-            for (int i = 1; i <= n; i++)
-            {
-                var c = GetCandle(bar - i);
-                bool bull = c.Close > c.Open; decimal rng = c.High - c.Low; decimal bd = Math.Abs(c.Close - c.Open);
-                bool opp = bearish ? bull : !bull; bool indec = rng > 0 && bd <= IndecBody * rng;
-                if (!(opp || indec)) continue;
-                bool cand = ZonePick == 0 || (bearish ? c.High > best : c.Low < best);
-                if (!cand) continue;
-                best = bearish ? c.High : c.Low;
-                zt = Math.Max(c.Open, c.Close); zb = Math.Min(c.Open, c.Close); wt = c.High; wb = c.Low; zbar = bar - i; found = true;
-                if (i >= 2) { var c2 = GetCandle(bar - i + 2); fvg = bearish ? c2.High < c.Low : c2.Low > c.High; }
-                if (ZonePick == 0) break;
-            }
-            return found;
-        }
+        private bool NewHigh(int bar, int size) { if (bar - size < 0) return false; var (m, _) = HighestSince(bar - size + 1, bar); return GetCandle(bar - size).High > m; }
+        private bool NewLow(int bar, int size) { if (bar - size < 0) return false; var (m, _) = LowestSince(bar - size + 1, bar); return GetCandle(bar - size).Low < m; }
 
         // ------------------------------------------------- orderflow ----
         // Returns 0..4: delta sign, absorption, stacked imbalance, delta divergence
@@ -217,7 +189,7 @@ namespace SnipeTrading
         // ------------------------------------------------- main loop ----
         protected override void OnCalculate(int bar, decimal value)
         {
-            if (bar < PivLen * 2 + 20) return;
+            if (bar < SwingLen + 20) return;
             var c = GetCandle(bar);
             var tUtc = c.Time.ToUniversalTime();
 
@@ -230,62 +202,38 @@ namespace SnipeTrading
             if (tUtc.Hour < 7) { _asiaH = Math.Max(_asiaH, c.High); _asiaL = _asiaL == 0 ? c.Low : Math.Min(_asiaL, c.Low); }
             if (tUtc.Hour >= 7 && tUtc.Hour < 12) { _ldnH = Math.Max(_ldnH, c.High); _ldnL = _ldnL == 0 ? c.Low : Math.Min(_ldnL, c.Low); }
 
-            // confirmed pivots (bar - PivLen)
-            int pb = bar - PivLen; var pc = GetCandle(pb); bool isPH = true, isPL = true;
-            for (int i = pb - PivLen; i <= pb + PivLen; i++)
-            {
-                if (i == pb) continue; var x = GetCandle(i);
-                if (x.High >= pc.High) isPH = false; if (x.Low <= pc.Low) isPL = false;
-            }
-            if (isPH && (_shBar.Count == 0 || _shBar[^1] != pb)) { _sh.Add(pc.High); _shBar.Add(pb); }
-            if (isPL && (_slBar.Count == 0 || _slBar[^1] != pb)) { _sl_.Add(pc.Low); _slBar.Add(pb); }
-            if (_sh.Count < 2 || _sl_.Count < 2) return;
-            decimal lastSH = _sh[^1], prevSH = _sh[^2], lastSL = _sl_[^1], prevSL = _sl_[^2];
-            int lastSHb = _shBar[^1], lastSLb = _slBar[^1];
-
-            // --- market structure state machine (mirrors Pine) ---
-            bool bearCHOCH = false, bullCHOCH = false;
-            if (_trend == 0)
-            {
-                _trend = lastSH > prevSH ? 1 : -1; _protLow = lastSL; _protLowBar = lastSLb; _protHigh = lastSH; _protHighBar = lastSHb;
-                _structHigh = lastSH; _structHighBar = lastSHb; _structLow = lastSL; _structLowBar = lastSLb;
-            }
-            if (isPH && _trend == 1 && (_structHigh == null || pc.High > _structHigh)) { _structHigh = pc.High; _structHighBar = pb; }
-            if (isPL && _trend == -1 && (_structLow == null || pc.Low < _structLow)) { _structLow = pc.Low; _structLowBar = pb; }
-            if (_trend == 1)
-            {
-                if (c.Close < _protLow) { bearCHOCH = true; _trend = -1; (_protHigh, _protHighBar) = HighestSince(_protLowBar, bar); _structHigh = _structLow = null; _lastBearEvent = bar; _lastBearKind = "TR2"; }
-                else if (_structHigh != null && c.Close > _structHigh) { (_protLow, _protLowBar) = LowestSince(_structHighBar, bar); _structHigh = null; _lastBullEvent = bar; _lastBullKind = "TC"; }
-            }
-            else if (_trend == -1)
-            {
-                if (c.Close > _protHigh) { bullCHOCH = true; _trend = 1; (_protLow, _protLowBar) = LowestSince(_protHighBar, bar); _structHigh = _structLow = null; _lastBullEvent = bar; _lastBullKind = "TR2"; }
-                else if (_structLow != null && c.Close < _structLow) { (_protHigh, _protHighBar) = HighestSince(_structLowBar, bar); _structLow = null; _lastBearEvent = bar; _lastBearKind = "TC"; }
-            }
-            // sweeps of external liquidity (structural HH / LL)
-            decimal tol = 2 * Pip; decimal extHigh = _structHigh ?? lastSH, extLow = _structLow ?? lastSL;
-            var (lbHi, _) = HighestSince(Math.Max(0, bar - ExtLookback), bar - 1); var (lbLo, _) = LowestSince(Math.Max(0, bar - ExtLookback), bar - 1);
-            if (c.High > extHigh && (!StrictSweep || c.Close < extHigh) && extHigh >= lbHi - Pip) { _sweepHiBar = bar; _sweepHiPx = c.High; _sweepHiSess = Near(extHigh, _asiaH, tol) || Near(extHigh, _ldnH, tol) || Near(extHigh, _pdH, tol); }
-            if (c.Low < extLow && (!StrictSweep || c.Close > extLow) && extLow <= lbLo + Pip) { _sweepLoBar = bar; _sweepLoPx = c.Low; _sweepLoSess = Near(extLow, _asiaL, tol) || Near(extLow, _ldnL, tol) || Near(extLow, _pdL, tol); }
-            if (bearCHOCH && _sweepHiBar >= 0 && bar - _sweepHiBar <= SweepMaxBars) { _chochBearBar = bar; _chochBearSess = _sweepHiSess; }
-            if (bullCHOCH && _sweepLoBar >= 0 && bar - _sweepLoBar <= SweepMaxBars) { _chochBullBar = bar; _chochBullSess = _sweepLoSess; }
-            bool upTrend = _trend == 1, downTrend = _trend == -1;
-
-            // consolidation box = range formed after the structure event (CHOCH for TR2, BOS for TC)
-            var (bxHd, bxLd, bxNd) = BoxSince(bar, _lastBearEvent); var (bxHu, bxLu, bxNu) = BoxSince(bar, _lastBullEvent);
-            decimal body = Math.Abs(c.Close - c.Open), ab = AvgBody(bar, 10);
-            bool breakDn = bxNd > 0 && c.Close < bxLd && body >= DispMult * ab && c.Close < c.Open;
-            bool breakUp = bxNu > 0 && c.Close > bxHu && body >= DispMult * ab && c.Close > c.Open;
-            var (bxH, bxL, bxN) = breakDn ? (bxHd, bxLd, bxNd) : (bxHu, bxLu, bxNu);
-            _boxBreak[bar] = breakDn ? -1 : breakUp ? 1 : 0;
-            bool tr2Bear = UseTR2 && breakDn && _lastBearKind == "TR2" && _chochBearBar == _lastBearEvent;
-            bool tr2Bull = UseTR2 && breakUp && _lastBullKind == "TR2" && _chochBullBar == _lastBullEvent;
-            bool tcBear = UseTC && breakDn && _lastBearKind == "TC" && downTrend, tcBull = UseTC && breakUp && _lastBullKind == "TC" && upTrend;
+            // ---- swing tier (one-sided confirmation)
+            if (NewHigh(bar, SwingLen)) { _sHigh = GetCandle(bar - SwingLen).High; _sHighBar = bar - SwingLen; _sHighX = false; _trailTop = _sHigh; }
+            if (NewLow(bar, SwingLen)) { _sLow = GetCandle(bar - SwingLen).Low; _sLowBar = bar - SwingLen; _sLowX = false; _trailBot = _sLow; }
+            _trailTop = _trailTop == null ? c.High : Math.Max(_trailTop.Value, c.High); _trailBot = _trailBot == null ? c.Low : Math.Min(_trailBot.Value, c.Low);
+            decimal biasMid = (_trailTop.Value + _trailBot.Value) / 2;
+            bool sBullBreak = _sHigh != null && !_sHighX && c.Close > _sHigh, sBearBreak = _sLow != null && !_sLowX && c.Close < _sLow;
+            if (sBullBreak) { _sHighX = true; _sBias = 1; }
+            if (sBearBreak) { _sLowX = true; _sBias = -1; }
+            decimal tol = 2 * Pip;
+            if (_sHigh != null && !_sHighX && c.High > _sHigh && (!StrictSweep || c.Close < _sHigh)) { _sweepHiBar = bar; _sweepHiSess = Near(_sHigh.Value, _asiaH, tol) || Near(_sHigh.Value, _ldnH, tol) || Near(_sHigh.Value, _pdH, tol); }
+            if (_sLow != null && !_sLowX && c.Low < _sLow && (!StrictSweep || c.Close > _sLow)) { _sweepLoBar = bar; _sweepLoSess = Near(_sLow.Value, _asiaL, tol) || Near(_sLow.Value, _ldnL, tol) || Near(_sLow.Value, _pdL, tol); }
+            // ---- internal tier
+            if (NewHigh(bar, IntLen)) { _iHigh = GetCandle(bar - IntLen).High; _iHighBar = bar - IntLen; _iHighX = false; }
+            if (NewLow(bar, IntLen)) { _iLow = GetCandle(bar - IntLen).Low; _iLowBar = bar - IntLen; _iLowX = false; }
+            bool iBullBreak = _iHigh != null && !_iHighX && c.Close > _iHigh, iBearBreak = _iLow != null && !_iLowX && c.Close < _iLow;
+            bool iBullCHoCH = iBullBreak && _iBias == -1, iBearCHoCH = iBearBreak && _iBias == 1, iBullBOS = iBullBreak && _iBias == 1, iBearBOS = iBearBreak && _iBias == -1;
+            int brokenLowBar = iBearBreak ? _iLowBar : -1, brokenHighBar = iBullBreak ? _iHighBar : -1;
+            if (iBullBreak) { _iHighX = true; _iBias = 1; }
+            if (iBearBreak) { _iLowX = true; _iBias = -1; }
+            if (iBearCHoCH) { _chochBearBar = (_sweepHiBar >= 0 && bar - _sweepHiBar <= SweepMaxBars) ? bar : -1; _chochBearSess = _sweepHiSess; }
+            if (iBullCHoCH) { _chochBullBar = (_sweepLoBar >= 0 && bar - _sweepLoBar <= SweepMaxBars) ? bar : -1; _chochBullSess = _sweepLoSess; }
+            decimal body = Math.Abs(c.Close - c.Open), ab = AvgBody(bar, 10); bool disp = body >= DispMult * ab;
+            bool tr2Bear = UseTR2 && iBearBOS && disp && _chochBearBar >= 0 && bar - _chochBearBar <= ChochMaxBars;
+            bool tr2Bull = UseTR2 && iBullBOS && disp && _chochBullBar >= 0 && bar - _chochBullBar <= ChochMaxBars;
+            bool tcBear = UseTC && iBearBOS && disp && _sBias == -1 && !tr2Bear, tcBull = UseTC && iBullBOS && disp && _sBias == 1 && !tr2Bull;
+            _boxBreak[bar] = iBearBOS ? -1 : iBullBOS ? 1 : 0;
+            int lookN = (tr2Bear || tcBear) ? bar - brokenLowBar : (tr2Bull || tcBull) ? bar - brokenHighBar : 0;
 
             if (bar != _lastBar) // create only once per bar
             {
-                if (tr2Bear || tcBear) TryCreate(bar, true, tr2Bear ? "TR2" : "TC", tr2Bear && _chochBearSess, bxH, bxL, bxN, tUtc);
-                else if (tr2Bull || tcBull) TryCreate(bar, false, tr2Bull ? "TR2" : "TC", tr2Bull && _chochBullSess, bxH, bxL, bxN, tUtc);
+                if (tr2Bear || tcBear) TryCreate(bar, true, tr2Bear ? "TR2" : "TC", tr2Bear && _chochBearSess, lookN, biasMid);
+                else if (tr2Bull || tcBull) TryCreate(bar, false, tr2Bull ? "TR2" : "TC", tr2Bull && _chochBullSess, lookN, biasMid);
             }
             _lastBar = bar;
 
@@ -348,30 +296,29 @@ namespace SnipeTrading
         private decimal MaxDeltaSince(int from, int to) { decimal m = decimal.MinValue; for (int i = from; i < to; i++) m = Math.Max(m, GetCandle(i).MaxDelta); return m; }
         private decimal MinDeltaSince(int from, int to) { decimal m = decimal.MaxValue; for (int i = from; i < to; i++) m = Math.Min(m, GetCandle(i).MinDelta); return m; }
 
-        private void TryCreate(int bar, bool bearish, string model, bool sessLiq, decimal bxH, decimal bxL, int bxN, DateTime tUtc)
+        private void TryCreate(int bar, bool bearish, string model, bool sessLiq, int lookN, decimal biasMid)
         {
-            if (!FindZone(bar, bxN, bearish, out var zt, out var zb, out var wt, out var wb, out var zbar, out var fvg)) return;
+            lookN = Math.Max(lookN, 1);
+            int j = OrderBlockBar(bar, lookN, bearish); if (j < 0) return;
+            var z = GetCandle(j); decimal zt = Math.Max(z.Open, z.Close), zb = Math.Min(z.Open, z.Close), wt = z.High, wb = z.Low;
             decimal entry = bearish ? (EntryBody ? zb : wb) : (EntryBody ? zt : wt);
             decimal sl = bearish ? wt + SLBufPips * Pip : wb - SLBufPips * Pip;
             decimal slPips = Math.Abs(sl - entry) / Pip;
             if (slPips > MaxSLPips) return;
-            if (HtfFilter)
-            {
-                var (rh, _) = HighestSince(Math.Max(0, bar - HtfLookback + 1), bar); var (rl, _) = LowestSince(Math.Max(0, bar - HtfLookback + 1), bar);
-                decimal mid = (rh + rl) / 2;
-                if (bearish ? entry < mid : entry > mid) return;
-            }
-            int score = 4 + (fvg ? 1 : 0) + (sessLiq ? 1 : 0) + (HiVol(GetCandle(zbar).Time.ToUniversalTime()) ? 1 : 0) + (model == "TR2" ? 1 : 0) + (slPips <= 20 ? 1 : 0);
+            if (BiasFilter && (bearish ? entry < biasMid : entry > biasMid)) return;
+            bool fvg = false; if (bar - j >= 2) { var c2 = GetCandle(j + 2); fvg = bearish ? c2.High < z.Low : c2.Low > z.High; }
+            int score = 4 + (fvg ? 1 : 0) + (sessLiq ? 1 : 0) + (HiVol(z.Time.ToUniversalTime()) ? 1 : 0) + (model == "TR2" ? 1 : 0) + (slPips <= 20 ? 1 : 0);
             if (score < MinScore) return;
+            var (cH, _) = HighestSince(bar - lookN, bar); var (cL, _) = LowestSince(bar - lookN, bar);
             var c = GetCandle(bar);
             var s = new Setup
             {
-                Bear = bearish, Model = model, ZT = zt, ZB = zb, WT = wt, WB = wb, ZBar = zbar, BoxH = bxH, BoxL = bxL, BoxStart = bar - bxN,
-                Born = bar, Entry = entry, SL = sl, Anchor = bearish ? bxH : bxL, Ext = bearish ? c.Low : c.High, Score = score, Fvg = fvg, SessLiq = sessLiq
+                Bear = bearish, Model = model, ZT = zt, ZB = zb, WT = wt, WB = wb, ZBar = j, BoxH = cH, BoxL = cL, BoxStart = bar - lookN,
+                Born = bar, Entry = entry, SL = sl, Anchor = bearish ? cH : cL, Ext = bearish ? c.Low : c.High, Score = score, Fvg = fvg, SessLiq = sessLiq
             };
             var zoneColor = bearish ? System.Drawing.Color.FromArgb(70, 255, 82, 82) : System.Drawing.Color.FromArgb(70, 0, 230, 118);
-            s.BoxRect = new DrawingRectangle(s.BoxStart, bxH, bar, bxL, new Pen(System.Drawing.Color.Gray), new SolidBrush(System.Drawing.Color.FromArgb(30, 144, 164, 174)));
-            s.ZoneRect = new DrawingRectangle(zbar, EntryBody ? zt : wt, bar + 3, EntryBody ? zb : wb, new Pen(zoneColor), new SolidBrush(zoneColor));
+            s.BoxRect = new DrawingRectangle(s.BoxStart, cH, bar, cL, new Pen(System.Drawing.Color.Gray), new SolidBrush(System.Drawing.Color.FromArgb(30, 144, 164, 174)));
+            s.ZoneRect = new DrawingRectangle(j, EntryBody ? zt : wt, bar + 3, EntryBody ? zb : wb, new Pen(zoneColor), new SolidBrush(zoneColor));
             Rectangles.Add(s.BoxRect); Rectangles.Add(s.ZoneRect);
             AddText("zone" + bar, (bearish ? "SELL " : "BUY ") + model + " " + score + "/9  SL " + slPips.ToString("F0") + "p", bearish, bar, bearish ? wt : wb, Colors.White, bearish ? Colors.DarkRed : Colors.DarkGreen, 9f, DrawingText.TextAlign.Left);
             _act = s;
