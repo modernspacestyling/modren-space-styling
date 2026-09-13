@@ -39,6 +39,7 @@ class Params:
     skip_fri_pm: bool = True
     min_score: int = 5
     require_armed: bool = True
+    strict_sweep: bool = True
 
 @dataclass
 class Setup:
@@ -132,9 +133,9 @@ def detect(df: pd.DataFrame, p: Params = Params()) -> List[Setup]:
         lastSH, prevSH, lastSL, prevSL = sh[-1], sh[-2], sl_[-1], sl_[-2]
         lastSHb, lastSLb = shb[-1], slb[-1]
         # sweeps
-        if h[i] > lastSH and i > lastSHb + p.piv_len:
+        if h[i] > lastSH and i > lastSHb + p.piv_len and (not p.strict_sweep or c[i] < lastSH):
             sweep_hi_bar, sweep_hi_px, sweep_hi_sess = i, h[i], sess_level(i, lastSH, True)
-        if l[i] < lastSL and i > lastSLb + p.piv_len:
+        if l[i] < lastSL and i > lastSLb + p.piv_len and (not p.strict_sweep or c[i] > lastSL):
             sweep_lo_bar, sweep_lo_px, sweep_lo_sess = i, l[i], sess_level(i, lastSL, False)
         bear_choch = c[i] < lastSL and c[i - 1] >= lastSL
         bull_choch = c[i] > lastSH and c[i - 1] <= lastSH

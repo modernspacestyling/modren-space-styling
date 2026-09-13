@@ -34,6 +34,7 @@ namespace SnipeTrading
         [Display(Name = "Swing length", GroupName = "Structure", Order = 10)] public int PivLen { get; set; } = 5;
         [Display(Name = "Max bars sweep->CHOCH", GroupName = "Structure", Order = 11)] public int SweepMaxBars { get; set; } = 40;
         [Display(Name = "Max bars CHOCH->box break", GroupName = "Structure", Order = 12)] public int ChochMaxBars { get; set; } = 60;
+        [Display(Name = "Sweep must close back inside", GroupName = "Structure", Order = 12)] public bool StrictSweep { get; set; } = true;
         [Display(Name = "Mark TR2", GroupName = "Structure", Order = 13)] public bool UseTR2 { get; set; } = true;
         [Display(Name = "Mark TC", GroupName = "Structure", Order = 14)] public bool UseTC { get; set; } = true;
 
@@ -236,8 +237,8 @@ namespace SnipeTrading
 
             // sweeps
             decimal tol = 2 * Pip;
-            if (c.High > lastSH && bar > lastSHb + PivLen) { _sweepHiBar = bar; _sweepHiPx = c.High; _sweepHiSess = Near(lastSH, _asiaH, tol) || Near(lastSH, _ldnH, tol) || Near(lastSH, _pdH, tol); }
-            if (c.Low < lastSL && bar > lastSLb + PivLen) { _sweepLoBar = bar; _sweepLoPx = c.Low; _sweepLoSess = Near(lastSL, _asiaL, tol) || Near(lastSL, _ldnL, tol) || Near(lastSL, _pdL, tol); }
+            if (c.High > lastSH && bar > lastSHb + PivLen && (!StrictSweep || c.Close < lastSH)) { _sweepHiBar = bar; _sweepHiPx = c.High; _sweepHiSess = Near(lastSH, _asiaH, tol) || Near(lastSH, _ldnH, tol) || Near(lastSH, _pdH, tol); }
+            if (c.Low < lastSL && bar > lastSLb + PivLen && (!StrictSweep || c.Close > lastSL)) { _sweepLoBar = bar; _sweepLoPx = c.Low; _sweepLoSess = Near(lastSL, _asiaL, tol) || Near(lastSL, _ldnL, tol) || Near(lastSL, _pdL, tol); }
 
             // CHOCH
             var p1 = GetCandle(bar - 1);

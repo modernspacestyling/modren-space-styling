@@ -24,6 +24,7 @@ indicator("Snipe Setup Marker v2 (TR2/TC)", "SNIPE", overlay = true,
 gS = "Structure"
 pivLen       = input.int(5,  "Swing length (bars each side)", minval = 2, group = gS)
 sweepMaxBars = input.int(40, "Max bars: sweep -> CHOCH",        minval = 3, group = gS)
+strictSweep  = input.bool(true, "Sweep must close back inside the level", group = gS)
 chochMaxBars = input.int(60, "Max bars: CHOCH -> box break",   minval = 3, group = gS)
 useTR2       = input.bool(true, "Mark TR2 (reversal) setups",  group = gS)
 useTC        = input.bool(true, "Mark TC (continuation) setups", group = gS)
@@ -100,9 +101,9 @@ f_sessLevel(float lvl, bool isHigh) =>
 // ------------------------------------------------------ sweeps & CHOCH ----
 var int sweepHiBar = na, var float sweepHiPx = na, var bool sweepHiSess = false
 var int sweepLoBar = na, var float sweepLoPx = na, var bool sweepLoSess = false
-if not na(lastSH) and high > lastSH and bar_index > lastSHb + pivLen
+if not na(lastSH) and high > lastSH and bar_index > lastSHb + pivLen and (not strictSweep or close < lastSH)
     sweepHiBar := bar_index, sweepHiPx := high, sweepHiSess := f_sessLevel(lastSH, true)
-if not na(lastSL) and low < lastSL and bar_index > lastSLb + pivLen
+if not na(lastSL) and low < lastSL and bar_index > lastSLb + pivLen and (not strictSweep or close > lastSL)
     sweepLoBar := bar_index, sweepLoPx := low, sweepLoSess := f_sessLevel(lastSL, false)
 
 bearCHOCH = not na(lastSL) and close < lastSL and close[1] >= lastSL
