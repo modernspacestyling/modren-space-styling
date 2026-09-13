@@ -29,6 +29,9 @@ class Params:
     fib: float = 0.764
     min_target_rr: float = 2.0
     bias_filter: bool = True
+    trend_filter: bool = True
+    trend_tf: int = 60
+    trend_len: int = 10
     entry_body: bool = True
     entry_mode: str = "reaction"   # or "limit"
     react_max_bars: int = 6
@@ -60,7 +63,30 @@ def _atr(h, l, c, n):
     tr = np.r_[h[0] - l[0], np.maximum(h[1:] - l[1:], np.maximum(np.abs(h[1:] - c[:-1]), np.abs(l[1:] - c[:-1])))]
     return pd.Series(tr).rolling(n, min_periods=1).mean().to_numpy()
 
-def detect(df: pd.DataFrame, p: Params = Params()) -> List[Setup]:
+def swing_bias(df: pd.DataFrame, length: int) -> np.ndarray:
+    """+1 / -1 / 0 per bar: bias after the last swing break (one-sided pivot confirmation)."""
+    h = df["high"].to_numpy(float); l = df["low"].to_numpy(float); c = df["close"].to_numpy(float); N = len(df)
+    out = np.zeros(N, int); sh = sl = np.nan; shx = slx = False; b = 0
+    for i in range(length, N):
+        if h[i - length] > h[i - length + 1:i + 1].max(): sh, shx = h[i - length], False
+        if l[i - length] < l[i - length + 1:i + 1].min(): sl, slx = l[i - length], False
+        if not np.isnan(sh) and not shx and c[i] > sh: shx = True; b = 1
+        if not np.isnan(sl) and not slx and c[i] < sl: slx = True; b = -1
+        out[i] = b
+    return out
+
+def htf_bias_for(df: pd.DataFrame, m1: pd.DataFrame, tf_minutes: int, length: int) -> np.ndarray:
+    """Bias of the last COMPLETED higher-timeframe bar, aligned to df's index (no lookahead)."""
+    from .data import resample
+    htf = resample(m1, tf_minutes)
+    b = swing_bias(htf, length)
+    close_time = htf.index + pd.Timedelta(minutes=tf_minutes)
+    ser = pd.Series(b, index=close_time).sort_index()
+    aligned = ser.reindex(ser.index.union(df.index)).ffill().reindex(df.index).fillna(0)
+    return aligned.to_numpy(int)
+
+def detect(df: pd.DataFrame, p: Params = Params(), htf_bias: Optional[np.ndarray] = None) -> List[Setup]:
+    if htf_bias is None: htf_bias = np.zeros(len(df), int)
     o = df["open"].to_numpy(float); h = df["high"].to_numpy(float); l = df["low"].to_numpy(float); c = df["close"].to_numpy(float)
     t = df.index; N = len(df)
     atr200 = _atr(h, l, c, 200)
@@ -157,6 +183,7 @@ def detect(df: pd.DataFrame, p: Params = Params()) -> List[Setup]:
                 sl = wt + p.sl_buf_pips * p.pip if bear else wb - p.sl_buf_pips * p.pip
                 sl_pips = abs(sl - entry) / p.pip
                 bias_ok = (not p.bias_filter) or (entry >= bias_mid if bear else entry <= bias_mid)
+                if p.trend_filter and not (htf_bias[i] == -1 if bear else htf_bias[i] == 1): bias_ok = False
                 off = i - j
                 fvg = ((h[j + 2] < l[j]) if bear else (l[j + 2] > h[j])) if off >= 2 else False
                 if sl_pips <= p.max_sl_pips and bias_ok:

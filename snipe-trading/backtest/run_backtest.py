@@ -16,14 +16,15 @@ import argparse, json, os, sys
 from dataclasses import asdict
 import numpy as np, pandas as pd
 from snipe_bt.data import load_bars, load_levels, resample, synthetic_gold
-from snipe_bt.detector import Params, detect
+from snipe_bt.detector import Params, detect, htf_bias_for
 from snipe_bt.sim import Ladder, simulate, summarise
 from snipe_bt.orderflow import touch_features
 from snipe_bt.report import fmt_stats, breakdown, equity_png
 
 def run_detector(m1: pd.DataFrame, tf: int, p: Params, ladder: Ladder, levels=None, of_filters=True):
     bars = resample(m1, tf) if tf > 1 else m1
-    setups = detect(bars, p)
+    hb = htf_bias_for(bars, m1, p.trend_tf, p.trend_len) if p.trend_filter else None
+    setups = detect(bars, p, hb)
     m1_index = m1.index
     rows = []
     for s in setups:
@@ -71,7 +72,7 @@ def main():
     ap.add_argument("--tz-offset", type=float, default=0.0, help="hours to subtract from file time to get UTC")
     ap.add_argument("--out", default="results"); ap.add_argument("--synthetic", action="store_true"); ap.add_argument("--replay-only", action="store_true")
     ap.add_argument("--min-score", type=int, default=5); ap.add_argument("--max-sl", type=float, default=28); ap.add_argument("--no-tc", action="store_true")
-    ap.add_argument("--entry", default="reaction", choices=["reaction", "limit"]); ap.add_argument("--be-rr", type=float, default=1.0); ap.add_argument("--spread", type=float, default=2.0)
+    ap.add_argument("--entry", default="reaction", choices=["reaction", "limit"]); ap.add_argument("--trend-tf", type=int, default=60); ap.add_argument("--no-trend-filter", action="store_true"); ap.add_argument("--be-rr", type=float, default=1.0); ap.add_argument("--spread", type=float, default=2.0)
     a = ap.parse_args(); os.makedirs(a.out, exist_ok=True)
     if a.synthetic: m1 = synthetic_gold(); levels = None; src = "SYNTHETIC random walk (no edge expected)"
     else:
@@ -80,7 +81,7 @@ def main():
     ladder = Ladder(be_rr=a.be_rr, spread_pips=a.spread)
     md = [f"# Snipe backtest report\n\nSource: `{src}`  \nBars: {len(m1)} M1 from {m1.index[0]} to {m1.index[-1]} (UTC)  \nLadder: BE at {ladder.be_rr}R, partials {ladder.partials}, runner to target, spread {ladder.spread_pips} pips\n"]
     if not a.replay_only:
-        p = Params(min_score=a.min_score, max_sl_pips=a.max_sl, use_tc=not a.no_tc, entry_mode=a.entry)
+        p = Params(min_score=a.min_score, max_sl_pips=a.max_sl, use_tc=not a.no_tc, entry_mode=a.entry, trend_tf=a.trend_tf, trend_filter=not a.no_trend_filter)
         df, bars = run_detector(m1, a.tf, p, ladder, levels)
         df.to_csv(os.path.join(a.out, f"setups_tf{a.tf}.csv"), index=False)
         sig = df[df.get("valid_signal", pd.Series(dtype=bool)) == True] if len(df) else df

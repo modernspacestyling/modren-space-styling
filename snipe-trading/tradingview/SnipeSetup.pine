@@ -34,6 +34,9 @@ fibLvl      = input.float(0.764, "Fib gate", step = 0.001, group = gF)
 fibLvl2     = input.float(0.705, "Second fib line (display)", step = 0.001, group = gF)
 minTargetRR = input.float(2.0, "Min reward to ultimate target (R)", step = 0.5, group = gF)
 biasFilter  = input.bool(true, "Sell only in premium / buy only in discount of the swing range", group = gF)
+trendFilter = input.bool(true, "Trade only with the higher-timeframe structure", group = gF)
+trendTF     = input.timeframe("60", "Trend timeframe", group = gF)
+trendLen    = input.int(10, "Trend swing length (bars of trend TF)", minval = 3, group = gF)
 showFib     = input.bool(true, "Draw fib band", group = gF)
 
 gZ = "Zone / risk"
@@ -110,6 +113,22 @@ f_sessLevel(float lvl, bool isHigh) =>
     tol = 2 * pip
     isHigh ? (math.abs(lvl - nz(asiaH, -1e9)) <= tol or math.abs(lvl - nz(ldnH, -1e9)) <= tol or math.abs(lvl - nz(pdH, -1e9)) <= tol)
            : (math.abs(lvl - nz(asiaL, -1e9)) <= tol or math.abs(lvl - nz(ldnL, -1e9)) <= tol or math.abs(lvl - nz(pdL, -1e9)) <= tol)
+
+// ------------------------------------------------ higher-timeframe trend ----
+// swing-structure bias (+1 after a bullish break of the last swing high, -1 after a bearish break of the last swing low)
+f_swingBias(int len) =>
+    var float sh = na, var bool shx = false, var float sl = na, var bool slx = false, var int b = 0
+    if high[len] > ta.highest(high, len)
+        sh := high[len], shx := false
+    if low[len] < ta.lowest(low, len)
+        sl := low[len], slx := false
+    if not na(sh) and not shx and close > sh
+        shx := true, b := 1
+    if not na(sl) and not slx and close < sl
+        slx := true, b := -1
+    b
+htfBias = request.security(syminfo.tickerid, trendTF, f_swingBias(trendLen)[1], lookahead = barmerge.lookahead_off)
+f_trendOK(bool bearish) => not trendFilter or (bearish ? htfBias == -1 : htfBias == 1)
 
 // ------------------------------------------------ swing detection (one-sided) ----
 // a pivot at bar[size] is confirmed when the following `size` bars did not exceed it
@@ -229,7 +248,7 @@ if newBear or newBull
         entry := bearish ? (zoneMode == "Body" ? zb : wb) : (zoneMode == "Body" ? zt : wt)
         sl    := bearish ? wt + slBufPips * pip : wb - slBufPips * pip
         slPips = math.abs(sl - entry) / pip
-        biasOK = not biasFilter or (bearish ? entry >= biasMid : entry <= biasMid)
+        biasOK = (not biasFilter or (bearish ? entry >= biasMid : entry <= biasMid)) and f_trendOK(bearish)
         fvg := obOff >= 2 ? (bearish ? high[obOff - 2] < low[obOff] : low[obOff - 2] > high[obOff]) : false
         ok := slPips <= maxSLpips and biasOK
         if ok
@@ -347,6 +366,7 @@ plot(showDebug ? sHigh : na, "Swing high", color = color.new(#ff5252, 30), style
 plot(showDebug ? sLow : na,  "Swing low",  color = color.new(#00e676, 30), style = plot.style_linebr, linewidth = 2)
 plot(showDebug and biasFilter ? biasMid : na, "Swing range 50%", color = color.new(color.orange, 30), style = plot.style_linebr)
 bgcolor(showDebug and inWindow ? color.new(color.blue, 96) : na, title = "Entry window")
+bgcolor(showDebug and trendFilter ? (htfBias == 1 ? color.new(color.green, 94) : htfBias == -1 ? color.new(color.red, 94) : na) : na, title = "HTF trend")
 
 plot(act ? (aBear ? -1 : 1) : na, "ActiveDir",   display = display.data_window)
 plot(act ? aEntry : na,            "ActiveEntry", display = display.data_window)

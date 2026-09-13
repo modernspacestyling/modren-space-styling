@@ -44,6 +44,9 @@ namespace SnipeTrading
         [Display(Name = "Fib gate", GroupName = "Fibonacci", Order = 30)] public decimal FibLvl { get; set; } = 0.764m;
         [Display(Name = "Min reward to ultimate target (R)", GroupName = "Fibonacci", Order = 31)] public decimal MinTargetRR { get; set; } = 2m;
         [Display(Name = "Sell only in premium / buy only in discount of swing range", GroupName = "Fibonacci", Order = 32)] public bool BiasFilter { get; set; } = true;
+        [Display(Name = "Trade only with higher-timeframe structure", GroupName = "Fibonacci", Order = 34)] public bool TrendFilter { get; set; } = true;
+        [Display(Name = "Trend timeframe (minutes)", GroupName = "Fibonacci", Order = 35)] public int TrendMinutes { get; set; } = 60;
+        [Display(Name = "Trend swing length (HTF bars)", GroupName = "Fibonacci", Order = 36)] public int TrendLen { get; set; } = 10;
 
         [Display(Name = "Entry on body (else wick)", GroupName = "Zone", Order = 41)] public bool EntryBody { get; set; } = true;
         [Display(Name = "Reaction entry (close back inside zone)", GroupName = "Zone", Order = 47)] public bool ReactionEntry { get; set; } = true;
@@ -78,6 +81,9 @@ namespace SnipeTrading
         private decimal? _sHigh, _sLow, _iHigh, _iLow; private int _sHighBar, _sLowBar, _iHighBar, _iLowBar; private bool _sHighX, _sLowX, _iHighX, _iLowX;
         private int _sBias, _iBias; private decimal? _trailTop, _trailBot;
         private int _sweepHiBar = -1, _sweepLoBar = -1; private bool _sweepHiSess, _sweepLoSess;
+        // higher-timeframe aggregation for the trend filter
+        private readonly List<decimal[]> _htf = new(); private long _htfBucket = -1; private decimal[] _htfCur;
+        private decimal? _hSH, _hSL; private bool _hSHX, _hSLX; private int _htfBias;
         private int _chochBearBar = -1, _chochBullBar = -1; private bool _chochBearSess, _chochBullSess;
         private decimal _asiaH, _asiaL, _ldnH, _ldnL, _pdH, _pdL, _dayH, _dayL; private int _lastDay = -1;
 
@@ -103,6 +109,7 @@ namespace SnipeTrading
         {
             _sHigh = _sLow = _iHigh = _iLow = null; _sHighX = _sLowX = _iHighX = _iLowX = false; _sBias = _iBias = 0; _trailTop = _trailBot = null;
             _sweepHiBar = _sweepLoBar = _chochBearBar = _chochBullBar = -1; _act = null; _lastDay = -1;
+            _htf.Clear(); _htfBucket = -1; _htfCur = null; _hSH = _hSL = null; _hSHX = _hSLX = false; _htfBias = 0;
             Rectangles.Clear(); Labels.Clear();
         }
 
@@ -203,6 +210,15 @@ namespace SnipeTrading
             if (tUtc.Hour < 7) { _asiaH = Math.Max(_asiaH, c.High); _asiaL = _asiaL == 0 ? c.Low : Math.Min(_asiaL, c.Low); }
             if (tUtc.Hour >= 7 && tUtc.Hour < 12) { _ldnH = Math.Max(_ldnH, c.High); _ldnL = _ldnL == 0 ? c.Low : Math.Min(_ldnL, c.Low); }
 
+            // ---- higher-timeframe bias (built from chart bars, last completed HTF bar only)
+            long bucket = (long)Math.Floor((tUtc - DateTime.UnixEpoch).TotalMinutes / TrendMinutes);
+            if (bucket != _htfBucket)
+            {
+                if (_htfCur != null) { _htf.Add(_htfCur); UpdateHtfBias(); }
+                _htfBucket = bucket; _htfCur = new[] { c.Open, c.High, c.Low, c.Close };
+            }
+            else { _htfCur[1] = Math.Max(_htfCur[1], c.High); _htfCur[2] = Math.Min(_htfCur[2], c.Low); _htfCur[3] = c.Close; }
+
             // ---- swing tier (one-sided confirmation)
             if (NewHigh(bar, SwingLen)) { _sHigh = GetCandle(bar - SwingLen).High; _sHighBar = bar - SwingLen; _sHighX = false; _trailTop = _sHigh; }
             if (NewLow(bar, SwingLen)) { _sLow = GetCandle(bar - SwingLen).Low; _sLowBar = bar - SwingLen; _sLowX = false; _trailBot = _sLow; }
@@ -282,6 +298,20 @@ namespace SnipeTrading
             }
         }
 
+        // structure bias on the completed HTF bars: +1 after a bullish break of the last HTF swing high, -1 after a bearish break of the last swing low
+        private void UpdateHtfBias()
+        {
+            int n = _htf.Count, L = TrendLen; if (n <= L) return;
+            int i = n - 1; var piv = _htf[i - L];
+            bool newHigh = true, newLow = true;
+            for (int k = i - L + 1; k <= i; k++) { if (_htf[k][1] >= piv[1]) newHigh = false; if (_htf[k][2] <= piv[2]) newLow = false; }
+            if (newHigh) { _hSH = piv[1]; _hSHX = false; }
+            if (newLow) { _hSL = piv[2]; _hSLX = false; }
+            decimal close = _htf[i][3];
+            if (_hSH != null && !_hSHX && close > _hSH) { _hSHX = true; _htfBias = 1; }
+            if (_hSL != null && !_hSLX && close < _hSL) { _hSLX = true; _htfBias = -1; }
+        }
+
         private (decimal, int) HighestSince(int from, int to) { decimal m = decimal.MinValue; int b = from; for (int i = from; i <= to; i++) { var x = GetCandle(i).High; if (x > m) { m = x; b = i; } } return (m, b); }
         private (decimal, int) LowestSince(int from, int to) { decimal m = decimal.MaxValue; int b = from; for (int i = from; i <= to; i++) { var x = GetCandle(i).Low; if (x < m) { m = x; b = i; } } return (m, b); }
         private void EmitSignal(int bar, Setup a, IndicatorCandle c, DateTime tUtc)
@@ -308,6 +338,7 @@ namespace SnipeTrading
             decimal slPips = Math.Abs(sl - entry) / Pip;
             if (slPips > MaxSLPips) return;
             if (BiasFilter && (bearish ? entry < biasMid : entry > biasMid)) return;
+            if (TrendFilter && (bearish ? _htfBias != -1 : _htfBias != 1)) return;
             bool fvg = false; if (bar - j >= 2) { var c2 = GetCandle(j + 2); fvg = bearish ? c2.High < z.Low : c2.Low > z.High; }
             int score = 4 + (fvg ? 1 : 0) + (sessLiq ? 1 : 0) + (HiVol(z.Time.ToUniversalTime()) ? 1 : 0) + (model == "TR2" ? 1 : 0) + (slPips <= 20 ? 1 : 0);
             if (score < MinScore) return;
