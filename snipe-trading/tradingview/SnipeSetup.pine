@@ -16,7 +16,7 @@
 //   Bias filter: sells only in the premium half of the trailing swing range,
 //                buys only in the discount half.
 // ============================================================================
-indicator("Snipe Setup Marker v3 (TR2/TC)", "SNIPE", overlay = true, max_boxes_count = 250, max_lines_count = 400, max_labels_count = 400)
+indicator("Snipe Setup Marker v3 (TR2/TC)", "SNIPE", overlay = true, max_boxes_count = 250, max_lines_count = 500, max_labels_count = 500)
 
 // ---------------------------------------------------------------- inputs ----
 gS = "Structure"
@@ -62,6 +62,9 @@ colFib  = input.color(color.new(#ffd54f, 85), "Fib band", group = gV)
 cleanMode  = input.bool(true,  "Clean chart (only armed zones + entry/SL/TP)", group = gV)
 showDebug  = input.bool(false, "Debug: structure labels, sweeps, bias midline", group = gV)
 showBoxes  = input.bool(false, "Show consolidation boxes", group = gV)
+showStruct = input.string("Both", "Show CHoCH / BOS", options = ["Both", "Swing only", "Internal only", "Off"], group = gV)
+colBull    = input.color(#089981, "Bullish structure", group = gV)
+colBearS   = input.color(#f23645, "Bearish structure", group = gV)
 
 pip = 0.10
 
@@ -151,9 +154,21 @@ trailBot := math.min(nz(trailBot, low), low)
 biasMid = (trailTop + trailBot) / 2
 sBullBreak = not na(sHigh) and not sHighX and close > sHigh
 sBearBreak = not na(sLow)  and not sLowX  and close < sLow
+sBullCHoCH = sBullBreak and sBias == -1
+sBearCHoCH = sBearBreak and sBias == 1
+f_drawStruct(bool bullish, bool isChoch, float lvl, int fromBar, bool internal) =>
+    col = bullish ? colBull : colBearS
+    line.new(fromBar, lvl, bar_index, lvl, color = col, style = internal ? line.style_dashed : line.style_solid, width = internal ? 1 : 2)
+    label.new(math.round((fromBar + bar_index) / 2), lvl, isChoch ? "CHoCH" : "BOS", style = bullish ? label.style_label_down : label.style_label_up, color = color(na), textcolor = col, size = internal ? size.tiny : size.small)
+showSw = showStruct == "Both" or showStruct == "Swing only"
+showIn = showStruct == "Both" or showStruct == "Internal only"
 if sBullBreak
+    if showSw
+        f_drawStruct(true, sBullCHoCH, sHigh, sHighBar, false)
     sHighX := true, sBias := 1
 if sBearBreak
+    if showSw
+        f_drawStruct(false, sBearCHoCH, sLow, sLowBar, false)
     sLowX := true, sBias := -1
 // sweep of the swing level: wick through, close back inside (no structure break)
 sweepHi = not na(sHigh) and not sHighX and high > sHigh and (not strictSweep or close < sHigh) and not sBullBreak
@@ -182,8 +197,12 @@ iBearBOS   = iBearBreak and iBias == -1
 int brokenLowBar  = iBearBreak ? iLowBar  : na     // remember before flags update
 int brokenHighBar = iBullBreak ? iHighBar : na
 if iBullBreak
+    if showIn
+        f_drawStruct(true, iBullCHoCH, iHigh, iHighBar, true)
     iHighX := true, iBias := 1
 if iBearBreak
+    if showIn
+        f_drawStruct(false, iBearCHoCH, iLow, iLowBar, true)
     iLowX := true, iBias := -1
 
 var int chochBearBar = na, var bool chochBearSess = false
@@ -356,10 +375,6 @@ if act and not na(zBox)
     line.set_x2(lnE, bar_index + 5), line.set_x2(lnS, bar_index + 5), line.set_x2(lnT1, bar_index + 5), line.set_x2(lnT2, bar_index + 5)
 
 // ------------------------------------------------------------- plots ----
-plotshape(showDebug and iBearCHoCH, "Internal CHoCH bear", shape.labeldown, location.abovebar, color.new(#ff5252, 30), text = "CHoCH", textcolor = color.white, size = size.tiny)
-plotshape(showDebug and iBullCHoCH, "Internal CHoCH bull", shape.labelup,   location.belowbar, color.new(#00e676, 30), text = "CHoCH", textcolor = color.white, size = size.tiny)
-plotshape(showDebug and iBearBOS, "Internal BOS bear", shape.labeldown, location.abovebar, color.new(#ff5252, 70), text = "BOS", textcolor = color.white, size = size.tiny)
-plotshape(showDebug and iBullBOS, "Internal BOS bull", shape.labelup,   location.belowbar, color.new(#00e676, 70), text = "BOS", textcolor = color.white, size = size.tiny)
 plotshape(showDebug and sweepHi, "Swing high swept", shape.xcross, location.abovebar, color.orange, size = size.small)
 plotshape(showDebug and sweepLo, "Swing low swept",  shape.xcross, location.belowbar, color.orange, size = size.small)
 plot(showDebug ? sHigh : na, "Swing high", color = color.new(#ff5252, 30), style = plot.style_linebr, linewidth = 2)
