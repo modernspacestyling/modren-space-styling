@@ -213,8 +213,10 @@ if newBear or newBull
     model   = (bearish ? tr2Bear : tr2Bull) ? "TR2" : "TC"
     sessLiq = bearish ? (tr2Bear and chochBearSess) : (tr2Bull and chochBullSess)
     // consolidation = bars between the broken internal swing and this bar
-    lookN = bearish ? bar_index - brokenLowBar : bar_index - brokenHighBar
-    [obPx, obOff] = bearish ? f_obHigh(lookN) : f_obLow(lookN)
+    lookN = math.max(nz(bearish ? bar_index - brokenLowBar : bar_index - brokenHighBar, 1), 1)
+    [obHiPx, obHiOff] = f_obHigh(lookN)
+    [obLoPx, obLoOff] = f_obLow(lookN)
+    int obOff = bearish ? obHiOff : obLoOff
     [cH, _c1] = f_hh(lookN + 1)
     [cL, _c2] = f_ll(lookN + 1)
     ok = not na(obOff)
