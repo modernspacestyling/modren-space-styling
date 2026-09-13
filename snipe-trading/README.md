@@ -17,3 +17,11 @@ Quick smoke test (synthetic data, no edge expected):
 ```bash
 cd backtest && pip install pandas numpy matplotlib && python run_backtest.py --synthetic --tf 5 --out results_synth
 ```
+
+## TradingView Strategy Tester (no data export needed)
+
+`tradingview/SnipeStrategy.pine` is the same v3 logic wrapped in `strategy()`. Paste it into the Pine editor,
+add to an XAUUSD 5m or 15m chart, open the **Strategy Tester** tab: Overview (net profit, profit factor,
+drawdown), Performance Summary, and List of Trades (export as CSV via the download icon). Position size is
+computed from *Risk per trade %* and the stop distance; partials at TP1/TP2, breakeven at 1R, runner to the
+leg extreme. Use *Deep Backtesting* (Premium) to run more history than the loaded bars.
